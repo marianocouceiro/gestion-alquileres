@@ -222,15 +222,14 @@
             flex-direction: column;
         }
 
-        .form-group label {
+        label {
             font-weight: 600;
             margin-bottom: 0.5rem;
             color: var(--text-primary);
             font-size: 0.95rem;
         }
 
-        .form-group input,
-        .form-group select {
+        input, select, textarea {
             padding: 0.875rem;
             border: 2px solid var(--border);
             border-radius: 10px;
@@ -240,15 +239,14 @@
             background: white;
         }
 
-        .form-group input:focus,
-        .form-group select:focus {
+        input:focus, select:focus, textarea:focus {
             outline: none;
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(43, 88, 118, 0.1);
         }
 
         .btn {
-            padding: 1rem 2rem;
+            padding: 0.875rem 2rem;
             border: none;
             border-radius: 10px;
             font-weight: 600;
@@ -258,14 +256,14 @@
             font-family: 'Manrope', sans-serif;
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
             justify-content: center;
+            gap: 0.5rem;
         }
 
         .btn-primary {
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
             color: white;
-            box-shadow: 0 4px 15px rgba(43, 88, 118, 0.3);
+            box-shadow: 0 4px 12px rgba(43, 88, 118, 0.3);
         }
 
         .btn-primary:hover {
@@ -274,13 +272,17 @@
         }
 
         .btn-secondary {
-            background: var(--bg-main);
-            color: var(--text-primary);
-            border: 2px solid var(--border);
+            background: var(--text-secondary);
+            color: white;
         }
 
         .btn-secondary:hover {
-            background: var(--border);
+            background: var(--text-primary);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
         }
 
         .btn-danger {
@@ -288,31 +290,9 @@
             color: white;
         }
 
-        .btn-danger:hover {
-            background: #c0392b;
-        }
-
-        .filters {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .filter-group {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .filter-group select,
-        .filter-group input {
-            padding: 0.75rem 1rem;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            font-size: 0.95rem;
-            font-family: 'Manrope', sans-serif;
+        .btn-warning {
+            background: var(--accent);
+            color: white;
         }
 
         .table-container {
@@ -333,22 +313,20 @@
         }
 
         th {
-            padding: 1rem;
+            padding: 1.25rem 1rem;
             text-align: left;
             font-weight: 700;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             letter-spacing: 0.3px;
-            white-space: nowrap;
         }
 
         td {
-            padding: 1rem;
+            padding: 1.25rem 1rem;
             border-bottom: 1px solid var(--border);
-            font-size: 0.95rem;
         }
 
         tbody tr {
-            transition: all 0.3s;
+            transition: background 0.2s;
         }
 
         tbody tr:hover {
@@ -356,22 +334,19 @@
         }
 
         tbody tr.urgent {
-            background: linear-gradient(90deg, rgba(255, 107, 107, 0.15) 0%, rgba(231, 76, 60, 0.05) 100%);
-            border-left: 4px solid var(--danger);
-            animation: urgentPulse 2s infinite;
+            background: rgba(255, 107, 107, 0.08);
         }
 
-        tbody tr.urgent td {
-            font-weight: 600;
+        tbody tr.expiring {
+            background: rgba(243, 156, 18, 0.08);
         }
 
         .badge {
             display: inline-block;
-            padding: 0.4rem 0.8rem;
+            padding: 0.4rem 1rem;
             border-radius: 20px;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             font-weight: 600;
-            letter-spacing: 0.3px;
         }
 
         .badge-active {
@@ -379,49 +354,30 @@
             color: var(--success);
         }
 
-        .badge-inactive {
+        .badge-urgent {
+            background: rgba(255, 107, 107, 0.15);
+            color: var(--warning);
+        }
+
+        .badge-expiring {
+            background: rgba(243, 156, 18, 0.15);
+            color: var(--accent);
+        }
+
+        .badge-paused {
             background: rgba(127, 140, 141, 0.15);
             color: var(--text-secondary);
         }
 
-        .badge-urgent {
-            background: rgba(231, 76, 60, 0.15);
-            color: var(--danger);
-            animation: badgePulse 1.5s infinite;
-        }
-
-        .badge-ipc {
-            background: rgba(52, 152, 219, 0.15);
-            color: #3498db;
-        }
-
-        .badge-icl {
-            background: rgba(155, 89, 182, 0.15);
-            color: #9b59b6;
-        }
-
-        .badge-fixed {
-            background: rgba(243, 156, 18, 0.15);
-            color: #f39c12;
-        }
-
-        .actions {
+        .action-buttons {
             display: flex;
             gap: 0.5rem;
+            flex-wrap: wrap;
         }
 
-        .btn-icon {
-            padding: 0.5rem;
-            border: none;
-            background: transparent;
-            cursor: pointer;
-            font-size: 1.2rem;
-            border-radius: 6px;
-            transition: all 0.3s;
-        }
-
-        .btn-icon:hover {
-            background: var(--bg-main);
+        .action-buttons button {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
         }
 
         .modal {
@@ -432,11 +388,11 @@
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
             z-index: 1000;
             align-items: center;
             justify-content: center;
-            backdrop-filter: blur(4px);
-            animation: fadeIn 0.3s;
+            padding: 2rem;
         }
 
         .modal.show {
@@ -448,11 +404,11 @@
             border-radius: 20px;
             padding: 2.5rem;
             max-width: 600px;
-            width: 90%;
+            width: 100%;
             max-height: 90vh;
             overflow-y: auto;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            animation: slideUp 0.3s ease;
+            animation: modalSlideIn 0.3s ease;
         }
 
         .modal-header {
@@ -464,168 +420,66 @@
             border-bottom: 2px solid var(--border);
         }
 
-        .modal-header h2 {
+        .modal-title {
             font-size: 1.5rem;
+            font-weight: 700;
             color: var(--primary);
         }
 
-        .close-modal {
+        .close-btn {
             background: none;
             border: none;
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             cursor: pointer;
             color: var(--text-secondary);
-            transition: all 0.3s;
-        }
-
-        .close-modal:hover {
-            color: var(--danger);
-            transform: rotate(90deg);
-        }
-
-        .whatsapp-message {
-            background: #e7ffdb;
-            border: 2px solid #4caf50;
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin: 1rem 0;
-            position: relative;
-        }
-
-        .whatsapp-message::before {
-            content: '💬';
-            position: absolute;
-            top: -15px;
-            left: 20px;
-            font-size: 1.5rem;
-            background: white;
-            padding: 0 8px;
-        }
-
-        .whatsapp-message h4 {
-            color: #2e7d32;
-            margin-bottom: 0.75rem;
-            font-size: 1.1rem;
-        }
-
-        .message-text {
-            background: white;
-            padding: 1rem;
-            border-radius: 8px;
-            white-space: pre-line;
-            font-size: 0.95rem;
-            line-height: 1.6;
-            margin-bottom: 1rem;
-            border-left: 4px solid #4caf50;
-        }
-
-        .copy-btn {
-            background: #25d366;
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            display: inline-flex;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
             align-items: center;
-            gap: 0.5rem;
+            justify-content: center;
+            border-radius: 8px;
             transition: all 0.3s;
         }
 
-        .copy-btn:hover {
-            background: #128c7e;
-            transform: translateY(-2px);
-        }
-
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 16px;
-            box-shadow: 0 8px 24px var(--shadow);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -20%;
-            width: 200px;
-            height: 200px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-        }
-
-        .stat-card-icon {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            opacity: 0.9;
-        }
-
-        .stat-card-value {
-            font-size: 2.5rem;
-            font-weight: 800;
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-card-label {
-            font-size: 1rem;
-            opacity: 0.9;
+        .close-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+            color: var(--text-primary);
         }
 
         .empty-state {
             text-align: center;
             padding: 4rem 2rem;
-            color: var(--text-secondary);
         }
 
         .empty-state-icon {
             font-size: 4rem;
             margin-bottom: 1rem;
-            opacity: 0.3;
         }
 
         .empty-state h3 {
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             margin-bottom: 0.5rem;
             color: var(--text-primary);
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        .empty-state p {
+            color: var(--text-secondary);
         }
 
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes modalSlideIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
         }
 
         @keyframes pulse {
@@ -633,68 +487,44 @@
             50% { transform: scale(1.1); }
         }
 
-        @keyframes urgentPulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); }
-            50% { box-shadow: 0 0 20px 0 rgba(231, 76, 60, 0.2); }
-        }
-
-        @keyframes badgePulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
         @media (max-width: 768px) {
             .header-content {
                 flex-direction: column;
-                gap: 1rem;
+                gap: 1.5rem;
+            }
+
+            .header-stats {
+                width: 100%;
+                justify-content: space-around;
             }
 
             .form-grid {
                 grid-template-columns: 1fr;
             }
 
-            .filters {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
             .tabs {
                 overflow-x: auto;
             }
 
-            table {
-                font-size: 0.85rem;
+            .tab {
+                white-space: nowrap;
+            }
+
+            .table-container {
+                font-size: 0.9rem;
             }
 
             th, td {
                 padding: 0.75rem 0.5rem;
             }
-        }
 
-        .info-box {
-            background: #e3f2fd;
-            border-left: 4px solid #2196f3;
-            padding: 1rem;
-            border-radius: 8px;
-            margin: 1rem 0;
-        }
+            .action-buttons {
+                flex-direction: column;
+            }
 
-        .info-box strong {
-            color: #1976d2;
-        }
-
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+            .action-buttons button {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -702,118 +532,566 @@
     <header class="header">
         <div class="header-content">
             <div class="logo">
-                <div class="logo-icon">🏢</div>
-                <div>
-                    <h1>Gestión de Alquileres</h1>
-                    <small style="opacity: 0.9;">Sistema Integral de Administración</small>
-                </div>
+                <div class="logo-icon">🏠</div>
+                <h1>Gestión de Alquileres</h1>
             </div>
             <div class="header-stats">
                 <div class="stat-item">
-                    <span class="stat-value" id="totalContracts">0</span>
-                    <span class="stat-label">Contratos Activos</span>
+                    <span class="stat-value" id="headerTotalContracts">0</span>
+                    <span class="stat-label">Contratos</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-value" id="urgentContracts">0</span>
-                    <span class="stat-label">Actualizaciones Pendientes</span>
+                    <span class="stat-value" id="headerUrgent">0</span>
+                    <span class="stat-label">Urgentes</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="headerExpiring">0</span>
+                    <span class="stat-label">Por vencer</span>
                 </div>
             </div>
         </div>
     </header>
 
-    <div class="alert-banner" id="alertBanner">
-        <span class="alert-icon">⚠️</span>
-        <div class="alert-content">
-            <h3>Actualizaciones Urgentes</h3>
-            <p id="alertText">Tienes contratos que actualizan en los próximos 10 días</p>
-        </div>
-    </div>
-
     <div class="container">
+        <!-- Alert Banners -->
+        <div id="alertUpdateBanner" class="alert-banner">
+            <div class="alert-icon">⚠️</div>
+            <div class="alert-content">
+                <h3>Actualizaciones Urgentes</h3>
+                <p id="alertUpdateText"></p>
+            </div>
+        </div>
+
+        <div id="alertExpirationBanner" class="alert-banner">
+            <div class="alert-icon">📅</div>
+            <div class="alert-content">
+                <h3>Contratos por Vencer</h3>
+                <p id="alertExpirationText"></p>
+            </div>
+        </div>
+
+        <!-- Tabs -->
         <div class="tabs">
             <button class="tab active" onclick="switchTab('dashboard')">📊 Dashboard</button>
             <button class="tab" onclick="switchTab('contracts')">📋 Contratos</button>
-            <button class="tab" onclick="switchTab('new')">➕ Nuevo Contrato</button>
-            <button class="tab" onclick="switchTab('indices')">📈 Índices Actuales</button>
+            <button class="tab" onclick="switchTab('add')">➕ Nuevo Contrato</button>
+            <button class="tab" onclick="switchTab('edit')">✏️ Editar Contratos</button>
         </div>
 
         <!-- Dashboard Tab -->
-        <div id="dashboard" class="tab-content active">
-            <div class="dashboard-grid">
-                <div class="stat-card">
-                    <div class="stat-card-icon">📑</div>
-                    <div class="stat-card-value" id="dashTotalContracts">0</div>
-                    <div class="stat-card-label">Total de Contratos</div>
+        <div id="dashboardTab" class="tab-content active">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">📊 Resumen General</h2>
+                    <button class="btn btn-primary" onclick="exportToCSV()">
+                        📥 Exportar CSV
+                    </button>
                 </div>
-                <div class="stat-card" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">
-                    <div class="stat-card-icon">⚡</div>
-                    <div class="stat-card-value" id="dashUrgent">0</div>
-                    <div class="stat-card-label">Actualizan en 10 días</div>
-                </div>
-                <div class="stat-card" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);">
-                    <div class="stat-card-icon">📅</div>
-                    <div class="stat-card-value" id="dashExpiring">0</div>
-                    <div class="stat-card-label">Vencen en 60 días</div>
-                </div>
-                <div class="stat-card" style="background: linear-gradient(135deg, #27ae60 0%, #229954 100%);">
-                    <div class="stat-card-icon">💰</div>
-                    <div class="stat-card-value" id="dashTotalValue">$0</div>
-                    <div class="stat-card-label">Valor Total Mensual</div>
+                <div class="form-grid">
+                    <div class="stat-item" style="background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; padding: 1.5rem; border-radius: 12px;">
+                        <span class="stat-value" id="dashTotalContracts">0</span>
+                        <span class="stat-label">Contratos Activos</span>
+                    </div>
+                    <div class="stat-item" style="background: linear-gradient(135deg, var(--warning), var(--danger)); color: white; padding: 1.5rem; border-radius: 12px;">
+                        <span class="stat-value" id="dashUrgent">0</span>
+                        <span class="stat-label">Actualizaciones Urgentes</span>
+                    </div>
+                    <div class="stat-item" style="background: linear-gradient(135deg, var(--accent), var(--accent-bright)); color: white; padding: 1.5rem; border-radius: 12px;">
+                        <span class="stat-value" id="dashExpiring">0</span>
+                        <span class="stat-label">Contratos por Vencer</span>
+                    </div>
                 </div>
             </div>
 
             <div class="card">
                 <div class="card-header">
-                    <h2 class="card-title">🔔 Próximas Actualizaciones de Monto</h2>
+                    <h2 class="card-title">🔄 Próximas Actualizaciones (30 días)</h2>
                 </div>
                 <div id="upcomingUpdates"></div>
             </div>
 
             <div class="card">
                 <div class="card-header">
-                    <h2 class="card-title">📅 Próximas Finalizaciones de Contrato</h2>
+                    <h2 class="card-title">📅 Contratos por Vencer (90 días)</h2>
                 </div>
                 <div id="upcomingExpirations"></div>
             </div>
         </div>
 
         <!-- Contracts Tab -->
-        <div id="contracts" class="tab-content">
+        <div id="contractsTab" class="tab-content">
             <div class="card">
                 <div class="card-header">
-                    <h2 class="card-title">📋 Lista de Contratos</h2>
-                    <button class="btn btn-primary" onclick="exportToCSV()">
-                        📥 Exportar CSV
-                    </button>
+                    <h2 class="card-title">📋 Todos los Contratos</h2>
                 </div>
+                <div id="contractsList"></div>
+            </div>
+        </div>
 
-                <div class="filters">
-                    <div class="filter-group">
-                        <label>Filtrar por estado:</label>
-                        <select id="filterStatus" onchange="filterContracts()">
-                            <option value="all">Todos</option>
-                            <option value="active">Activos</option>
-                            <option value="inactive">Finalizados</option>
+        <!-- Add Contract Tab -->
+        <div id="addTab" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">➕ Nuevo Contrato</h2>
+                </div>
+                <form id="contractForm" onsubmit="addContract(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="address">Dirección *</label>
+                            <input type="text" id="address" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="ownerName">Nombre del Propietario *</label>
+                            <input type="text" id="ownerName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="ownerPhone">Teléfono del Propietario *</label>
+                            <input type="tel" id="ownerPhone" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="tenantName">Nombre del Inquilino *</label>
+                            <input type="text" id="tenantName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="tenantPhone">Teléfono del Inquilino *</label>
+                            <input type="tel" id="tenantPhone" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="currentAmount">Monto Actual *</label>
+                            <input type="number" id="currentAmount" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="indexType">Índice de Actualización *</label>
+                            <select id="indexType" required>
+                                <option value="ICL">ICL (Índice Ley de Alquileres)</option>
+                                <option value="IPC">IPC (Índice de Precios al Consumidor)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="startDate">Fecha de Inicio *</label>
+                            <input type="date" id="startDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="duration">Duración (meses) *</label>
+                            <input type="number" id="duration" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="updateFrequency">Frecuencia de Actualización *</label>
+                            <select id="updateFrequency" required>
+                                <option value="3">Cada 3 meses</option>
+                                <option value="4">Cada 4 meses</option>
+                                <option value="6">Cada 6 meses</option>
+                                <option value="12">Anual</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                        <button type="submit" class="btn btn-primary">💾 Guardar Contrato</button>
+                        <button type="button" class="btn btn-secondary" onclick="resetForm()">🔄 Limpiar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Edit Contract Tab -->
+        <div id="editTab" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">✏️ Editar Contratos</h2>
+                </div>
+                <div id="editContractsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Editar Contrato</h3>
+                <button class="close-btn" onclick="closeModal('editModal')">✕</button>
+            </div>
+            <form id="editForm" onsubmit="saveEdit(event)">
+                <input type="hidden" id="editId">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="editAddress">Dirección *</label>
+                        <input type="text" id="editAddress" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editOwnerName">Nombre del Propietario *</label>
+                        <input type="text" id="editOwnerName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editOwnerPhone">Teléfono del Propietario *</label>
+                        <input type="tel" id="editOwnerPhone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editTenantName">Nombre del Inquilino *</label>
+                        <input type="text" id="editTenantName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editTenantPhone">Teléfono del Inquilino *</label>
+                        <input type="tel" id="editTenantPhone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editCurrentAmount">Monto Actual *</label>
+                        <input type="number" id="editCurrentAmount" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editIndexType">Índice de Actualización *</label>
+                        <select id="editIndexType" required>
+                            <option value="ICL">ICL (Índice Ley de Alquileres)</option>
+                            <option value="IPC">IPC (Índice de Precios al Consumidor)</option>
                         </select>
                     </div>
-                    <div class="filter-group">
-                        <label>Filtrar por período:</label>
-                        <select id="filterPeriod" onchange="filterContracts()">
-                            <option value="all">Todos</option>
-                            <option value="urgent">Actualizan en 10 días</option>
-                            <option value="expiring">Vencen en 60 días</option>
-                            <option value="thisMonth">Actualizan este mes</option>
-                            <option value="nextMonth">Actualizan próximo mes</option>
+                    <div class="form-group">
+                        <label for="editStartDate">Fecha de Inicio *</label>
+                        <input type="date" id="editStartDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editDuration">Duración (meses) *</label>
+                        <input type="number" id="editDuration" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editUpdateFrequency">Frecuencia de Actualización *</label>
+                        <select id="editUpdateFrequency" required>
+                            <option value="3">Cada 3 meses</option>
+                            <option value="4">Cada 4 meses</option>
+                            <option value="6">Cada 6 meses</option>
+                            <option value="12">Anual</option>
                         </select>
                     </div>
-                    <div class="filter-group">
-                        <label>Buscar:</label>
-                        <input type="text" id="searchInput" placeholder="Dirección, propietario..." oninput="filterContracts()">
+                    <div class="form-group">
+                        <label for="editStatus">Estado *</label>
+                        <select id="editStatus" required>
+                            <option value="active">Activo</option>
+                            <option value="paused">Pausado</option>
+                            <option value="completed">Finalizado</option>
+                        </select>
                     </div>
                 </div>
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    <button type="submit" class="btn btn-success">💾 Guardar Cambios</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('editModal')">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
+    <script>
+        // Sample Data - Replace with real data
+        let contracts = [
+            {
+                id: 1,
+                address: 'Av. Córdoba 1234',
+                ownerName: 'Juan Pérez',
+                ownerPhone: '1123456789',
+                tenantName: 'María González',
+                tenantPhone: '1198765432',
+                currentAmount: 150000,
+                indexType: 'ICL',
+                startDate: '2024-01-15',
+                duration: 24,
+                updateFrequency: 4,
+                status: 'active'
+            },
+            {
+                id: 2,
+                address: 'Av. Santa Fe 5678',
+                ownerName: 'Ana Rodríguez',
+                ownerPhone: '1145678912',
+                tenantName: 'Carlos López',
+                tenantPhone: '1156789123',
+                currentAmount: 200000,
+                indexType: 'IPC',
+                startDate: '2023-06-01',
+                duration: 36,
+                updateFrequency: 3,
+                status: 'active'
+            }
+        ];
+
+        let nextId = 3;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            updateDashboard();
+            renderAllContracts();
+            renderEditContracts();
+            checkAlerts();
+        });
+
+        // Load data from localStorage
+        function loadData() {
+            const saved = localStorage.getItem('contracts');
+            if (saved) {
+                contracts = JSON.parse(saved);
+                if (contracts.length > 0) {
+                    nextId = Math.max(...contracts.map(c => c.id)) + 1;
+                }
+            }
+        }
+
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem('contracts', JSON.stringify(contracts));
+        }
+
+        // Tab Switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            
+            if (tabName === 'contracts') {
+                renderAllContracts();
+            } else if (tabName === 'edit') {
+                renderEditContracts();
+            }
+        }
+
+        // Add Contract
+        function addContract(event) {
+            event.preventDefault();
+            
+            const contract = {
+                id: nextId++,
+                address: document.getElementById('address').value,
+                ownerName: document.getElementById('ownerName').value,
+                ownerPhone: document.getElementById('ownerPhone').value,
+                tenantName: document.getElementById('tenantName').value,
+                tenantPhone: document.getElementById('tenantPhone').value,
+                currentAmount: parseFloat(document.getElementById('currentAmount').value),
+                indexType: document.getElementById('indexType').value,
+                startDate: document.getElementById('startDate').value,
+                duration: parseInt(document.getElementById('duration').value),
+                updateFrequency: parseInt(document.getElementById('updateFrequency').value),
+                status: 'active'
+            };
+            
+            contracts.push(contract);
+            saveData();
+            
+            alert('✅ Contrato agregado exitosamente');
+            resetForm();
+            updateDashboard();
+            checkAlerts();
+        }
+
+        // Edit Contract (Open Modal)
+        function editContract(id) {
+            const contract = contracts.find(c => c.id === id);
+            if (!contract) return;
+            
+            document.getElementById('editId').value = contract.id;
+            document.getElementById('editAddress').value = contract.address;
+            document.getElementById('editOwnerName').value = contract.ownerName;
+            document.getElementById('editOwnerPhone').value = contract.ownerPhone;
+            document.getElementById('editTenantName').value = contract.tenantName;
+            document.getElementById('editTenantPhone').value = contract.tenantPhone;
+            document.getElementById('editCurrentAmount').value = contract.currentAmount;
+            document.getElementById('editIndexType').value = contract.indexType;
+            document.getElementById('editStartDate').value = contract.startDate;
+            document.getElementById('editDuration').value = contract.duration;
+            document.getElementById('editUpdateFrequency').value = contract.updateFrequency;
+            document.getElementById('editStatus').value = contract.status;
+            
+            document.getElementById('editModal').classList.add('show');
+        }
+
+        // Save Edit
+        function saveEdit(event) {
+            event.preventDefault();
+            
+            const id = parseInt(document.getElementById('editId').value);
+            const index = contracts.findIndex(c => c.id === id);
+            
+            if (index !== -1) {
+                contracts[index] = {
+                    id: id,
+                    address: document.getElementById('editAddress').value,
+                    ownerName: document.getElementById('editOwnerName').value,
+                    ownerPhone: document.getElementById('editOwnerPhone').value,
+                    tenantName: document.getElementById('editTenantName').value,
+                    tenantPhone: document.getElementById('editTenantPhone').value,
+                    currentAmount: parseFloat(document.getElementById('editCurrentAmount').value),
+                    indexType: document.getElementById('editIndexType').value,
+                    startDate: document.getElementById('editStartDate').value,
+                    duration: parseInt(document.getElementById('editDuration').value),
+                    updateFrequency: parseInt(document.getElementById('editUpdateFrequency').value),
+                    status: document.getElementById('editStatus').value
+                };
+                
+                saveData();
+                closeModal('editModal');
+                updateDashboard();
+                renderAllContracts();
+                renderEditContracts();
+                checkAlerts();
+                alert('✅ Contrato actualizado exitosamente');
+            }
+        }
+
+        // Delete Contract
+        function deleteContract(id) {
+            if (confirm('¿Estás seguro de que quieres eliminar este contrato?')) {
+                contracts = contracts.filter(c => c.id !== id);
+                saveData();
+                updateDashboard();
+                renderAllContracts();
+                renderEditContracts();
+                checkAlerts();
+                alert('✅ Contrato eliminado');
+            }
+        }
+
+        // Calculate Next Update Date
+        function calculateNextUpdate(contract) {
+            const start = new Date(contract.startDate);
+            const today = new Date();
+            const monthsSinceStart = (today.getFullYear() - start.getFullYear()) * 12 + (today.getMonth() - start.getMonth());
+            
+            // Calcular cuántos períodos de actualización han pasado
+            const periodsPassed = Math.floor(monthsSinceStart / contract.updateFrequency);
+            
+            // Calcular la próxima fecha de actualización
+            const nextUpdateMonths = (periodsPassed + 1) * contract.updateFrequency;
+            const nextUpdate = new Date(start);
+            nextUpdate.setMonth(start.getMonth() + nextUpdateMonths);
+            
+            return nextUpdate;
+        }
+
+        // Calculate End Date
+        function calculateEndDate(contract) {
+            const start = new Date(contract.startDate);
+            const end = new Date(start);
+            end.setMonth(start.getMonth() + contract.duration);
+            return end;
+        }
+
+        // Calculate New Amount (simplified - would need real index data)
+        function calculateNewAmount(contract) {
+            // Simulación: incremento del 10% por actualización
+            const increment = contract.indexType === 'ICL' ? 1.10 : 1.08;
+            return Math.round(contract.currentAmount * increment);
+        }
+
+        // Get Days Until
+        function getDaysUntil(date) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const target = new Date(date);
+            target.setHours(0, 0, 0, 0);
+            const diffTime = target - today;
+            return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        }
+
+        // Check if Update is Urgent (10 days or less)
+        function isUrgent(date) {
+            const days = getDaysUntil(date);
+            return days >= 0 && days <= 10;
+        }
+
+        // Check if Contract is Expiring (60 days or less)
+        function isExpiring(date) {
+            const days = getDaysUntil(date);
+            return days >= 0 && days <= 60;
+        }
+
+        // Format Currency
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('es-AR', {
+                style: 'currency',
+                currency: 'ARS',
+                minimumFractionDigits: 0
+            }).format(amount);
+        }
+
+        // Format Date
+        function formatDate(date) {
+            if (typeof date === 'string') {
+                date = new Date(date);
+            }
+            return new Intl.DateTimeFormat('es-AR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            }).format(date);
+        }
+
+        // Generate WhatsApp Message
+        function generateWhatsAppMessage(id) {
+            const contract = contracts.find(c => c.id === id);
+            if (!contract) return;
+            
+            const nextUpdate = calculateNextUpdate(contract);
+            const newAmount = calculateNewAmount(contract);
+            
+            const message = `Hola ${contract.tenantName}, te informo que el ${formatDate(nextUpdate)} se realizará la actualización del contrato de alquiler de ${contract.address}. El nuevo monto será de ${formatCurrency(newAmount)}. Saludos!`;
+            
+            const encodedMessage = encodeURIComponent(message);
+            const phoneNumber = contract.tenantPhone.replace(/\D/g, '');
+            const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+            
+            window.open(whatsappUrl, '_blank');
+        }
+
+        // Generate Expiration Messages
+        function generateExpirationMessages(id) {
+            const contract = contracts.find(c => c.id === id);
+            if (!contract) return;
+            
+            const endDate = calculateEndDate(contract);
+            
+            // Message for Tenant
+            const tenantMessage = `Hola ${contract.tenantName}, te informo que el contrato de alquiler de ${contract.address} vence el ${formatDate(endDate)}. Por favor, comunicate para coordinar la renovación o finalización. Saludos!`;
+            
+            // Message for Owner
+            const ownerMessage = `Hola ${contract.ownerName}, te informo que el contrato de alquiler de ${contract.address} vence el ${formatDate(endDate)}. Te mantendremos informado sobre la renovación o finalización. Saludos!`;
+            
+            const encodedTenantMsg = encodeURIComponent(tenantMessage);
+            const encodedOwnerMsg = encodeURIComponent(ownerMessage);
+            
+            const tenantPhone = contract.tenantPhone.replace(/\D/g, '');
+            const ownerPhone = contract.ownerPhone.replace(/\D/g, '');
+            
+            const tenantUrl = `https://wa.me/${tenantPhone}?text=${encodedTenantMsg}`;
+            const ownerUrl = `https://wa.me/${ownerPhone}?text=${encodedOwnerMsg}`;
+            
+            if (confirm('¿Enviar mensaje al inquilino primero?')) {
+                window.open(tenantUrl, '_blank');
+                setTimeout(() => {
+                    if (confirm('¿Enviar mensaje al propietario ahora?')) {
+                        window.open(ownerUrl, '_blank');
+                    }
+                }, 1000);
+            }
+        }
+
+        // Render All Contracts
+        function renderAllContracts() {
+            const container = document.getElementById('contractsList');
+            const activeContracts = contracts.filter(c => c.status === 'active');
+            
+            if (activeContracts.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <h3>No hay contratos registrados</h3>
+                        <p>Comienza agregando un nuevo contrato</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = `
                 <div class="table-container">
-                    <table id="contractsTable">
+                    <table>
                         <thead>
                             <tr>
                                 <th>Dirección</th>
@@ -822,856 +1100,107 @@
                                 <th>Monto Actual</th>
                                 <th>Índice</th>
                                 <th>Próxima Actualización</th>
-                                <th>Nuevo Monto</th>
+                                <th>Fecha Finalización</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${activeContracts.map(contract => {
+                                const nextUpdate = calculateNextUpdate(contract);
+                                const endDate = calculateEndDate(contract);
+                                const daysUntilUpdate = getDaysUntil(nextUpdate);
+                                const daysUntilEnd = getDaysUntil(endDate);
+                                const isUrgentUpdate = isUrgent(nextUpdate);
+                                const isExpiringContract = isExpiring(endDate);
+                                
+                                return `
+                                    <tr class="${isUrgentUpdate ? 'urgent' : (isExpiringContract ? 'expiring' : '')}">
+                                        <td><strong>${contract.address}</strong></td>
+                                        <td>${contract.ownerName}<br><small>${contract.ownerPhone}</small></td>
+                                        <td>${contract.tenantName}<br><small>${contract.tenantPhone}</small></td>
+                                        <td><strong>${formatCurrency(contract.currentAmount)}</strong></td>
+                                        <td>${contract.indexType}</td>
+                                        <td>
+                                            ${formatDate(nextUpdate)}
+                                            <br>
+                                            <span class="badge ${isUrgentUpdate ? 'badge-urgent' : 'badge-active'}">
+                                                ${daysUntilUpdate} días
+                                            </span>
+                                        </td>
+                                        <td>
+                                            ${formatDate(endDate)}
+                                            <br>
+                                            <span class="badge ${isExpiringContract ? 'badge-expiring' : 'badge-active'}">
+                                                ${daysUntilEnd} días
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-active">Activo</span>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        // Render Edit Contracts
+        function renderEditContracts() {
+            const container = document.getElementById('editContractsList');
+            
+            if (contracts.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <h3>No hay contratos para editar</h3>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = `
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Dirección</th>
+                                <th>Propietario</th>
+                                <th>Inquilino</th>
+                                <th>Monto</th>
                                 <th>Estado</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
-                        <tbody id="contractsBody">
+                        <tbody>
+                            ${contracts.map(contract => `
+                                <tr>
+                                    <td><strong>${contract.address}</strong></td>
+                                    <td>${contract.ownerName}</td>
+                                    <td>${contract.tenantName}</td>
+                                    <td>${formatCurrency(contract.currentAmount)}</td>
+                                    <td>
+                                        <span class="badge badge-${contract.status === 'active' ? 'active' : 'paused'}">
+                                            ${contract.status === 'active' ? 'Activo' : contract.status === 'paused' ? 'Pausado' : 'Finalizado'}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="btn btn-primary" onclick="editContract(${contract.id})">
+                                                ✏️ Editar
+                                            </button>
+                                            <button class="btn btn-danger" onclick="deleteContract(${contract.id})">
+                                                🗑️ Eliminar
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
                         </tbody>
                     </table>
                 </div>
-            </div>
-        </div>
-
-        <!-- New Contract Tab -->
-        <div id="new" class="tab-content">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">➕ Nuevo Contrato de Alquiler</h2>
-                </div>
-
-                <form id="contractForm" onsubmit="saveContract(event)">
-                    <h3 style="margin-bottom: 1rem; color: var(--primary);">📍 Datos de la Propiedad</h3>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Dirección de la Propiedad *</label>
-                            <input type="text" id="address" required placeholder="Ej: Av. Corrientes 1234, CABA">
-                        </div>
-                    </div>
-
-                    <h3 style="margin: 2rem 0 1rem; color: var(--primary);">👤 Datos del Propietario</h3>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Nombre del Propietario *</label>
-                            <input type="text" id="ownerName" required placeholder="Nombre completo">
-                        </div>
-                        <div class="form-group">
-                            <label>Teléfono del Propietario *</label>
-                            <input type="tel" id="ownerPhone" required placeholder="Ej: +54 9 11 1234-5678">
-                        </div>
-                        <div class="form-group">
-                            <label>Email del Propietario</label>
-                            <input type="email" id="ownerEmail" placeholder="email@ejemplo.com">
-                        </div>
-                    </div>
-
-                    <h3 style="margin: 2rem 0 1rem; color: var(--primary);">👥 Datos del Inquilino</h3>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Nombre del Inquilino *</label>
-                            <input type="text" id="tenantName" required placeholder="Nombre completo">
-                        </div>
-                        <div class="form-group">
-                            <label>Teléfono del Inquilino *</label>
-                            <input type="tel" id="tenantPhone" required placeholder="Ej: +54 9 11 1234-5678">
-                        </div>
-                        <div class="form-group">
-                            <label>Email del Inquilino</label>
-                            <input type="email" id="tenantEmail" placeholder="email@ejemplo.com">
-                        </div>
-                    </div>
-
-                    <h3 style="margin: 2rem 0 1rem; color: var(--primary);">📄 Datos del Contrato</h3>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Fecha de Inicio del Contrato *</label>
-                            <input type="date" id="startDate" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Duración del Contrato (años) *</label>
-                            <input type="number" id="duration" required min="1" placeholder="Ej: 2">
-                        </div>
-                        <div class="form-group">
-                            <label>Frecuencia de Actualización (meses) *</label>
-                            <input type="number" id="updateFrequency" required min="1" max="12" placeholder="Ej: 3">
-                        </div>
-                        <div class="form-group">
-                            <label>Tipo de Índice *</label>
-                            <select id="indexType" required>
-                                <option value="">Seleccionar...</option>
-                                <option value="IPC">IPC - Índice de Precios al Consumidor</option>
-                                <option value="ICL">ICL - Índice Contratos de Locación</option>
-                                <option value="FIXED">Porcentaje Fijo</option>
-                            </select>
-                        </div>
-                        <div class="form-group" id="fixedPercentageGroup" style="display: none;">
-                            <label>Porcentaje de Aumento Fijo (%)</label>
-                            <input type="number" id="fixedPercentage" step="0.01" placeholder="Ej: 15.5">
-                        </div>
-                        <div class="form-group">
-                            <label>Monto Inicial del Contrato ($) *</label>
-                            <input type="number" id="initialAmount" required step="0.01" placeholder="Ej: 150000">
-                        </div>
-                        <div class="form-group">
-                            <label>¿Actualiza Depósito en Garantía? *</label>
-                            <select id="updatesDeposit" required>
-                                <option value="yes">Sí - Se actualiza con cada ajuste</option>
-                                <option value="no">No - Permanece fijo</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Estado del Contrato *</label>
-                            <select id="status" required>
-                                <option value="active">Activo</option>
-                                <option value="inactive">Finalizado</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="info-box">
-                        <strong>ℹ️ Información:</strong> El sistema calculará automáticamente las fechas de actualización, los montos según el índice seleccionado, y la fecha de finalización del contrato. Te avisará 10 días antes de cada actualización y 60 días antes del vencimiento. Recuerda cargar los índices IPC e ICL manualmente cada mes en la pestaña "Índices Actuales".
-                    </div>
-
-                    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
-                        <button type="button" class="btn btn-secondary" onclick="resetForm()">
-                            ❌ Cancelar
-                        </button>
-                        <button type="submit" class="btn btn-primary">
-                            💾 Guardar Contrato
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Indices Tab -->
-        <div id="indices" class="tab-content">
-            <div class="card" style="background: linear-gradient(135deg, rgba(43, 88, 118, 0.05) 0%, rgba(78, 137, 174, 0.05) 100%); border: 2px solid var(--primary);">
-                <div class="card-header">
-                    <h2 class="card-title">➕ Cargar Índices Mensuales</h2>
-                </div>
-
-                <div class="info-box" style="background: #fff3cd; border-left-color: var(--orange);">
-                    <strong>📝 Importante:</strong> Debes cargar manualmente los valores de IPC e ICL cada mes. Estos valores se utilizan para calcular las actualizaciones de alquiler. Puedes obtener los datos oficiales de INDEC o www.arquiler.com
-                </div>
-
-                <form onsubmit="saveIndices(event)" style="background: white; padding: 2rem; border-radius: 12px; border: 2px solid var(--border); margin-top: 1.5rem;">
-                    <h3 style="margin-bottom: 1.5rem; color: var(--primary); font-size: 1.2rem;">📊 Ingresar Índices del Mes</h3>
-                    <div class="indices-input-grid">
-                        <div class="form-group">
-                            <label>IPC Mensual (%) *</label>
-                            <input type="number" id="ipcInput" step="0.01" placeholder="Ej: 25.5" required style="font-size: 1.1rem; font-weight: 600;">
-                            <small style="color: var(--text-secondary); margin-top: 0.5rem; display: block;">Índice de Precios al Consumidor</small>
-                        </div>
-                        <div class="form-group">
-                            <label>ICL Mensual (%) *</label>
-                            <input type="number" id="iclInput" step="0.01" placeholder="Ej: 28.3" required style="font-size: 1.1rem; font-weight: 600;">
-                            <small style="color: var(--text-secondary); margin-top: 0.5rem; display: block;">Índice Contratos de Locación</small>
-                        </div>
-                        <div class="form-group">
-                            <label>Período (Mes/Año) *</label>
-                            <input type="month" id="periodInput" required style="font-size: 1.1rem; font-weight: 600;">
-                            <small style="color: var(--text-secondary); margin-top: 0.5rem; display: block;">Selecciona el mes correspondiente</small>
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-primary" style="margin-top: 1.5rem; font-size: 1.1rem; padding: 1.2rem 2.5rem;">
-                        ✅ Guardar Índices del Mes
-                    </button>
-                </form>
-            </div>
-
-            <div class="card" style="margin-top: 2rem;">
-                <div class="card-header">
-                    <h2 class="card-title">📈 Índices Vigentes para Cálculos</h2>
-                </div>
-
-                <div class="info-box">
-                    <strong>ℹ️ Índices Actuales:</strong> Estos son los últimos valores cargados que se usan para calcular las actualizaciones. Última carga: <span id="lastUpdate">---</span>
-                </div>
-
-                <div class="dashboard-grid">
-                    <div class="stat-card" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);">
-                        <div class="stat-card-icon">📊</div>
-                        <div class="stat-card-value" id="ipcValue">---</div>
-                        <div class="stat-card-label">IPC - Último mes (%)</div>
-                    </div>
-                    <div class="stat-card" style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);">
-                        <div class="stat-card-icon">📈</div>
-                        <div class="stat-card-value" id="iclValue">---</div>
-                        <div class="stat-card-label">ICL - Último mes (%)</div>
-                    </div>
-                </div>
-
-                <div class="card" style="margin-top: 2rem;">
-                    <h3 style="margin-bottom: 1rem;">📋 Histórico de Índices Cargados</h3>
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Período</th>
-                                    <th>IPC (%)</th>
-                                    <th>ICL (%)</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="indicesHistory">
-                                <tr>
-                                    <td colspan="4" style="text-align: center; padding: 2rem;">
-                                        No hay datos históricos. Agrega el primer registro arriba.
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- WhatsApp Message Modal -->
-    <div id="whatsappModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>💬 Mensajes de Actualización</h2>
-                <button class="close-modal" onclick="closeModal('whatsappModal')">×</button>
-            </div>
-
-            <div id="modalContent"></div>
-        </div>
-    </div>
-
-    <!-- Edit Contract Modal -->
-    <div id="editModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>✏️ Editar Contrato</h2>
-                <button class="close-modal" onclick="closeModal('editModal')">×</button>
-            </div>
-
-            <form id="editForm" onsubmit="updateContract(event)">
-                <input type="hidden" id="editId">
-                
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Dirección *</label>
-                        <input type="text" id="editAddress" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Propietario *</label>
-                        <input type="text" id="editOwnerName" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Tel. Propietario *</label>
-                        <input type="tel" id="editOwnerPhone" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Inquilino *</label>
-                        <input type="text" id="editTenantName" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Tel. Inquilino *</label>
-                        <input type="tel" id="editTenantPhone" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Fecha de Inicio *</label>
-                        <input type="date" id="editStartDate" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Monto Actual ($) *</label>
-                        <input type="number" id="editCurrentAmount" required step="0.01">
-                    </div>
-                    <div class="form-group">
-                        <label>Estado *</label>
-                        <select id="editStatus" required>
-                            <option value="active">Activo</option>
-                            <option value="inactive">Finalizado</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('editModal')">
-                        Cancelar
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        💾 Guardar Cambios
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <script>
-        // Storage and State Management
-        let contracts = JSON.parse(localStorage.getItem('contracts')) || [];
-        let indices = JSON.parse(localStorage.getItem('indices')) || { ipc: null, icl: null, lastUpdate: null };
-        let indicesHistory = JSON.parse(localStorage.getItem('indicesHistory')) || [];
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            loadIndices();
-            renderContracts();
-            updateDashboard();
-            checkAlerts();
-            
-            // Show index type conditional field
-            document.getElementById('indexType').addEventListener('change', function() {
-                const fixedGroup = document.getElementById('fixedPercentageGroup');
-                if (this.value === 'FIXED') {
-                    fixedGroup.style.display = 'block';
-                    document.getElementById('fixedPercentage').required = true;
-                } else {
-                    fixedGroup.style.display = 'none';
-                    document.getElementById('fixedPercentage').required = false;
-                }
-            });
-        });
-
-        // Tab Switching
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            
-            event.target.classList.add('active');
-            document.getElementById(tabName).classList.add('active');
-
-            if (tabName === 'contracts') {
-                renderContracts();
-            } else if (tabName === 'dashboard') {
-                updateDashboard();
-            } else if (tabName === 'indices') {
-                renderIndicesHistory();
-            }
-        }
-
-        // Save Indices
-        function saveIndices(event) {
-            event.preventDefault();
-
-            const ipc = parseFloat(document.getElementById('ipcInput').value);
-            const icl = parseFloat(document.getElementById('iclInput').value);
-            const period = document.getElementById('periodInput').value;
-
-            indices = {
-                ipc: ipc,
-                icl: icl,
-                lastUpdate: new Date().toISOString()
-            };
-
-            // Add to history
-            indicesHistory.unshift({
-                period: period,
-                ipc: ipc,
-                icl: icl,
-                date: new Date().toISOString()
-            });
-
-            // Keep only last 12 months
-            if (indicesHistory.length > 12) {
-                indicesHistory = indicesHistory.slice(0, 12);
-            }
-
-            localStorage.setItem('indices', JSON.stringify(indices));
-            localStorage.setItem('indicesHistory', JSON.stringify(indicesHistory));
-
-            loadIndices();
-            renderIndicesHistory();
-            alert('✅ Índices guardados correctamente');
-            
-            // Clear form
-            document.getElementById('ipcInput').value = '';
-            document.getElementById('iclInput').value = '';
-            document.getElementById('periodInput').value = '';
-        }
-
-        // Load Indices
-        function loadIndices() {
-            document.getElementById('ipcValue').textContent = indices.ipc ? `${indices.ipc}%` : '---';
-            document.getElementById('iclValue').textContent = indices.icl ? `${indices.icl}%` : '---';
-            document.getElementById('lastUpdate').textContent = indices.lastUpdate ? formatDate(indices.lastUpdate) : '---';
-        }
-
-        // Render Indices History
-        function renderIndicesHistory() {
-            const tbody = document.getElementById('indicesHistory');
-
-            if (indicesHistory.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="4" style="text-align: center; padding: 2rem;">
-                            No hay datos históricos. Agrega el primer registro arriba.
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-
-            tbody.innerHTML = indicesHistory.map((item, index) => `
-                <tr>
-                    <td><strong>${formatPeriod(item.period)}</strong></td>
-                    <td>${item.ipc}%</td>
-                    <td>${item.icl}%</td>
-                    <td>
-                        <button class="btn-icon" onclick="deleteIndexHistory(${index})" title="Eliminar">
-                            🗑️
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        // Delete Index History
-        function deleteIndexHistory(index) {
-            if (!confirm('¿Eliminar este registro histórico?')) return;
-            
-            indicesHistory.splice(index, 1);
-            localStorage.setItem('indicesHistory', JSON.stringify(indicesHistory));
-            renderIndicesHistory();
-        }
-
-        // Format Period (YYYY-MM to readable format)
-        function formatPeriod(period) {
-            const [year, month] = period.split('-');
-            const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
-                           'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-            return `${months[parseInt(month) - 1]} ${year}`;
-        }
-
-        // Save Contract
-        function saveContract(event) {
-            event.preventDefault();
-
-            const startDate = document.getElementById('startDate').value;
-            const duration = parseInt(document.getElementById('duration').value);
-            
-            // Calculate end date
-            const endDate = new Date(startDate);
-            endDate.setFullYear(endDate.getFullYear() + duration);
-
-            const contract = {
-                id: Date.now(),
-                address: document.getElementById('address').value,
-                ownerName: document.getElementById('ownerName').value,
-                ownerPhone: document.getElementById('ownerPhone').value,
-                ownerEmail: document.getElementById('ownerEmail').value,
-                tenantName: document.getElementById('tenantName').value,
-                tenantPhone: document.getElementById('tenantPhone').value,
-                tenantEmail: document.getElementById('tenantEmail').value,
-                startDate: startDate,
-                endDate: endDate.toISOString().split('T')[0],
-                duration: duration,
-                updateFrequency: parseInt(document.getElementById('updateFrequency').value),
-                indexType: document.getElementById('indexType').value,
-                fixedPercentage: document.getElementById('indexType').value === 'FIXED' ? 
-                    parseFloat(document.getElementById('fixedPercentage').value) : null,
-                initialAmount: parseFloat(document.getElementById('initialAmount').value),
-                currentAmount: parseFloat(document.getElementById('initialAmount').value),
-                updatesDeposit: document.getElementById('updatesDeposit').value,
-                currentDeposit: parseFloat(document.getElementById('initialAmount').value),
-                status: document.getElementById('status').value,
-                lastUpdate: startDate,
-                updateHistory: []
-            };
-
-            contracts.push(contract);
-            localStorage.setItem('contracts', JSON.stringify(contracts));
-
-            alert('✅ Contrato guardado exitosamente');
-            resetForm();
-            switchTab('contracts');
-            renderContracts();
-            updateDashboard();
-        }
-
-        // Calculate Next Update Date
-        function calculateNextUpdate(contract) {
-            const lastUpdate = new Date(contract.lastUpdate);
-            lastUpdate.setMonth(lastUpdate.getMonth() + contract.updateFrequency);
-            return lastUpdate;
-        }
-
-        // Calculate Contract End Date
-        function calculateEndDate(contract) {
-            return new Date(contract.endDate);
-        }
-
-        // Check if Contract is Expiring (within 60 days)
-        function isExpiring(endDate) {
-            const today = new Date();
-            const end = new Date(endDate);
-            const diffTime = end - today;
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            return diffDays >= 0 && diffDays <= 60;
-        }
-
-        // Calculate New Amount
-        function calculateNewAmount(contract) {
-            if (contract.indexType === 'FIXED') {
-                return contract.currentAmount * (1 + contract.fixedPercentage / 100);
-            }
-            
-            const index = contract.indexType === 'IPC' ? indices.ipc : indices.icl;
-            if (!index) return contract.currentAmount;
-            
-            return contract.currentAmount * (1 + index / 100);
-        }
-
-        // Calculate New Deposit
-        function calculateNewDeposit(contract) {
-            if (!contract.updatesDeposit || contract.updatesDeposit === 'no') {
-                return contract.currentDeposit || contract.initialAmount;
-            }
-            // If updates deposit, it should equal the new rental amount
-            return calculateNewAmount(contract);
-        }
-
-        // Check if Update is Urgent (within 10 days)
-        function isUrgent(nextUpdateDate) {
-            const today = new Date();
-            const update = new Date(nextUpdateDate);
-            const diffTime = update - today;
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            return diffDays >= 0 && diffDays <= 10;
-        }
-
-        // Get Days Until Update
-        function getDaysUntil(nextUpdateDate) {
-            const today = new Date();
-            const update = new Date(nextUpdateDate);
-            const diffTime = update - today;
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            return diffDays;
-        }
-
-        // Format Currency
-        function formatCurrency(amount) {
-            return new Intl.NumberFormat('es-AR', {
-                style: 'currency',
-                currency: 'ARS',
-                minimumFractionDigits: 2
-            }).format(amount);
-        }
-
-        // Format Date
-        function formatDate(dateString) {
-            return new Date(dateString).toLocaleDateString('es-AR', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-        }
-
-        // Render Contracts Table
-        function renderContracts() {
-            const tbody = document.getElementById('contractsBody');
-            const activeContracts = contracts.filter(c => c.status === 'active');
-
-            if (activeContracts.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="9">
-                            <div class="empty-state">
-                                <div class="empty-state-icon">📋</div>
-                                <h3>No hay contratos registrados</h3>
-                                <p>Comienza agregando tu primer contrato de alquiler</p>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-
-            tbody.innerHTML = activeContracts.map(contract => {
-                const nextUpdate = calculateNextUpdate(contract);
-                const newAmount = calculateNewAmount(contract);
-                const urgent = isUrgent(nextUpdate);
-                const daysUntil = getDaysUntil(nextUpdate);
-
-                return `
-                    <tr class="${urgent ? 'urgent' : ''}">
-                        <td><strong>${contract.address}</strong></td>
-                        <td>${contract.ownerName}</td>
-                        <td>${contract.tenantName}</td>
-                        <td><strong>${formatCurrency(contract.currentAmount)}</strong></td>
-                        <td>
-                            <span class="badge badge-${contract.indexType.toLowerCase()}">
-                                ${contract.indexType}
-                            </span>
-                        </td>
-                        <td>
-                            ${formatDate(nextUpdate)}
-                            ${urgent ? `<br><span class="badge badge-urgent">⚠️ ${daysUntil} días</span>` : ''}
-                        </td>
-                        <td><strong>${formatCurrency(newAmount)}</strong></td>
-                        <td>
-                            <span class="badge badge-${contract.status === 'active' ? 'active' : 'inactive'}">
-                                ${contract.status === 'active' ? 'Activo' : 'Finalizado'}
-                            </span>
-                        </td>
-                        <td>
-                            <div class="actions">
-                                <button class="btn-icon" onclick="generateWhatsAppMessage(${contract.id})" title="Generar mensaje WhatsApp">
-                                    💬
-                                </button>
-                                <button class="btn-icon" onclick="editContract(${contract.id})" title="Editar">
-                                    ✏️
-                                </button>
-                                <button class="btn-icon" onclick="deleteContract(${contract.id})" title="Eliminar">
-                                    🗑️
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        // Filter Contracts
-        function filterContracts() {
-            const status = document.getElementById('filterStatus').value;
-            const period = document.getElementById('filterPeriod').value;
-            const search = document.getElementById('searchInput').value.toLowerCase();
-
-            let filtered = contracts;
-
-            if (status !== 'all') {
-                filtered = filtered.filter(c => c.status === status);
-            }
-
-            if (period !== 'all') {
-                filtered = filtered.filter(c => {
-                    const nextUpdate = calculateNextUpdate(c);
-                    const endDate = calculateEndDate(c);
-                    const daysUntilUpdate = getDaysUntil(nextUpdate);
-                    const daysUntilExpiry = getDaysUntil(endDate);
-                    const today = new Date();
-                    const thisMonth = today.getMonth();
-                    const nextMonth = (today.getMonth() + 1) % 12;
-                    const updateMonth = nextUpdate.getMonth();
-
-                    if (period === 'urgent') return daysUntilUpdate >= 0 && daysUntilUpdate <= 10;
-                    if (period === 'expiring') return daysUntilExpiry >= 0 && daysUntilExpiry <= 60;
-                    if (period === 'thisMonth') return updateMonth === thisMonth;
-                    if (period === 'nextMonth') return updateMonth === nextMonth;
-                    return true;
-                });
-            }
-
-            if (search) {
-                filtered = filtered.filter(c => 
-                    c.address.toLowerCase().includes(search) ||
-                    c.ownerName.toLowerCase().includes(search) ||
-                    c.tenantName.toLowerCase().includes(search)
-                );
-            }
-
-            // Temporarily store filtered contracts for rendering
-            const originalContracts = contracts;
-            contracts = filtered;
-            renderContracts();
-            contracts = originalContracts;
-        }
-
-        // Generate WhatsApp Messages
-        function generateWhatsAppMessage(contractId) {
-            const contract = contracts.find(c => c.id === contractId);
-            if (!contract) return;
-
-            const nextUpdate = calculateNextUpdate(contract);
-            const newAmount = calculateNewAmount(contract);
-            const newDeposit = calculateNewDeposit(contract);
-            const increase = newAmount - contract.currentAmount;
-            const increasePercent = (increase / contract.currentAmount * 100).toFixed(2);
-            
-            const currentDeposit = contract.currentDeposit || contract.initialAmount;
-            const depositIncrease = newDeposit - currentDeposit;
-            const depositUpdates = contract.updatesDeposit === 'yes';
-
-            let depositInfo = depositUpdates ? 
-                `• Depósito actual: ${formatCurrency(currentDeposit)}
-• Nuevo depósito: ${formatCurrency(newDeposit)}
-• Incremento depósito: ${formatCurrency(depositIncrease)}` : 
-                `• Depósito en garantía: ${formatCurrency(currentDeposit)} (sin cambios)`;
-
-            const ownerMessage = `Hola ${contract.ownerName},
-
-Le informo que el contrato de alquiler de la propiedad ubicada en ${contract.address} se actualizará el próximo ${formatDate(nextUpdate)}.
-
-Datos de la actualización:
-• Monto alquiler actual: ${formatCurrency(contract.currentAmount)}
-• Nuevo monto alquiler: ${formatCurrency(newAmount)}
-• Incremento: ${formatCurrency(increase)} (${increasePercent}%)
-• Índice aplicado: ${contract.indexType}
-${depositInfo}
-
-El inquilino será notificado de este ajuste.
-
-Saludos cordiales,
-Inmobiliaria`;
-
-            const tenantMessage = `Hola ${contract.tenantName},
-
-Le informo que el alquiler de ${contract.address} se actualizará el próximo ${formatDate(nextUpdate)}.
-
-Datos de la actualización:
-• Monto alquiler actual: ${formatCurrency(contract.currentAmount)}
-• Nuevo monto alquiler: ${formatCurrency(newAmount)}
-• Incremento: ${formatCurrency(increase)} (${increasePercent}%)
-• Índice aplicado: ${contract.indexType}
-${depositInfo}
-
-El nuevo monto será efectivo a partir de la fecha indicada.${depositUpdates ? '\nEl depósito en garantía debe ser actualizado según el nuevo monto de alquiler.' : ''}
-
-Saludos cordiales,
-Administración`;
-
-            document.getElementById('modalContent').innerHTML = `
-                <div class="whatsapp-message">
-                    <h4>📱 Mensaje para el Propietario</h4>
-                    <div class="message-text">${ownerMessage}</div>
-                    <button class="copy-btn" onclick="copyToClipboard(\`${ownerMessage.replace(/`/g, '\\`')}\`, 'propietario')">
-                        📋 Copiar mensaje
-                    </button>
-                </div>
-
-                <div class="whatsapp-message">
-                    <h4>📱 Mensaje para el Inquilino</h4>
-                    <div class="message-text">${tenantMessage}</div>
-                    <button class="copy-btn" onclick="copyToClipboard(\`${tenantMessage.replace(/`/g, '\\`')}\`, 'inquilino')">
-                        📋 Copiar mensaje
-                    </button>
-                </div>
             `;
-
-            document.getElementById('whatsappModal').classList.add('show');
-        }
-
-        // Generate Expiration Messages
-        function generateExpirationMessages(contractId) {
-            const contract = contracts.find(c => c.id === contractId);
-            if (!contract) return;
-
-            const endDate = calculateEndDate(contract);
-            const daysUntilExpiry = getDaysUntil(endDate);
-
-            const ownerExpirationMessage = `Hola ${contract.ownerName},
-
-Le recordamos que el contrato de alquiler de la propiedad ubicada en ${contract.address} finalizará el ${formatDate(endDate)}.
-
-Faltan ${daysUntilExpiry} días para el vencimiento del contrato.
-
-Por favor, indíquenos si desea renovar el contrato o finalizar la relación locativa. De acuerdo a la normativa vigente, el inquilino debe ser notificado con la debida antelación.
-
-Quedamos a su disposición.
-
-Saludos cordiales,
-Inmobiliaria`;
-
-            const tenantExpirationMessage = `Hola ${contract.tenantName},
-
-Por medio de la presente le informamos que el contrato de alquiler de ${contract.address} finalizará el ${formatDate(endDate)}.
-
-Faltan ${daysUntilExpiry} días para el vencimiento del contrato.
-
-Conforme a lo establecido en la Ley 27.551, le notificamos formalmente sobre la proximidad del vencimiento contractual. Por favor, indíquenos su intención respecto a:
-• Renovación del contrato
-• Finalización de la locación
-
-Quedamos a su disposición para coordinar los detalles.
-
-Saludos cordiales,
-Administración`;
-
-            document.getElementById('modalContent').innerHTML = `
-                <div class="whatsapp-message warning">
-                    <h4>📅 Vencimiento - Mensaje para el Propietario</h4>
-                    <div class="message-text">${ownerExpirationMessage}</div>
-                    <button class="copy-btn" onclick="copyToClipboard(\`${ownerExpirationMessage.replace(/`/g, '\\`')}\`, 'propietario (vencimiento)')">
-                        📋 Copiar mensaje
-                    </button>
-                </div>
-
-                <div class="whatsapp-message warning">
-                    <h4>📅 Vencimiento - Mensaje para el Inquilino</h4>
-                    <div class="message-text">${tenantExpirationMessage}</div>
-                    <button class="copy-btn" onclick="copyToClipboard(\`${tenantExpirationMessage.replace(/`/g, '\\`')}\`, 'inquilino (vencimiento)')">
-                        📋 Copiar mensaje
-                    </button>
-                </div>
-            `;
-
-            document.getElementById('whatsappModal').classList.add('show');
-        }
-
-        // Copy to Clipboard
-        function copyToClipboard(text, recipient) {
-            navigator.clipboard.writeText(text).then(() => {
-                alert(`✅ Mensaje para ${recipient} copiado al portapapeles`);
-            });
-        }
-
-        // Edit Contract
-        function editContract(contractId) {
-            const contract = contracts.find(c => c.id === contractId);
-            if (!contract) return;
-
-            document.getElementById('editId').value = contract.id;
-            document.getElementById('editAddress').value = contract.address;
-            document.getElementById('editOwnerName').value = contract.ownerName;
-            document.getElementById('editOwnerPhone').value = contract.ownerPhone;
-            document.getElementById('editTenantName').value = contract.tenantName;
-            document.getElementById('editTenantPhone').value = contract.tenantPhone;
-            document.getElementById('editStartDate').value = contract.startDate;
-            document.getElementById('editCurrentAmount').value = contract.currentAmount;
-            document.getElementById('editStatus').value = contract.status;
-
-            document.getElementById('editModal').classList.add('show');
-        }
-
-        // Update Contract
-        function updateContract(event) {
-            event.preventDefault();
-
-            const id = parseInt(document.getElementById('editId').value);
-            const contract = contracts.find(c => c.id === id);
-
-            const newStartDate = document.getElementById('editStartDate').value;
-            
-            // Recalculate end date if start date changed
-            if (newStartDate !== contract.startDate) {
-                const endDate = new Date(newStartDate);
-                endDate.setFullYear(endDate.getFullYear() + contract.duration);
-                contract.endDate = endDate.toISOString().split('T')[0];
-                contract.startDate = newStartDate;
-            }
-
-            contract.address = document.getElementById('editAddress').value;
-            contract.ownerName = document.getElementById('editOwnerName').value;
-            contract.ownerPhone = document.getElementById('editOwnerPhone').value;
-            contract.tenantName = document.getElementById('editTenantName').value;
-            contract.tenantPhone = document.getElementById('editTenantPhone').value;
-            contract.currentAmount = parseFloat(document.getElementById('editCurrentAmount').value);
-            contract.status = document.getElementById('editStatus').value;
-
-            localStorage.setItem('contracts', JSON.stringify(contracts));
-
-            alert('✅ Contrato actualizado exitosamente');
-            closeModal('editModal');
-            renderContracts();
-            updateDashboard();
-        }
-
-        // Delete Contract
-        function deleteContract(contractId) {
-            if (!confirm('¿Está seguro de eliminar este contrato?')) return;
-
-            contracts = contracts.filter(c => c.id !== contractId);
-            localStorage.setItem('contracts', JSON.stringify(contracts));
-
-            alert('✅ Contrato eliminado');
-            renderContracts();
-            updateDashboard();
         }
 
         // Update Dashboard
@@ -1680,25 +1209,22 @@ Administración`;
             
             let urgentCount = 0;
             let expiringCount = 0;
-            let totalValue = 0;
-
+            
             activeContracts.forEach(contract => {
                 const nextUpdate = calculateNextUpdate(contract);
                 const endDate = calculateEndDate(contract);
-                const daysUntilUpdate = getDaysUntil(nextUpdate);
-                const daysUntilExpiry = getDaysUntil(endDate);
-
-                if (daysUntilUpdate >= 0 && daysUntilUpdate <= 10) urgentCount++;
-                if (daysUntilExpiry >= 0 && daysUntilExpiry <= 60) expiringCount++;
-                totalValue += contract.currentAmount;
+                
+                if (isUrgent(nextUpdate)) urgentCount++;
+                if (isExpiring(endDate)) expiringCount++;
             });
-
-            document.getElementById('totalContracts').textContent = activeContracts.length;
-            document.getElementById('urgentContracts').textContent = urgentCount;
+            
+            document.getElementById('headerTotalContracts').textContent = activeContracts.length;
+            document.getElementById('headerUrgent').textContent = urgentCount;
+            document.getElementById('headerExpiring').textContent = expiringCount;
+            
             document.getElementById('dashTotalContracts').textContent = activeContracts.length;
             document.getElementById('dashUrgent').textContent = urgentCount;
             document.getElementById('dashExpiring').textContent = expiringCount;
-            document.getElementById('dashTotalValue').textContent = formatCurrency(totalValue);
 
             renderUpcomingUpdates();
             renderUpcomingExpirations();
@@ -1873,13 +1399,14 @@ Administración`;
         function exportToCSV() {
             const activeContracts = contracts.filter(c => c.status === 'active');
             
-            let csv = 'Dirección,Propietario,Tel. Propietario,Inquilino,Tel. Inquilino,Monto Actual,Índice,Próxima Actualización,Nuevo Monto,Estado\n';
+            let csv = 'Dirección,Propietario,Tel. Propietario,Inquilino,Tel. Inquilino,Monto Actual,Índice,Próxima Actualización,Nuevo Monto,Fecha Finalización,Estado\n';
             
             activeContracts.forEach(contract => {
                 const nextUpdate = calculateNextUpdate(contract);
                 const newAmount = calculateNewAmount(contract);
+                const endDate = calculateEndDate(contract);
                 
-                csv += `"${contract.address}","${contract.ownerName}","${contract.ownerPhone}","${contract.tenantName}","${contract.tenantPhone}",${contract.currentAmount},"${contract.indexType}","${formatDate(nextUpdate)}",${newAmount},"${contract.status}"\n`;
+                csv += `"${contract.address}","${contract.ownerName}","${contract.ownerPhone}","${contract.tenantName}","${contract.tenantPhone}",${contract.currentAmount},"${contract.indexType}","${formatDate(nextUpdate)}",${newAmount},"${formatDate(endDate)}","${contract.status}"\n`;
             });
 
             const blob = new Blob([csv], { type: 'text/csv' });

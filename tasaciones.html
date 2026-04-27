@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tasaciones — Cristian Sanchez Propiedades</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="logger.js"></script>
+    <script src="shared.js"></script>
+    <script src="supabase.js"></script>
+<style>
+:root{
+    --bg:#0f1117;--bg2:#161b27;--bg3:#1e2535;
+    --border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.14);
+    --txt:#e8eaf0;--muted:#6b7280;--acc:#f57c00;--soft:rgba(245,124,0,.12);
+    --ok:#10b981;--warn:#f59e0b;--danger:#ef4444;--info:#4f8ef7;
+    --gh:linear-gradient(135deg,rgba(30,37,53,.98),rgba(22,27,39,.98));
+    --tr:.18s ease;--sh:0 20px 60px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px;background:var(--bg)}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh}
+body::before{content:'';position:fixed;top:0;left:0;right:0;height:400px;background:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(245,124,0,.08),transparent);pointer-events:none;z-index:0}
+
+.hdr{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:.7rem 1.5rem;background:var(--gh);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);gap:1rem;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:.75rem}
+.logo-icon{width:36px;height:36px;background:var(--soft);border:1px solid rgba(245,124,0,.3);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-text h1{font-size:.92rem;font-weight:700}
+.logo-text span{font-size:.68rem;color:var(--muted)}
+.hdr-right{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.btn-nav{background:var(--soft);color:var(--acc);border:1px solid rgba(245,124,0,.25);border-radius:8px;padding:.38rem .85rem;font-size:.78rem;font-weight:600;cursor:pointer;text-decoration:none;font-family:inherit;display:inline-flex;align-items:center;gap:.4rem}
+.btn-nav:hover{background:rgba(245,124,0,.2)}
+.btn-prim{background:var(--acc);color:#fff;border:none;border-radius:8px;padding:.42rem 1rem;font-size:.82rem;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-prim:hover{opacity:.88}
+.btn-sm{background:var(--bg3);color:var(--txt);border:1px solid var(--border2);border-radius:7px;padding:.32rem .75rem;font-size:.78rem;cursor:pointer;font-family:inherit}
+.btn-sm:hover{background:rgba(255,255,255,.06)}
+.btn-danger-sm{background:rgba(239,68,68,.1);color:var(--danger);border:1px solid rgba(239,68,68,.25);border-radius:7px;padding:.32rem .75rem;font-size:.78rem;cursor:pointer;font-family:inherit}
+
+.summary{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.sum-item{display:flex;flex-direction:column;justify-content:center;padding:.5rem 1.1rem;border-right:1px solid var(--border)}
+.sum-item:last-child{border-right:none}
+.sum-lbl{font-size:.6rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:600}
+.sum-val{font-size:.9rem;font-weight:700;margin-top:1px}
+
+.filters{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;padding:.7rem 1.5rem;background:var(--bg2);border-bottom:1px solid var(--border)}
+.sel-filter{background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:.3rem .6rem;color:var(--txt);font-size:.78rem;font-family:inherit;cursor:pointer;color-scheme:dark}
+.sel-filter option{background:#1c1c2e;color:#e8eaf0}
+.inp-search{background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:.3rem .7rem;color:var(--txt);font-size:.78rem;font-family:inherit;width:180px}
+.inp-search:focus{outline:none;border-color:var(--acc)}
+
+.content{padding:1.25rem 1.5rem;position:relative;z-index:1}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.8rem;min-width:860px}
+thead tr{background:var(--bg2)}
+th{padding:.5rem .75rem;text-align:left;font-size:.67rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:.48rem .75rem;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}
+tbody tr:hover td{background:rgba(255,255,255,.02)}
+tbody tr.alerta-amarilla td{background:rgba(245,197,24,.06);border-left:3px solid rgba(245,197,24,.4)}
+tbody tr.alerta-naranja td{background:rgba(245,124,0,.08);border-left:3px solid rgba(245,124,0,.4)}
+.badge-estado{font-size:.68rem;padding:2px 8px;border-radius:20px;font-weight:600;white-space:nowrap;display:inline-block}
+.dir-cell{font-weight:600;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dir-sub{font-size:.7rem;color:var(--muted);margin-top:1px}
+.leyenda{display:flex;gap:1rem;font-size:.72rem;color:var(--muted);margin-left:auto}
+.ley-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:4px}
+.empty-msg{text-align:center;padding:3rem;color:var(--muted);font-size:.85rem}
+.tabs-bar{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);padding:0 1.5rem;gap:0}
+.tab-btn{padding:.65rem 1.25rem;font-size:.82rem;font-weight:600;color:var(--muted);background:none;border:none;border-bottom:2.5px solid transparent;cursor:pointer;font-family:inherit;transition:color var(--tr),border-color var(--tr)}
+.tab-btn:hover{color:var(--txt)}
+.tab-btn.active{color:var(--acc);border-bottom-color:var(--acc)}
+.tab-panel{display:none}.tab-panel.active{display:block}
+.hist-nav{display:flex;align-items:center;gap:.75rem;padding:.75rem 0;margin-bottom:.5rem}
+.hist-nav button{background:var(--bg3);border:1px solid var(--border2);color:var(--txt);border-radius:7px;width:32px;height:32px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center}
+.hist-nav button:hover{background:rgba(255,255,255,.08)}
+.hist-year{font-size:1rem;font-weight:700;min-width:55px;text-align:center}
+.hist-count{font-size:.75rem;color:var(--muted)}
+
+/* Modales */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:1000;align-items:center;justify-content:center;padding:1rem}
+.overlay.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:580px;max-height:90vh;overflow-y:auto;box-shadow:var(--sh)}
+.modal-lg{max-width:760px}
+.modal-hdr{padding:1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg2);z-index:2}
+.modal-hdr h2{font-size:.95rem;font-weight:700}
+.modal-close{background:none;border:none;color:var(--muted);font-size:1.4rem;cursor:pointer;line-height:1}
+.modal-body{padding:1.25rem 1.5rem}
+.modal-footer{padding:.9rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:.5rem}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.fl{display:flex;flex-direction:column;gap:.3rem}
+.fl.full{grid-column:1/-1}
+.fl label{font-size:.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
+.inp,.ta,.sel{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:.45rem .7rem;color:var(--txt);font-size:.84rem;font-family:inherit;width:100%}
+.inp:focus,.ta:focus,.sel:focus{outline:none;border-color:var(--acc)}
+.sel{color-scheme:dark}
+.sel option{background:#1c1c2e;color:#e8eaf0}
+.ta{resize:vertical;min-height:60px}
+
+/* Seguimiento */
+.contacto-item{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:.6rem .85rem;font-size:.8rem;display:flex;gap:.75rem;align-items:flex-start;margin-bottom:.4rem}
+.cont-fecha{font-size:.7rem;color:var(--muted);white-space:nowrap;min-width:65px}
+.cont-tipo{font-size:.68rem;font-weight:600;padding:1px 7px;border-radius:10px;background:rgba(79,142,247,.12);color:var(--info);white-space:nowrap}
+.precio-chip{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:.3rem .65rem;font-size:.75rem;display:inline-flex;flex-direction:column;gap:1px;margin-right:.35rem;margin-bottom:.35rem}
+.precio-chip .pf{font-size:.65rem;color:var(--muted)}
+.precio-chip .pv{font-weight:700;color:var(--ok)}
+
+.tc{position:fixed;top:1rem;right:1rem;z-index:9999;display:flex;flex-direction:column;gap:.5rem;pointer-events:none}
+.toast{padding:.7rem 1.1rem;border-radius:10px;font-size:.82rem;font-weight:500;background:var(--bg3);border:1px solid var(--border2);color:var(--txt);box-shadow:var(--sh);pointer-events:all}
+.toast.ok{border-color:rgba(16,185,129,.4);color:var(--ok)}
+.toast.err{border-color:rgba(239,68,68,.4);color:var(--danger)}
+#lb{position:fixed;top:0;left:0;right:0;padding:.35rem 1rem;background:rgba(245,124,0,.92);color:#fff;font-size:.8rem;font-weight:600;text-align:center;z-index:9000;display:none}
+</style>
+  <style id="gs-hdr-css">
+    .app-hdr{position:sticky;top:0;z-index:300;display:flex;align-items:center;justify-content:space-between;padding:.55rem 1.4rem;background:linear-gradient(135deg,#0d0d0d 0%,#1a1206 50%,#0d0d0d 100%);border-bottom:1px solid rgba(255,255,255,.08);backdrop-filter:blur(20px);gap:.8rem;flex-wrap:wrap}
+    .app-hdr-logo{display:flex;align-items:center;gap:.65rem;text-decoration:none;flex-shrink:0}
+    .app-hdr-ico{width:34px;height:34px;flex-shrink:0;border-radius:9px;overflow:hidden;border:1px solid rgba(245,124,0,.35);padding:2px;background:rgba(245,124,0,.1)}
+    .app-hdr-ico svg{width:100%;height:100%;display:block}
+    .app-hdr-name{font-family:'Inter',-apple-system,sans-serif;font-size:.88rem;font-weight:700;color:#fff;line-height:1.2}
+    .app-hdr-sub{font-family:'Inter',-apple-system,sans-serif;font-size:.64rem;color:#717171;line-height:1}
+    .app-hdr-nav{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
+    .nav-lnk{display:inline-flex;align-items:center;gap:.3rem;padding:.35rem .75rem;border-radius:8px;font-family:'Inter',-apple-system,sans-serif;font-size:.76rem;font-weight:600;color:rgba(245,124,0,.85);background:rgba(245,124,0,.1);border:1px solid rgba(245,124,0,.22);text-decoration:none;transition:background .15s;white-space:nowrap}
+    .nav-lnk:hover{background:rgba(245,124,0,.22);color:#f57c00;border-color:rgba(245,124,0,.45)}
+    .nav-lnk.active{background:rgba(245,124,0,.25);color:#ff9800;border-color:rgba(245,124,0,.6)}
+    .nav-font{display:flex;align-items:center;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;overflow:hidden;flex-shrink:0}
+    .nav-font button{background:none;border:none;color:#b0b0b0;cursor:pointer;padding:.28rem .48rem;font-family:'Inter',-apple-system,sans-serif;font-size:.8rem;font-weight:600}
+    .nav-font button:hover{color:#f57c00;background:rgba(245,124,0,.1)}
+    .wa-phone-link{color:#378ADD;text-decoration:none;cursor:pointer}
+    .wa-phone-link:hover{text-decoration:underline;color:#25d366}
+  </style>
+</head>
+<body>
+<div id="lb"></div>
+<div class="tc" id="tc"></div>
+
+<header class="app-hdr">
+  <a href="index.html" class="app-hdr-logo">
+    <div class="app-hdr-ico"><svg viewBox="0 0 1532.9 1229.94" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><path fill="#f39200" d="M766.45,39.94L54.91,353.68h229.76c-3.51,0-6.36,3-6.36,6.7v677.09c0,72.57,55.77,131.39,124.57,131.39h788.13c35.1,0,63.56-30.01,63.56-67.04V353.68h223.41L766.45,39.94Z"/><path fill="#fff" d="M786.94,398.11v186.57h-13.66c-10.28-48.68-29.43-86-57.45-111.94-28.03-25.94-59.78-38.9-95.28-38.9-29.66,0-56.87,9.66-81.61,28.98-24.75,19.32-42.86,44.59-54.3,75.82-14.71,39.96-22.06,84.42-22.06,133.39s5.37,92.03,16.11,131.59c10.75,39.57,27.55,69.47,50.44,89.72,22.89,20.25,52.55,30.37,88.97,30.37,29.89,0,57.27-7.4,82.14-22.23,24.88-14.82,51.09-40.35,78.64-76.62v46.45c-26.62,31.5-54.35,54.33-83.19,68.48-28.84,14.15-62.52,21.24-101.06,21.24-50.67,0-95.69-11.51-135.04-34.54-39.35-23.03-69.7-56.11-91.07-99.24-21.37-43.13-32.06-89.06-32.06-137.75,0-51.34,11.85-100.05,35.56-146.09,23.7-46.05,55.69-81.77,95.98-107.19,40.28-25.4,83.07-38.11,128.38-38.11,33.39,0,68.65,8.21,105.79,24.61,21.48,9.53,35.14,14.29,40.98,14.29,7.47,0,13.95-3.11,19.43-9.33,5.48-6.21,9.05-16.07,10.69-29.57h13.66Z"/><path fill="#fff" d="M1163.15,398.11l3.85,179.43h-14.35c-6.78-44.99-23.42-81.18-49.92-108.57-26.51-27.39-55.17-41.08-85.99-41.08-23.82,0-42.68,7.21-56.57,21.63-13.9,14.42-20.85,31.03-20.85,49.82,0,11.92,2.45,22.5,7.36,31.76,6.77,12.44,17.63,24.75,32.58,36.92,10.98,8.73,36.31,24.22,76.01,46.45,55.57,30.96,93.05,60.21,112.44,87.74,19.15,27.52,28.73,59.02,28.73,94.48,0,45-15.47,83.7-46.41,116.12-30.95,32.43-70.23,48.63-117.87,48.63-14.95,0-29.07-1.72-42.39-5.16-13.31-3.45-30.01-9.92-50.09-19.45-11.21-5.3-20.44-7.94-27.68-7.94-6.07,0-12.49,2.64-19.26,7.94-6.77,5.3-12.27,13.36-16.46,24.22h-12.97v-203.26h12.97c10.27,57.17,30.06,100.77,59.37,130.81,29.3,30.04,60.89,45.05,94.75,45.05,26.15,0,46.99-8.07,62.52-24.22,15.53-16.14,23.29-34.93,23.29-56.37,0-12.7-2.97-25-8.93-36.92-5.96-11.91-15.01-23.22-27.15-33.94-12.14-10.72-33.62-24.67-64.45-41.88-43.21-24.07-74.26-44.59-93.18-61.53-18.91-16.94-33.45-35.86-43.61-56.77-10.16-20.9-15.24-43.93-15.24-69.07,0-42.88,13.89-79.4,41.69-109.57,27.78-30.17,62.81-45.26,105.08-45.26,15.41,0,30.36,2.13,44.84,6.36,10.97,3.17,24.34,9.06,40.11,17.66,15.76,8.6,26.79,12.9,33.1,12.9s10.86-2.12,14.36-6.35c3.5-4.23,6.77-14.42,9.81-30.57h10.51Z"/></svg></div>
+    <div><div class="app-hdr-name">Cristian Sanchez Propiedades</div>
+    <div class="app-hdr-sub">Administración de Alquileres</div></div>
+  </a>
+  <nav class="app-hdr-nav">
+    <a href="dashboard.html" class="nav-lnk">🏠 Dashboard</a>
+    <a href="ventas.html" class="nav-lnk">🏘️ Propiedades</a>
+    <a href="visitas.html" class="nav-lnk">📅 Visitas</a>
+    <a href="tasaciones.html" class="nav-lnk active">📋 Tasaciones</a>
+    <a href="banco.html" class="nav-lnk">👤 Banco</a>
+    <a href="index.html" class="nav-lnk">📄 Contratos</a>
+    <a href="administracion.html" class="nav-lnk">🧾 Administración</a>
+    <a href="configuracion.html" class="nav-lnk">⚙️ Configuración</a>
+    <div class="nav-font">
+      <button onclick="(function(){var fs=parseInt(localStorage.getItem('app_fs'))||15;fs=Math.max(11,fs-1);localStorage.setItem('app_fs',fs);document.documentElement.style.fontSize=fs+'px';})()" title="Reducir">A-</button>
+      <button onclick="(function(){localStorage.setItem('app_fs',15);document.documentElement.style.fontSize='15px';})()" title="Defecto">↺</button>
+      <button onclick="(function(){var fs=parseInt(localStorage.getItem('app_fs'))||15;fs=Math.min(20,fs+1);localStorage.setItem('app_fs',fs);document.documentElement.style.fontSize=fs+'px';})()" title="Agrandar">A+</button>
+    </div>
+  </nav>
+</header>
+
+<div class="summary">
+    <div class="sum-item"><span class="sum-lbl">Activas</span><span class="sum-val" style="color:var(--acc)" id="sTot">0</span></div>
+    <div class="sum-item"><span class="sum-lbl">En seguimiento</span><span class="sum-val" style="color:var(--info)" id="sSeg">0</span></div>
+    <div class="sum-item"><span class="sum-lbl">Tomadas</span><span class="sum-val" style="color:var(--ok)" id="sTom">0</span></div>
+    <div class="sum-item"><span class="sum-lbl">Alertas</span><span class="sum-val" style="color:var(--warn)" id="sAler">0</span></div>
+    <div class="sum-item"><span class="sum-lbl">Rechazadas</span><span class="sum-val" style="color:var(--muted)" id="sRech">0</span></div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs-bar">
+    <button class="tab-btn active" id="tabBtnActivas" onclick="TAS.cambiarTab('activas')">Activas</button>
+    <button class="tab-btn"        id="tabBtnHistorial" onclick="TAS.cambiarTab('historial')">Historial</button>
+</div>
+
+<!-- Panel: Activas -->
+<div class="tab-panel active" id="panelActivas">
+    <div class="filters">
+        <span style="font-size:.72rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.3px">Estado</span>
+        <select class="sel-filter" id="fEstado" onchange="TAS.render()">
+            <option value="">Todos</option>
+            <option value="en_seguimiento">En seguimiento</option>
+            <option value="tomada">Tomada</option>
+            <option value="rechazada">Rechazada</option>
+            <option value="otro">Otro</option>
+        </select>
+        <span style="font-size:.72rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.3px">Destino</span>
+        <select class="sel-filter" id="fDestino" onchange="TAS.render()">
+            <option value="">Todos</option>
+            <option value="venta">Venta</option>
+            <option value="alquiler">Alquiler</option>
+        </select>
+        <input class="inp-search" id="fBuscar" placeholder="Buscar dirección…" oninput="TAS.render()">
+        <button onclick="TAS.abrirNueva()" class="btn-prim" style="margin-left:auto;padding:.38rem 1rem;font-size:.8rem">+ Nueva Tasación</button>
+        <div class="leyenda">
+            <span><span class="ley-dot" style="background:rgba(245,197,24,.7)"></span><span id="leyAmari">7+ días</span></span>
+            <span><span class="ley-dot" style="background:rgba(245,124,0,.8)"></span><span id="leyNaran">15+ días</span></span>
+        </div>
+    </div>
+    <div class="content">
+        <div class="table-wrap">
+            <table>
+                <thead><tr>
+                    <th style="min-width:170px">Dirección</th>
+                    <th style="min-width:130px">Propietario</th>
+                    <th style="min-width:75px">Destino</th>
+                    <th style="min-width:100px">Rubro / Zona</th>
+                    <th style="min-width:105px">Valor tasado</th>
+                    <th style="min-width:105px">Val. pretendido</th>
+                    <th style="min-width:90px">Vendedor</th>
+                    <th style="min-width:90px">Últ. contacto</th>
+                    <th style="min-width:110px">Estado</th>
+                    <th style="min-width:100px">Acciones</th>
+                </tr></thead>
+                <tbody id="tbody"><tr><td colspan="10" class="empty-msg">Cargando…</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Panel: Historial -->
+<div class="tab-panel" id="panelHistorial">
+    <div class="content">
+        <div class="hist-nav">
+            <button onclick="TAS.histPrev()">←</button>
+            <span class="hist-year" id="histYear">2026</span>
+            <button onclick="TAS.histNext()">→</button>
+            <span class="hist-count" id="histCount"></span>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead><tr>
+                    <th style="min-width:90px">Fecha</th>
+                    <th style="min-width:60px">Hora</th>
+                    <th style="min-width:170px">Dirección</th>
+                    <th style="min-width:130px">Propietario</th>
+                    <th style="min-width:75px">Destino</th>
+                    <th style="min-width:100px">Rubro / Zona</th>
+                    <th style="min-width:105px">Valor tasado</th>
+                    <th style="min-width:90px">Vendedor</th>
+                    <th style="min-width:110px">Estado</th>
+                </tr></thead>
+                <tbody id="histBody"><tr><td colspan="9" class="empty-msg">Seleccioná el año</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Nueva / Editar Tasación -->
+<div class="overlay" id="modalTas">
+    <div class="modal">
+        <div class="modal-hdr">
+            <h2 id="tituloModal">Nueva Tasación</h2>
+            <button class="modal-close" onclick="TAS.cerrarModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="tId">
+            <div class="fg">
+                <div class="fl full"><label>Dirección *</label><input class="inp" type="text" id="tDir" placeholder="Av. Ejemplo 1234"></div>
+                <div class="fl"><label>Propietario *</label><input class="inp" type="text" id="tProp"></div>
+                <div class="fl"><label>Celular</label><input class="inp" type="tel" id="tCel"></div>
+                <div class="fl"><label>Fecha *</label><input class="inp" type="date" id="tFecha"></div>
+                <div class="fl"><label>Hora</label><input class="inp" type="time" id="tHora"></div>
+                <div class="fl"><label>Vendedor</label>
+                    <select class="sel" id="tVendedor"><option value="">— Sin asignar —</option></select>
+                </div>
+                <div class="fl"><label>Destino *</label>
+                    <select class="sel" id="tDestino">
+                        <option value="venta">Venta</option>
+                        <option value="alquiler">Alquiler</option>
+                    </select>
+                </div>
+                <div class="fl"><label>Rubro</label>
+                    <select class="sel" id="tTipo">
+                        <option value="departamento">Departamento</option>
+                        <option value="casa">Casa</option>
+                        <option value="ph">PH</option>
+                        <option value="local">Local</option>
+                        <option value="terreno">Terreno</option>
+                        <option value="oficina">Oficina</option>
+                        <option value="cochera">Cochera</option>
+                        <option value="galpon">Galpón</option>
+                        <option value="consultorio">Consultorio</option>
+                        <option value="otro">Otro</option>
+                    </select>
+                </div>
+                <div class="fl"><label>Zona</label>
+                    <select class="sel" id="tZona">
+                        <option value="">— Sin especificar —</option>
+                        <option value="floresta">Floresta</option>
+                        <option value="villa_del_parque">Villa del Parque</option>
+                        <option value="devoto">Villa Devoto</option>
+                        <option value="villa_urquiza">Villa Urquiza</option>
+                        <option value="flores">Flores</option>
+                        <option value="caballito">Caballito</option>
+                        <option value="villa_santa_rita">Villa Santa Rita</option>
+                        <option value="monte_castro">Monte Castro</option>
+                        <option value="villa_luro">Villa Luro</option>
+                        <option value="velez_sarsfield">Vélez Sársfield</option>
+                        <option value="parque_avellaneda">Parque Avellaneda</option>
+                        <option value="mataderos">Mataderos</option>
+                        <option value="liniers">Liniers</option>
+                        <option value="otra">Otra CABA</option>
+                    </select>
+                </div>
+                <div class="fl"><label>Superficie (m²)</label><input class="inp" type="number" id="tSup" min="0"></div>
+                <div class="fl"><label>Moneda</label>
+                    <select class="sel" id="tMoneda"><option value="USD">USD</option><option value="ARS">ARS</option></select>
+                </div>
+                <div class="fl"><label>Valor tasado</label><input class="inp" type="number" id="tValTas" min="0"></div>
+                <div class="fl"><label>Val. pretendido dueño</label><input class="inp" type="number" id="tValPret" min="0"></div>
+                <div class="fl full"><label>URL publicación</label><input class="inp" type="url" id="tUrl" placeholder="https://…"></div>
+                <div class="fl full"><label>Observaciones</label><textarea class="ta" id="tObs"></textarea></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-sm" onclick="TAS.cerrarModal()">Cancelar</button>
+            <button class="btn-prim" onclick="TAS.guardar()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Seguimiento -->
+<div class="overlay" id="modalSeg">
+    <div class="modal modal-lg">
+        <div class="modal-hdr">
+            <div>
+                <div id="segTitulo" style="font-size:.95rem;font-weight:700"></div>
+                <div id="segSub" style="font-size:.75rem;color:var(--muted);margin-top:2px"></div>
+            </div>
+            <button class="modal-close" onclick="TAS.cerrarSeg()">×</button>
+        </div>
+        <div class="modal-body">
+            <!-- Estado -->
+            <div style="margin-bottom:1rem">
+                <div style="font-size:.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-bottom:.5rem">Estado</div>
+                <div id="segEstados" style="display:flex;gap:.4rem;flex-wrap:wrap"></div>
+            </div>
+            <!-- Info rápida -->
+            <div id="segInfo" style="display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1rem;padding:.75rem;background:var(--bg3);border:1px solid var(--border);border-radius:10px;font-size:.8rem"></div>
+            <!-- Historial precios -->
+            <div style="margin-bottom:.75rem">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem">
+                    <span style="font-size:.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.3px">Historial de precios</span>
+                    <button class="btn-sm" style="font-size:.7rem;padding:.2rem .55rem" onclick="TAS.abrirPrecio()">+ Actualizar precio</button>
+                </div>
+                <div id="segPrecios"></div>
+                <div id="formPrecio" style="display:none;background:var(--bg3);border:1px solid var(--border2);border-radius:9px;padding:.75rem;margin-top:.4rem">
+                    <div style="display:flex;gap:.5rem;align-items:flex-end;flex-wrap:wrap">
+                        <div class="fl" style="flex:1;min-width:90px"><label>Moneda</label><select class="sel" id="pMon" style="font-size:.78rem"><option value="USD">USD</option><option value="ARS">ARS</option></select></div>
+                        <div class="fl" style="flex:2;min-width:110px"><label>Nuevo valor</label><input class="inp" type="number" id="pVal" min="0" style="font-size:.78rem"></div>
+                        <button class="btn-prim" style="font-size:.75rem;padding:.35rem .75rem" onclick="TAS.guardarPrecio()">Guardar</button>
+                        <button class="btn-sm" style="font-size:.75rem;padding:.35rem .75rem" onclick="TAS.cerrarPrecio()">Cancelar</button>
+                    </div>
+                </div>
+            </div>
+            <!-- Contactos -->
+            <div>
+                <div style="font-size:.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-bottom:.4rem">Historial de contactos</div>
+                <div id="segContactos" style="max-height:220px;overflow-y:auto;margin-bottom:.5rem"></div>
+                <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:.85rem">
+                    <div style="font-size:.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-bottom:.6rem">Registrar nuevo contacto</div>
+                    <div class="fg" style="grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin-bottom:.5rem">
+                        <div class="fl"><label>Fecha</label><input class="inp" type="date" id="cFecha" style="font-size:.78rem"></div>
+                        <div class="fl"><label>Tipo</label>
+                            <select class="sel" id="cTipo" style="font-size:.78rem">
+                                <option value="llamada">Llamada</option>
+                                <option value="visita">Visita</option>
+                                <option value="whatsapp">WhatsApp</option>
+                                <option value="email">Email</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                        </div>
+                        <div class="fl"><label>Resultado breve</label><input class="inp" type="text" id="cResult" style="font-size:.78rem"></div>
+                    </div>
+                    <div class="fl" style="margin-bottom:.5rem"><label>Observaciones</label><textarea class="ta" id="cNota" style="min-height:45px;font-size:.78rem"></textarea></div>
+                    <div style="text-align:right"><button class="btn-prim" style="font-size:.78rem;padding:.35rem .85rem" onclick="TAS.guardarContacto()">Agregar contacto</button></div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-sm" onclick="TAS.editarActual()">Editar datos</button>
+            <button class="btn-danger-sm" onclick="TAS.eliminarActual()">Eliminar</button>
+            <button class="btn-sm" onclick="TAS.cerrarSeg()">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Configurar Alertas -->
+<div class="overlay" id="modalAlertas">
+    <div class="modal" style="max-width:360px">
+        <div class="modal-hdr">
+            <h2>Días de alerta</h2>
+            <button class="modal-close" onclick="TAS.cerrarAlertas()">×</button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size:.8rem;color:var(--muted);margin-bottom:1rem">Cuántos días sin contacto activan cada nivel de alerta.</p>
+            <div class="fg" style="grid-template-columns:1fr 1fr">
+                <div class="fl"><label>Alerta amarilla (días)</label><input class="inp" type="number" id="aDias1" min="1" max="365" value="7"></div>
+                <div class="fl"><label>Alerta naranja (días)</label><input class="inp" type="number" id="aDias2" min="1" max="365" value="15"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-sm" onclick="TAS.cerrarAlertas()">Cancelar</button>
+            <button class="btn-prim" onclick="TAS.guardarAlertas()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  TASACIONES — Todo en objeto TAS para evitar conflictos de scope
+// ═══════════════════════════════════════════════════════════
+const TAS = (function() {
+
+    // ── Config ──────────────────────────────────────────────
+    const API = ''; // GAS eliminado v5
+    const VISITAS_API = ''; // GAS eliminado v5
+    const VENTAS_API  = ''; // GAS eliminado v5
+    const API_ON = true; // Siempre Supabase
+    const ALERTA_KEY = 'tas_alertas';
+    const LOCAL_KEY  = 'tas_data';
+
+    // ── Estado ──────────────────────────────────────────────
+    let lista = [];      // array de tasaciones
+    let segId = null;    // ID de la tasación en seguimiento
+
+    // ── Helpers ─────────────────────────────────────────────
+    const ge = id => document.getElementById(id);
+    const hoy = () => new Date().toISOString().slice(0,10);
+    const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+    const fmtFecha = s => s ? new Date(s+'T00:00:00').toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
+    const fmtMoney = (v,m) => v ? (m==='ARS'?'$':'U$D ')+Number(v).toLocaleString('es-AR') : '—';
+    const diasDesde = s => s ? Math.floor((Date.now() - new Date(s+'T00:00:00').getTime())/864e5) : 999;
+    const ultimoContacto = t => {
+        if(!t.contactos||!t.contactos.length) return t.fecha||hoy();
+        return [...t.contactos].sort((a,b)=>b.fecha.localeCompare(a.fecha))[0].fecha;
+    };
+    const getAlertas = () => {
+        try {
+            if (typeof GestShared !== 'undefined') {
+                const cfg = GestShared.getConfig();
+                return { d1: cfg.diasAlertaTasacion1, d2: cfg.diasAlertaTasacion2 };
+            }
+            return JSON.parse(localStorage.getItem(ALERTA_KEY)) || {d1:7,d2:15};
+        }
+        catch { return {d1:7,d2:15}; }
+    };
+    const getVendedores = () => {
+        if (typeof GestShared !== 'undefined') return GestShared.getVendedores();
+        try { return JSON.parse(localStorage.getItem('vendedores')||'[]'); } catch { return []; }
+    };
+
+    function toast(msg, tipo='ok') {
+        const t = document.createElement('div');
+        t.className = 'toast ' + tipo;
+        t.textContent = msg;
+        ge('tc').appendChild(t);
+        setTimeout(() => t.remove(), 3000);
+    }
+    function cargando(on, msg='') {
+        const lb = ge('lb');
+        lb.style.display = on ? 'block' : 'none';
+        if(msg) lb.textContent = msg;
+    }
+
+    // ── Persistencia ────────────────────────────────────────
+    // Guardar siempre en localStorage primero, luego intentar API
+    function guardarLocal() {
+        try { localStorage.setItem(LOCAL_KEY, JSON.stringify(lista)); } catch(e){ console.error("[Tasaciones]",e); }
+    }
+    async function apiCall(params) {
+        if(!API_ON) return {success:true};
+        const token = localStorage.getItem('gest_api_token')||'';
+        if(token) params=Object.assign({},params,{token});
+        const WRITES=new Set(['save','delete']);
+        const isWrite=WRITES.has(params.action||'');
+        try{
+            let r;
+            if(isWrite){r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams(params).toString()})}
+            else{r=await fetch(API+'?'+new URLSearchParams(params).toString())}
+            if(!r.ok)throw new Error('HTTP '+r.status);
+            return await r.json();
+        }catch(e){console.error('[Tasaciones API]',e);return null;}
+    }
+    async function cargar() {
+        // Cargar desde localStorage primero (respuesta inmediata)
+        const local = localStorage.getItem(LOCAL_KEY);
+        if(local) { try { lista = JSON.parse(local); } catch(e) { lista=[]; } }
+        // Cargar desde Supabase
+        try {
+            lista = await SupabaseDB.getTasaciones();
+            guardarLocal();
+        } catch(e) { console.warn('[Tasaciones] getAll error', e); }
+    }
+    async function guardarEnAPI(item) {
+        if(!API_ON) return;
+        try { await SupabaseDB.upsertTasacion(item); }
+        catch(e) { console.warn('API save error', e); }
+    }
+    async function eliminarEnAPI(id) {
+        if(!API_ON) return;
+        try { await SupabaseDB.deleteTasacion(id); }
+        catch(e) { console.warn('API delete error', e); }
+    }
+
+    // ── Render tabla ─────────────────────────────────────────
+    const ESTADOS = {
+        en_seguimiento: { label:'En seguimiento', bg:'rgba(79,142,247,.15)', color:'#4f8ef7', border:'rgba(79,142,247,.4)' },
+        tomada:         { label:'Tomada',          bg:'rgba(16,185,129,.15)', color:'#10b981', border:'rgba(16,185,129,.4)' },
+        rechazada:      { label:'Rechazada',       bg:'rgba(239,68,68,.12)',  color:'#ef4444', border:'rgba(239,68,68,.35)' },
+        otro:           { label:'Otro',            bg:'rgba(255,255,255,.06)',color:'#9ca3af', border:'rgba(255,255,255,.2)' },
+    };
+    const TIPOS_C = { llamada:'📞 Llamada', visita:'🏠 Visita', whatsapp:'💬 WhatsApp', email:'📧 Email', otro:'📝 Otro' };
+
+    function actualizarLeyenda() {
+        const a = getAlertas();
+        ge('leyAmari').textContent = a.d1 + '+ días';
+        ge('leyNaran').textContent = a.d2 + '+ días';
+    }
+
+    function render() {
+        actualizarLeyenda();
+        const fEst  = ge('fEstado').value;
+        const fDest = ge('fDestino').value;
+        const fBus  = ge('fBuscar').value.toLowerCase();
+        const a = getAlertas();
+
+        const filtrada = lista.filter(t => {
+            if(fEst  && t.estado !== fEst)  return false;
+            if(fDest && t.destino !== fDest) return false;
+            if(fBus  && !(t.direccion||'').toLowerCase().includes(fBus)) return false;
+            return true;
+        }).sort((a,b) => (b.fecha||'').localeCompare(a.fecha||''));
+
+        // Summary
+        const activas = lista.filter(t => t.estado !== 'rechazada');
+        ge('sTot').textContent  = activas.filter(t => !t.estado||t.estado==='en_seguimiento'||t.estado==='otro').length;
+        ge('sSeg').textContent  = lista.filter(t => t.estado==='en_seguimiento').length;
+        ge('sTom').textContent  = lista.filter(t => t.estado==='tomada').length;
+        ge('sRech').textContent = lista.filter(t => t.estado==='rechazada').length;
+        ge('sAler').textContent = activas.filter(t => t.estado!=='tomada' && diasDesde(ultimoContacto(t))>=a.d1).length || '—';
+
+        const tbody = ge('tbody');
+        if(!filtrada.length) {
+            tbody.innerHTML = `<tr><td colspan="10" class="empty-msg">No hay tasaciones${fEst||fDest||fBus ? ' que coincidan' : ''}</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = filtrada.map(t => {
+            const dias = diasDesde(ultimoContacto(t));
+            const estado = t.estado || 'en_seguimiento';
+            const est = ESTADOS[estado] || ESTADOS.otro;
+            let rowCls = '';
+            if(estado === 'en_seguimiento' || estado === 'otro' || !t.estado) {
+                if(dias >= a.d2)      rowCls = 'alerta-naranja';
+                else if(dias >= a.d1) rowCls = 'alerta-amarilla';
+            }
+            let diasColor = 'var(--muted)';
+            if(dias >= a.d2)      diasColor = 'var(--acc)';
+            else if(dias >= a.d1) diasColor = 'var(--warn)';
+            const diasLabel = dias === 0 ? 'Hoy' : `Hace ${dias}d`;
+
+            return `<tr class="${rowCls}" data-id="${t.id}">
+                <td><div class="dir-cell" title="${t.direccion||''}">${t.direccion||'—'}</div><div class="dir-sub">${t.tipo||''} ${t.superficie?'· '+t.superficie+'m²':''}</div></td>
+                <td style="font-size:.8rem">${t.propietario||'—'}<br><span style="font-size:.72rem">${t.celular?GestShared.waSpan(t.celular):''}</span></td>
+                <td><span style="font-size:.72rem;font-weight:600;padding:2px 8px;border-radius:20px;background:${t.destino==='venta'?'rgba(79,142,247,.12)':'rgba(16,185,129,.1)'};color:${t.destino==='venta'?'#4f8ef7':'#10b981'}">${t.destino||'—'}</span></td>
+                <td style="font-size:.78rem;color:var(--muted)">${t.tipo||'—'}${t.zona?'<br><span style="font-size:.7rem">'+t.zona.replace(/_/g,' ')+'</span>':''}</td>
+                <td style="font-weight:700;color:var(--ok);font-size:.8rem">${fmtMoney(t.valorTasado,t.moneda)}</td>
+                <td style="font-size:.8rem;color:var(--warn)">${fmtMoney(t.valorPretendido,t.moneda)}</td>
+                <td style="font-size:.78rem">${t.vendedor||'—'}</td>
+                <td><span style="color:${diasColor};font-weight:600;font-size:.78rem">${diasLabel}</span></td>
+                <td><span class="badge-estado" style="background:${est.bg};color:${est.color};border:1px solid ${est.border}">${est.label}</span></td>
+                <td>
+                    <div style="display:flex;gap:.3rem">
+                        <button class="btn-sm" style="font-size:.72rem;padding:.2rem .5rem" onclick="TAS.abrirSeg('${t.id}')">Seguimiento</button>
+                        <button class="btn-sm" style="font-size:.72rem;padding:.2rem .5rem" onclick="TAS.abrirEditar('${t.id}')">Editar</button>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    // ── Modal Nueva/Editar ───────────────────────────────────
+    function llenarVendedores() {
+        const sel = ge('tVendedor');
+        const cur = sel.value;
+        while(sel.options.length > 1) sel.remove(1);
+        getVendedores().forEach(v => { const o=document.createElement('option'); o.value=o.textContent=v; sel.appendChild(o); });
+        sel.value = cur;
+    }
+
+    function abrirNueva() {
+        llenarVendedores();
+        ge('tituloModal').textContent = 'Nueva Tasación';
+        ge('tId').value    = '';
+        ge('tDir').value   = '';
+        ge('tProp').value  = '';
+        ge('tCel').value   = '';
+        ge('tFecha').value = hoy();
+        ge('tHora').value  = '09:00';
+        ge('tVendedor').value = '';
+        ge('tDestino').value  = 'venta';
+        ge('tTipo').value  = 'departamento';
+        ge('tZona').value  = '';
+        ge('tSup').value   = '';
+        ge('tMoneda').value   = 'USD';
+        ge('tValTas').value   = '';
+        ge('tValPret').value  = '';
+        ge('tUrl').value   = '';
+        ge('tObs').value   = '';
+        ge('modalTas').classList.add('open');
+        setTimeout(() => ge('tDir').focus(), 80);
+    }
+
+    function abrirEditar(id) {
+        const t = lista.find(x => x.id === id);
+        if(!t) return;
+        llenarVendedores();
+        ge('tituloModal').textContent = 'Editar Tasación';
+        ge('tId').value       = t.id;
+        ge('tDir').value      = t.direccion  || '';
+        ge('tProp').value     = t.propietario|| '';
+        ge('tCel').value      = t.celular    || '';
+        ge('tFecha').value    = t.fecha      || '';
+        ge('tHora').value     = t.hora       || '';
+        ge('tVendedor').value = t.vendedor   || '';
+        ge('tDestino').value  = t.destino    || 'venta';
+        ge('tTipo').value  = t.tipo       || 'departamento';
+        ge('tZona').value  = t.zona        || '';
+        ge('tSup').value      = t.superficie || '';
+        ge('tMoneda').value   = t.moneda     || 'USD';
+        ge('tValTas').value   = t.valorTasado      || '';
+        ge('tValPret').value  = t.valorPretendido  || '';
+        ge('tUrl').value      = t.urlPublicacion   || '';
+        ge('tObs').value      = t.obs        || '';
+        ge('modalTas').classList.add('open');
+    }
+
+    function cerrarModal() {
+        ge('modalTas').classList.remove('open');
+    }
+
+    async function guardar() {
+        const dir   = ge('tDir').value.trim();
+        const prop  = ge('tProp').value.trim();
+        const fecha = ge('tFecha').value;
+        if(!dir || !prop || !fecha) { toast('Dirección, propietario y fecha son obligatorios','err'); return; }
+
+        const id       = ge('tId').value || genId();
+        const esNueva  = !ge('tId').value;
+        const existing = lista.find(t => t.id === id);
+
+        const hora = ge('tHora').value || '09:00';
+        const item = {
+            id,
+            fecha,
+            hora,
+            direccion:        dir,
+            propietario:      prop,
+            celular:          ge('tCel').value.trim(),
+            vendedor:         ge('tVendedor').value,
+            destino:          ge('tDestino').value,
+            tipo:             ge('tTipo').value,
+            zona:             ge('tZona').value,
+            superficie:       parseFloat(ge('tSup').value)    || 0,
+            moneda:           ge('tMoneda').value,
+            valorTasado:      parseFloat(ge('tValTas').value)  || 0,
+            valorPretendido:  parseFloat(ge('tValPret').value) || 0,
+            urlPublicacion:   ge('tUrl').value.trim(),
+            obs:              ge('tObs').value.trim(),
+            estado:           existing ? existing.estado : 'en_seguimiento',
+            contactos:        existing ? existing.contactos : [],
+            historialPrecios: existing ? existing.historialPrecios : [],
+        };
+        if(esNueva && item.valorTasado) {
+            item.historialPrecios = [{ fecha, valor:item.valorTasado, moneda:item.moneda }];
+        }
+
+        // 1. Actualizar lista local INMEDIATAMENTE
+        const idx = lista.findIndex(t => t.id === id);
+        if(idx >= 0) lista[idx] = item; else lista.push(item);
+        guardarLocal();
+
+        // 2. Cerrar modal y renderizar
+        cerrarModal();
+        render();
+        toast('Tasación guardada','ok');
+
+        // 3. Intentar guardar en API (en background, no bloquea la UI)
+        cargando(true, 'Sincronizando…');
+        await guardarEnAPI(item);
+        cargando(false);
+
+        // 4. Sincronizar con visitas:
+        //    - Siempre si es nueva
+        //    - Si cambió fecha u hora en una edición
+        const fechaHoraCambio = existing && (existing.fecha !== item.fecha || existing.hora !== item.hora);
+        if(esNueva || fechaHoraCambio) {
+            try { await sincronizarVisita(item); } catch(e){ console.error("[Tasaciones]",e); }
+        }
+    }
+
+    // ── Registrar / actualizar en Visitas ────────────────────
+    async function sincronizarVisita(item) {
+        // Supabase v5: always sync via SupabaseDB
+        const v = {
+            id: 'tas_' + item.id,
+            fecha: item.fecha,
+            hora: item.hora || '09:00',
+            tipo: 'tasacion',
+            vendedor: item.vendedor || '',
+            cliente: item.propietario || '',
+            celular: item.celular || '',
+            propiedad: item.direccion,
+            esColega: false, coleagaEmpresa:'', coleagaNombre:'', coleagaCelular:'',
+            estado: 'por_visitar',
+            obs: `Tasación · ${item.destino||''} · ${item.tipo||''} · ${item.moneda||''}${item.valorTasado?' '+Number(item.valorTasado).toLocaleString('es-AR'):''}`
+        };
+        const qs = `action=save&data=${encodeURIComponent(JSON.stringify(v))}`;
+        await SupabaseDB.upsertVisita(v);
+    }
+
+    // ── Historial ─────────────────────────────────────────────
+    let histAnio = new Date().getFullYear();
+
+    function cambiarTab(tab) {
+        const panelActivas   = ge('panelActivas');
+        const panelHistorial = ge('panelHistorial');
+        const btnActivas     = ge('tabBtnActivas');
+        const btnHistorial   = ge('tabBtnHistorial');
+        if(tab === 'activas') {
+            panelActivas.classList.add('active');
+            panelHistorial.classList.remove('active');
+            btnActivas.classList.add('active');
+            btnHistorial.classList.remove('active');
+        } else {
+            panelHistorial.classList.add('active');
+            panelActivas.classList.remove('active');
+            btnHistorial.classList.add('active');
+            btnActivas.classList.remove('active');
+            renderHistorial();
+        }
+    }
+
+    function renderHistorial() {
+        ge('histYear').textContent = histAnio;
+        const fmtF = s => s ? new Date(s+'T00:00:00').toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
+        // Extraer año de fecha en cualquier formato: YYYY-MM-DD, DD/MM/YYYY, etc.
+        function extraerAnio(fecha) {
+            if (!fecha) return null;
+            const s = String(fecha);
+            // ISO: YYYY-MM-DD
+            if (/^\d{4}-/.test(s)) return parseInt(s.substring(0,4));
+            // Argentino: DD/MM/YYYY
+            const m = s.match(/(\d{4})$/);
+            return m ? parseInt(m[1]) : null;
+        }
+        const filtradas = lista
+            .filter(t => extraerAnio(t.fecha) === histAnio)
+            .sort((a,b) => {
+                // normalizar para ordenar
+                const fa = String(a.fecha||''), fb = String(b.fecha||'');
+                return fb.localeCompare(fa);
+            });
+        ge('histCount').textContent = filtradas.length ? `${filtradas.length} tasación${filtradas.length!==1?'es':''}` : '';
+        const tbody = ge('histBody');
+        if(!filtradas.length) {
+            tbody.innerHTML = `<tr><td colspan="9" class="empty-msg">No hay tasaciones en ${histAnio}</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = filtradas.map(t => {
+            const est = ESTADOS[t.estado||'en_seguimiento'] || ESTADOS.otro;
+            return `<tr>
+                <td style="font-size:.78rem">${fmtF(t.fecha)}</td>
+                <td style="font-size:.78rem;color:var(--muted)">${t.hora||'—'}</td>
+                <td><div class="dir-cell" title="${t.direccion||''}">${t.direccion||'—'}</div></td>
+                <td style="font-size:.8rem">${esc?esc(t.propietario):t.propietario||'—'}<br><span style="font-size:.7rem">${t.celular?((typeof GestShared!=='undefined')?GestShared.waSpan(t.celular):'📱 '+t.celular):''}</span></td>
+                <td><span style="font-size:.72rem;font-weight:600;padding:2px 8px;border-radius:20px;background:${t.destino==='venta'?'rgba(79,142,247,.12)':'rgba(16,185,129,.1)'};color:${t.destino==='venta'?'#4f8ef7':'#10b981'}">${t.destino||'—'}</span></td>
+                <td style="font-size:.78rem;color:var(--muted)">${t.tipo||'—'}${t.zona?'<br><span style="font-size:.7rem">'+t.zona.replace(/_/g,' ')+'</span>':''}</td>
+                <td style="font-weight:700;color:var(--ok);font-size:.8rem">${fmtMoney(t.valorTasado,t.moneda)}</td>
+                <td style="font-size:.78rem">${t.vendedor||'—'}</td>
+                <td><span class="badge-estado" style="background:${est.bg};color:${est.color};border:1px solid ${est.border}">${est.label}</span></td>
+            </tr>`;
+        }).join('');
+    }
+
+    function histPrev() { histAnio--; renderHistorial(); }
+    function histNext() { histAnio++; renderHistorial(); }
+
+    // ── Modal Seguimiento ────────────────────────────────────
+    function abrirSeg(id) {
+        segId = id;
+        renderSeg();
+        ge('modalSeg').classList.add('open');
+        ge('cFecha').value = hoy();
+        ge('cNota').value  = '';
+        ge('cResult').value = '';
+        ge('formPrecio').style.display = 'none';
+    }
+
+    function cerrarSeg() {
+        ge('modalSeg').classList.remove('open');
+        segId = null;
+    }
+
+    function renderSeg() {
+        const t = lista.find(x => x.id === segId);
+        if(!t) return;
+
+        ge('segTitulo').textContent = t.direccion || '—';
+        ge('segSub').textContent = `${t.propietario||''}${t.celular?' · '+t.celular:''} · Tasación: ${fmtFecha(t.fecha)}`;
+
+        // Botones de estado
+        const segEst = ge('segEstados');
+        const estAct = t.estado || 'en_seguimiento';
+        segEst.innerHTML = Object.entries(ESTADOS).map(([k,v]) => {
+            const activo = estAct === k;
+            return `<button onclick="TAS.cambiarEstado('${k}')"
+                style="padding:.32rem .85rem;border-radius:20px;font-size:.75rem;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid ${v.border};color:${activo?'#fff':v.color};background:${activo?v.color:'transparent'}">${v.label}</button>`;
+        }).join('');
+
+        // Info
+        ge('segInfo').innerHTML = `
+            <div style="flex:1;min-width:130px"><span style="font-size:.68rem;color:var(--muted);display:block;text-transform:uppercase;letter-spacing:.3px">Valor tasado</span><span style="font-size:.9rem;font-weight:700;color:var(--ok)">${fmtMoney(t.valorTasado,t.moneda)}</span></div>
+            <div style="flex:1;min-width:130px"><span style="font-size:.68rem;color:var(--muted);display:block;text-transform:uppercase;letter-spacing:.3px">Val. pretendido</span><span style="font-size:.9rem;font-weight:700;color:var(--warn)">${fmtMoney(t.valorPretendido,t.moneda)}</span></div>
+            <div style="flex:1;min-width:100px"><span style="font-size:.68rem;color:var(--muted);display:block;text-transform:uppercase;letter-spacing:.3px">Días desde tasación</span><span style="font-size:.9rem;font-weight:700">${diasDesde(t.fecha)}d</span></div>
+            ${t.urlPublicacion ? `<div style="flex:2;min-width:180px"><span style="font-size:.68rem;color:var(--muted);display:block;text-transform:uppercase;letter-spacing:.3px">URL publicación</span><a href="${t.urlPublicacion}" target="_blank" style="font-size:.78rem;color:var(--info);text-decoration:none;word-break:break-all">${t.urlPublicacion.replace(/^https?:\/\//,'')}</a></div>` : ''}`;
+
+        // Precios
+        const precios = (t.historialPrecios||[]);
+        ge('segPrecios').innerHTML = precios.length
+            ? [...precios].sort((a,b)=>a.fecha.localeCompare(b.fecha)).map(p=>`<span class="precio-chip"><span class="pf">${fmtFecha(p.fecha)}</span><span class="pv">${fmtMoney(p.valor,p.moneda)}</span></span>`).join('')
+            : '<span style="font-size:.75rem;color:var(--muted)">Sin historial</span>';
+
+        // Contactos
+        const contactos = (t.contactos||[]);
+        ge('segContactos').innerHTML = contactos.length
+            ? [...contactos].sort((a,b)=>b.fecha.localeCompare(a.fecha)).map((c,i)=>`
+                <div class="contacto-item">
+                    <span class="cont-fecha">${fmtFecha(c.fecha)}</span>
+                    <span class="cont-tipo">${TIPOS_C[c.tipo]||c.tipo}</span>
+                    <div style="flex:1"><div>${c.nota||'—'}</div>${c.resultado?`<div style="font-size:.7rem;color:var(--muted);font-style:italic">${c.resultado}</div>`:''}</div>
+                    <button onclick="TAS.borrarContacto(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;padding:0">✕</button>
+                </div>`).join('')
+            : '<div style="color:var(--muted);font-size:.78rem;padding:.5rem 0">Sin contactos registrados</div>';
+    }
+
+    async function cambiarEstado(estado) {
+        const t = lista.find(x => x.id === segId);
+        if(!t) return;
+        const estadoAnterior = t.estado;
+        t.estado = estado;
+        guardarLocal();
+        renderSeg();
+        render();
+
+        cargando(true, 'Guardando…');
+
+        // 1. Guardar en API de tasaciones (historial incluido)
+        await guardarEnAPI(t);
+
+        // 2. Si pasa a TOMADA: crear propiedad en ventas.html
+        if(estado === 'tomada' && estadoAnterior !== 'tomada') {
+            try {
+                const propVenta = {
+                    id:        'tas_' + t.id,
+                    address:   t.direccion,
+                    tipo:      'venta',
+                    owners:    t.propietario ? [{ name: t.propietario, phone: t.celular || '' }] : [],
+                    precioPubl:  t.valorTasado    || 0,
+                    precioAut:   t.valorPretendido || t.valorTasado || 0,
+                    moneda:      t.moneda || 'USD',
+                    zona:        t.zona   || '',
+                    tipo_inmueble: t.tipo || '',
+                    superficie:  t.superficie || 0,
+                    honVend:     '',
+                    honComp:     '',
+                    fNotas:      t.obs   || '',
+                    origenTasacion: t.id,   // referencia a la tasación original
+                    createdAt:   new Date().toISOString(),
+                };
+                // Supabase v5: URL de GAS ya no se usa
+                await SupabaseDB.upsertPropiedad(propVenta);
+                toast('✓ Tasación tomada — propiedad creada en Ventas','ok');
+            } catch(e) {
+                console.warn('Error al crear propiedad en ventas:', e);
+                toast('Tasación tomada (error al crear en Ventas)','err');
+            }
+        } else if(estado === 'rechazada' && estadoAnterior !== 'rechazada') {
+            toast('Tasación rechazada — guardada en historial','ok');
+        } else {
+            toast('Estado actualizado','ok');
+        }
+
+        cargando(false);
+    }
+
+    function abrirPrecio()  { ge('formPrecio').style.display='block'; setTimeout(()=>ge('pVal').focus(),60); }
+    function cerrarPrecio() { ge('formPrecio').style.display='none'; }
+
+    async function guardarPrecio() {
+        const t = lista.find(x => x.id === segId);
+        if(!t) return;
+        const val = parseFloat(ge('pVal').value);
+        if(!val || val <= 0) { toast('Ingresá un valor válido','err'); return; }
+        const entry = { fecha:hoy(), valor:val, moneda:ge('pMon').value };
+        t.historialPrecios = t.historialPrecios || [];
+        t.historialPrecios.push(entry);
+        t.valorTasado = val;
+        t.moneda = entry.moneda;
+        guardarLocal();
+        cerrarPrecio();
+        ge('pVal').value = '';
+        renderSeg();
+        render();
+        await guardarEnAPI(t);
+        toast('Precio actualizado','ok');
+    }
+
+    async function guardarContacto() {
+        const t = lista.find(x => x.id === segId);
+        if(!t) return;
+        const fecha = ge('cFecha').value;
+        if(!fecha) { toast('Ingresá la fecha del contacto','err'); return; }
+        const c = { fecha, tipo:ge('cTipo').value, nota:ge('cNota').value.trim(), resultado:ge('cResult').value.trim() };
+        t.contactos = t.contactos || [];
+        t.contactos.push(c);
+        guardarLocal();
+        ge('cNota').value   = '';
+        ge('cResult').value = '';
+        ge('cFecha').value  = hoy();
+        renderSeg();
+        render();
+        await guardarEnAPI(t);
+        toast('Contacto registrado','ok');
+    }
+
+    async function borrarContacto(idx) {
+        const t = lista.find(x => x.id === segId);
+        if(!t) return;
+        t.contactos.splice(idx, 1);
+        guardarLocal();
+        renderSeg();
+        await guardarEnAPI(t);
+    }
+
+    function editarActual() {
+        cerrarSeg();
+        abrirEditar(segId);
+    }
+
+    async function eliminarActual() {
+        if(!confirm('¿Eliminar esta tasación? Esta acción no se puede deshacer.')) return;
+        const id = segId;
+        cerrarSeg();
+        lista = lista.filter(t => t.id !== id);
+        guardarLocal();
+        render();
+        toast('Tasación eliminada','ok');
+        await eliminarEnAPI(id);
+    }
+
+    // ── Modal Alertas ────────────────────────────────────────
+    function abrirAlertas() {
+        const a = getAlertas();
+        ge('aDias1').value = a.d1;
+        ge('aDias2').value = a.d2;
+        ge('modalAlertas').classList.add('open');
+        setTimeout(() => ge('aDias1').focus(), 80);
+    }
+    function cerrarAlertas() { ge('modalAlertas').classList.remove('open'); }
+    function guardarAlertas() {
+        const d1 = parseInt(ge('aDias1').value) || 7;
+        const d2 = parseInt(ge('aDias2').value) || 15;
+        const a = { d1: Math.min(d1,d2), d2: Math.max(d1,d2) };
+        try { localStorage.setItem(ALERTA_KEY, JSON.stringify(a)); } catch(e){ console.error("[Tasaciones]",e); }
+        cerrarAlertas();
+        actualizarLeyenda();
+        render();
+        toast('Configuración guardada','ok');
+    }
+
+    // ── Init ─────────────────────────────────────────────────
+    window.addEventListener('DOMContentLoaded', async () => {
+        cargando(true, 'Cargando tasaciones…');
+        // Esperar sincronización de config (vendedores) desde Supabase
+        try { if (window._gsReady) await window._gsReady; } catch {}
+        await cargar();
+        cargando(false);
+        render();
+
+        // Cerrar modales con Esc
+        document.addEventListener('keydown', e => {
+            if(e.key === 'Escape') {
+                ge('modalTas').classList.remove('open');
+                ge('modalSeg').classList.remove('open');
+                ge('modalAlertas').classList.remove('open');
+            }
+        });
+        // Cerrar modales haciendo clic fuera
+        ge('modalTas').addEventListener('click',     e => { if(e.target===ge('modalTas'))     ge('modalTas').classList.remove('open'); });
+        ge('modalSeg').addEventListener('click',     e => { if(e.target===ge('modalSeg'))     ge('modalSeg').classList.remove('open'); });
+        ge('modalAlertas').addEventListener('click', e => { if(e.target===ge('modalAlertas')) ge('modalAlertas').classList.remove('open'); });
+
+        // Auto-refresh inteligente cada 60s
+        function isUserTypingTas() {
+            const el = document.activeElement;
+            if (!el) return false;
+            return el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || !!el.isContentEditable;
+        }
+        async function silentRefreshTas() {
+            if(ge('modalTas').classList.contains('open')) return;
+            if(ge('modalSeg').classList.contains('open')) return;
+            if(isUserTypingTas()) return;
+            try { await cargar(); render(); } catch(e){ console.error("[Tasaciones]",e); }
+        }
+        setInterval(silentRefreshTas, 60000+Math.random()*15000);
+        document.addEventListener('visibilitychange', async () => {
+            if(document.visibilityState !== 'visible') return;
+            await silentRefreshTas();
+        });
+    });
+
+    // ── Export CSV ─────────────────────────────────────────────
+    function exportarCSV() {
+        if (!lista.length) { toast('Sin datos','err'); return; }
+        const esc = v => { const s=String(v==null?'':v); return s.includes(',')||s.includes('"')||s.includes('\n')?'"'+s.replace(/"/g,'""')+'"':s; };
+        const headers = ['Fecha','Dirección','Propietario','Celular','Vendedor','Destino','Tipo','Zona','Sup.','Moneda','Valor Tasado','Valor Pretendido','Estado','URL','Observaciones'];
+        const rows = lista.map(t => [
+            t.fecha||'', t.direccion||'', t.propietario||'', t.celular||'',
+            t.vendedor||'', t.destino||'', t.tipo||'', t.zona||'',
+            t.superficie||'', t.moneda||'', t.valorTasado||'', t.valorPretendido||'',
+            t.estado||'', t.urlPublicacion||'', t.obs||''
+        ].map(esc).join(','));
+        const csv = '\uFEFF' + headers.join(',') + '\n' + rows.join('\n');
+        const url = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}));
+        const a = document.createElement('a'); a.href=url;
+        a.download = 'tasaciones_' + new Date().toISOString().slice(0,10) + '.csv';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+        toast(lista.length + ' tasaciones exportadas');
+    }
+
+    // Exponer API pública
+    return { abrirNueva, abrirEditar, cerrarModal, guardar, abrirSeg, cerrarSeg,
+             cambiarEstado, abrirPrecio, cerrarPrecio, guardarPrecio,
+             guardarContacto, borrarContacto, editarActual, eliminarActual,
+             abrirAlertas, cerrarAlertas, guardarAlertas, render,
+             cambiarTab, histPrev, histNext };
+})();
+</script>
+<script>// header hardcoded — no JS needed</script>
+
+</body>
+</html>

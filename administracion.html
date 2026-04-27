@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cristian Sanchez Propiedades — Administración</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="logger.js"></script>
+    <script src="shared.js"></script>
+    <script src="supabase.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg-primary:   #0d0d0d;
+            --bg-secondary: #151515;
+            --bg-card:      #1c1c1c;
+            --bg-hover:     #252525;
+            --text-primary:   #f5f5f5;
+            --text-secondary: #b0b0b0;
+            --text-muted:     #717171;
+            --accent:       #f57c00;
+            --accent-hover: #ffb74d;
+            --accent-glow:  rgba(245,124,0,0.28);
+            --accent-soft:  rgba(245,124,0,0.12);
+            --success:      #10b981;
+            --success-soft: rgba(16,185,129,0.12);
+            --warning:      #f59e0b;
+            --danger:       #ef4444;
+            --border:       rgba(255,255,255,0.08);
+            --border-hover: rgba(255,255,255,0.16);
+            --gradient-primary: linear-gradient(135deg,#f57c00,#ff9800);
+            --gradient-header:  linear-gradient(135deg,#0d0d0d 0%,#1a1206 50%,#0d0d0d 100%);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.5);
+            --radius-md: 10px;
+            --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
+            /* Estado row tints */
+            --retirado-bg:   rgba(16,185,129,0.09);
+            --retirado-text: #6ee7b7;
+            --avisado-bg:    rgba(245,158,11,0.09);
+            --avisado-text:  #fcd34d;
+            --esperar-bg:    rgba(245,124,0,0.07);
+            --esperar-text:  #fdba74;
+        }
+
+        html { font-size: 15px; scroll-behavior: smooth; background: var(--bg-primary); }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+        body::before {
+            content: '';
+            position: fixed; top: 0; left: 0; right: 0; height: 400px;
+            background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(245,124,0,0.09), transparent);
+            pointer-events: none; z-index: 0;
+        }
+
+        /* ── Header ── */
+        .app-header {
+            position: sticky; top: 0; z-index: 200;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0.7rem 1.5rem;
+            background: var(--gradient-header);
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(20px);
+            gap: 1rem;
+            min-width: 900px;
+        }
+        .logo { display: flex; align-items: center; gap: 0.75rem; }
+        .logo-icon {
+            width: 36px; height: 36px;
+            background: var(--accent-soft); border: 1px solid var(--accent-glow);
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            color: var(--accent); flex-shrink: 0;
+        }
+        .logo-icon svg { width: 18px; height: 18px; }
+        .logo-text h1 { font-size: 0.92rem; font-weight: 700; color: #fff; }
+        .logo-text span { font-size: 0.68rem; color: var(--text-muted); }
+        .header-right { display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0; }
+        .btn-nav {
+            background: var(--accent-soft); color: var(--accent);
+            border: 1px solid rgba(245,124,0,0.25); border-radius: 8px;
+            padding: 0.4rem 0.9rem; font-size: 0.78rem; font-weight: 600;
+            cursor: pointer; text-decoration: none; font-family: inherit;
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            transition: background var(--transition);
+        }
+        .btn-nav:hover { background: rgba(245,124,0,0.2); }
+
+        /* ── Summary bar — sticky below header ── */
+        .summary-bar {
+            position: sticky; top: 53px; z-index: 150;
+            display: flex; background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 0 1.5rem; flex-wrap: wrap;
+            min-width: 900px;
+        }
+        .summary-item {
+            display: flex; flex-direction: column; justify-content: center;
+            padding: 0.55rem 1.1rem; border-right: 1px solid var(--border);
+            min-width: 145px;
+        }
+        .summary-item:last-child { border-right: none; }
+        .summary-label { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); font-weight: 600; }
+        .summary-value { font-size: 0.9rem; font-weight: 700; color: var(--text-primary); margin-top: 1px; }
+        .summary-value.accent  { color: var(--accent); }
+        .summary-value.warning { color: var(--warning); }
+        .summary-value.green   { color: var(--success); }
+
+        /* ── Month picker popup ── */
+        .month-nav { position: relative; }
+        #monthTitle {
+            cursor: pointer;
+            user-select: none;
+            transition: color var(--transition);
+        }
+        #monthTitle:hover { color: var(--accent); }
+        #monthTitle::after {
+            content: ' ▾';
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            vertical-align: middle;
+        }
+        .month-picker {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md), 0 0 0 1px rgba(245,124,0,0.1);
+            padding: 1rem;
+            z-index: 300;
+            min-width: 280px;
+        }
+        .month-picker.open { display: block; }
+        .picker-year {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+        .picker-year span { font-weight: 700; font-size: 0.95rem; color: var(--text-primary); }
+        .picker-year button {
+            background: none; border: 1px solid var(--border); border-radius: 6px;
+            color: var(--text-secondary); cursor: pointer; padding: 0.2rem 0.6rem;
+            font-size: 0.8rem; transition: border-color var(--transition), color var(--transition);
+        }
+        .picker-year button:hover { border-color: var(--accent); color: var(--accent); }
+        .picker-months {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem;
+        }
+        .picker-month-btn {
+            background: none; border: 1px solid transparent; border-radius: 8px;
+            color: var(--text-secondary); cursor: pointer; padding: 0.45rem 0.3rem;
+            font-size: 0.78rem; font-weight: 500; font-family: inherit;
+            transition: background var(--transition), border-color var(--transition), color var(--transition);
+            text-align: center;
+        }
+        .picker-month-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: rgba(245,124,0,0.3); }
+        .picker-month-btn.active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); font-weight: 700; }
+        .month-nav {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.55rem 1.5rem;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            position: sticky; top: 100px; z-index: 140;
+            min-width: 900px;
+        }
+        .month-nav h2 { font-size: 0.95rem; font-weight: 700; min-width: 155px; text-align: center; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-month {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 8px; padding: 0.3rem 0.7rem;
+            cursor: pointer; font-size: 0.85rem; font-weight: 700;
+            color: var(--text-secondary); transition: border-color var(--transition), color var(--transition);
+        }
+        .btn-month:hover { border-color: var(--accent); color: var(--accent); }
+        .month-selects { display: flex; gap: 0.5rem; margin-left: auto; }
+        .month-selects select, .btn-refresh {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 8px; padding: 0.3rem 0.6rem;
+            font-size: 0.75rem; color: var(--text-primary);
+            cursor: pointer; font-family: inherit;
+            transition: border-color var(--transition);
+        }
+        .month-selects select:focus, .btn-refresh:hover { outline: none; border-color: var(--accent); }
+        .btn-refresh { color: var(--text-muted); }
+        .btn-refresh:hover { color: var(--accent); }
+
+        .btn-wa-row {
+            background: rgba(37,211,102,0.12);
+            border: 1px solid rgba(37,211,102,0.25);
+            border-radius: 7px;
+            color: #25d366;
+            cursor: pointer;
+            padding: 0.32rem 0.45rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+        .btn-wa-row:hover { background: rgba(37,211,102,0.25); border-color: #25d366; transform: scale(1.08); }
+
+        /* ── Table ── */
+        .table-wrap { overflow-x: auto; overflow-y: auto; padding: 0; position: relative; z-index: 1; margin: 0 1.5rem 2rem; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.93rem; min-width: 860px; }
+        thead tr { background: var(--bg-secondary); }
+        th {
+            padding: 0.52rem 0.65rem; text-align: left; font-weight: 600;
+            font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase;
+            letter-spacing: 0.4px; border-bottom: 1px solid var(--border); white-space: nowrap;
+            position: sticky; top: 0; z-index: 10; background: var(--bg-secondary);
+        }
+        /* Renglón principal */
+        td { padding: 0.42rem 0.65rem; border-bottom: none; vertical-align: middle; background: var(--bg-primary); }
+        /* Renglón secundario — mismo fondo que el principal */
+        td.row2 { padding: 0.26rem 0.65rem; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: top; background: var(--bg-primary); }
+        tbody tr.row-neutral td  { background: transparent; color: var(--text-primary); }
+        tbody tr.row-neutral td.row2 { background: transparent; }
+        tbody tr.estado-RETIRADO td { background: var(--retirado-bg); color: var(--retirado-text); }
+        tbody tr.estado-RETIRADO td.row2 { background: var(--retirado-bg); color: var(--retirado-text); }
+        tbody tr.estado-AVISADO  td { background: var(--avisado-bg);  color: var(--avisado-text); }
+        tbody tr.estado-AVISADO  td.row2 { background: var(--avisado-bg); color: var(--avisado-text); }
+        tbody tr.estado-ESPERAR  td { background: var(--esperar-bg);  color: var(--esperar-text); }
+        tbody tr.estado-ESPERAR  td.row2 { background: var(--esperar-bg); color: var(--esperar-text); }
+        tbody tr:last-child td.row2 { border-bottom: none; }
+        tbody tr:hover td, tbody tr:hover td.row2 { filter: brightness(1.08); }
+        /* Separador visual entre contratos */
+        tr.tr-sep td { height: 0; padding: 0; border-bottom: 2px solid rgba(255,255,255,0.35); background: transparent !important; }
+
+        /* Etiquetas del renglón 2 */
+        .r2-lbl { font-size: 0.73rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .3px; display: block; margin-bottom: 1px; }
+        .r2-cell { display: flex; flex-direction: column; gap: 0; min-width: 70px; }
+
+        /* ── Inline inputs ── */
+        .inp {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px; padding: 0.28rem 0.5rem;
+            font-size: 0.93rem; width: 100%; color: inherit; font-family: inherit;
+            transition: border-color var(--transition), background var(--transition);
+        }
+        .inp:focus { outline: none; border-color: var(--accent); background: rgba(245,124,0,0.06); }
+        input[type="date"].inp { min-width: 115px; color-scheme: dark; }
+        select { color-scheme: dark; }
+        select option { background: #1c1c2e; color: #e8eaf0; }
+        input[type="number"].inp { min-width: 82px; }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        textarea.inp { min-width: 110px; height: 33px; resize: vertical; }
+
+        /* ── Checkboxes ── */
+        .services { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .svc { display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; }
+        .svc input[type="checkbox"] { accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer; }
+        .svc span { font-size: 0.73rem; white-space: nowrap; color: inherit; }
+        .svc-item { display: flex; flex-direction: column; gap: 2px; }
+        .svc-monto { display: flex; align-items: center; gap: 2px; }
+        .svc-peso { font-size: .80rem; color: var(--text-muted); }
+        .svc-chk { width:13px;height:13px;cursor:pointer;accent-color:var(--accent); }
+        .svc-lbl-wrap { display:flex;align-items:center;gap:3px; }
+        .svc-inact { opacity:.45; }
+
+        /* ── Estado select ── */
+        .select-estado {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px; padding: 0.28rem 0.4rem; font-size: 0.82rem; font-weight: 600;
+            color: inherit; cursor: pointer; width: 100%; font-family: inherit;
+            transition: border-color var(--transition);
+        }
+        .select-estado:focus { outline: none; border-color: var(--accent); }
+        .select-estado option { background: #1c1c1c; color: #f5f5f5; }
+
+        /* ── Amount display ── */
+        .amount { font-weight: 700; white-space: nowrap; }
+        .amount-green  { color: var(--success); }
+        .amount-accent { color: var(--accent); }
+
+        /* ── Address ── */
+        .addr { font-weight: 600; max-width: 165px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .addr-sub { font-size: 0.73rem; color: var(--text-muted); margin-top: 1px; }
+
+        /* ── Loading ── */
+        #loadingBanner {
+            display: none; position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+            z-index: 999; background: var(--gradient-primary); color: #fff;
+            padding: 0.5rem 1.5rem; font-size: 0.82rem; font-weight: 600;
+            border-radius: 50px; box-shadow: 0 4px 20px var(--accent-glow); white-space: nowrap;
+        }
+
+        /* ── Toasts ── */
+        .toast-container { position: fixed; top: 1rem; right: 1rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }
+        .toast { background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.78rem; box-shadow: var(--shadow-md); }
+        .toast.success { border-color: var(--success); color: var(--success); }
+        .toast.error   { border-color: var(--danger);  color: var(--danger); }
+
+        .empty { text-align: center; padding: 3rem; color: var(--text-muted); }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+        /* ── Badge estado honorarios ── */
+        .hon-badge { display: inline-block; font-family: inherit; }
+        .hon-pendiente {
+            background: rgba(245,124,0,0.13);
+            color: var(--accent);
+            border: 1px solid rgba(245,124,0,0.35) !important;
+        }
+        .hon-pendiente:hover {
+            background: rgba(245,124,0,0.25);
+        }
+        .hon-recibido {
+            background: rgba(16,185,129,0.13);
+            color: var(--success);
+            border: 1px solid rgba(16,185,129,0.35) !important;
+        }
+        .hon-recibido:hover {
+            background: rgba(16,185,129,0.25);
+        }
+    </style>
+  <style id="gs-hdr-css">
+    .app-hdr{position:sticky;top:0;z-index:300;display:flex;align-items:center;justify-content:space-between;padding:.55rem 1.4rem;background:linear-gradient(135deg,#0d0d0d 0%,#1a1206 50%,#0d0d0d 100%);border-bottom:1px solid rgba(255,255,255,.08);backdrop-filter:blur(20px);gap:.8rem;flex-wrap:wrap}
+    .app-hdr-logo{display:flex;align-items:center;gap:.65rem;text-decoration:none;flex-shrink:0}
+    .app-hdr-ico{width:34px;height:34px;flex-shrink:0;border-radius:9px;overflow:hidden;border:1px solid rgba(245,124,0,.35);padding:2px;background:rgba(245,124,0,.1)}
+    .app-hdr-ico svg{width:100%;height:100%;display:block}
+    .app-hdr-name{font-family:'Inter',-apple-system,sans-serif;font-size:.88rem;font-weight:700;color:#fff;line-height:1.2}
+    .app-hdr-sub{font-family:'Inter',-apple-system,sans-serif;font-size:.64rem;color:#717171;line-height:1}
+    .app-hdr-nav{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
+    .nav-lnk{display:inline-flex;align-items:center;gap:.3rem;padding:.35rem .75rem;border-radius:8px;font-family:'Inter',-apple-system,sans-serif;font-size:.76rem;font-weight:600;color:rgba(245,124,0,.85);background:rgba(245,124,0,.1);border:1px solid rgba(245,124,0,.22);text-decoration:none;transition:background .15s;white-space:nowrap}
+    .nav-lnk:hover{background:rgba(245,124,0,.22);color:#f57c00;border-color:rgba(245,124,0,.45)}
+    .nav-lnk.active{background:rgba(245,124,0,.25);color:#ff9800;border-color:rgba(245,124,0,.6)}
+    .nav-font{display:flex;align-items:center;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;overflow:hidden;flex-shrink:0}
+    .nav-font button{background:none;border:none;color:#b0b0b0;cursor:pointer;padding:.28rem .48rem;font-family:'Inter',-apple-system,sans-serif;font-size:.8rem;font-weight:600}
+    .nav-font button:hover{color:#f57c00;background:rgba(245,124,0,.1)}
+    .wa-phone-link{color:#378ADD;text-decoration:none;cursor:pointer}
+    .wa-phone-link:hover{text-decoration:underline;color:#25d366}
+  </style>
+</head>
+<body>
+<div id="loadingBanner">🔄 Cargando datos…</div>
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Header -->
+<header class="app-hdr">
+  <a href="index.html" class="app-hdr-logo">
+    <div class="app-hdr-ico"><svg viewBox="0 0 1532.9 1229.94" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><path fill="#f39200" d="M766.45,39.94L54.91,353.68h229.76c-3.51,0-6.36,3-6.36,6.7v677.09c0,72.57,55.77,131.39,124.57,131.39h788.13c35.1,0,63.56-30.01,63.56-67.04V353.68h223.41L766.45,39.94Z"/><path fill="#fff" d="M786.94,398.11v186.57h-13.66c-10.28-48.68-29.43-86-57.45-111.94-28.03-25.94-59.78-38.9-95.28-38.9-29.66,0-56.87,9.66-81.61,28.98-24.75,19.32-42.86,44.59-54.3,75.82-14.71,39.96-22.06,84.42-22.06,133.39s5.37,92.03,16.11,131.59c10.75,39.57,27.55,69.47,50.44,89.72,22.89,20.25,52.55,30.37,88.97,30.37,29.89,0,57.27-7.4,82.14-22.23,24.88-14.82,51.09-40.35,78.64-76.62v46.45c-26.62,31.5-54.35,54.33-83.19,68.48-28.84,14.15-62.52,21.24-101.06,21.24-50.67,0-95.69-11.51-135.04-34.54-39.35-23.03-69.7-56.11-91.07-99.24-21.37-43.13-32.06-89.06-32.06-137.75,0-51.34,11.85-100.05,35.56-146.09,23.7-46.05,55.69-81.77,95.98-107.19,40.28-25.4,83.07-38.11,128.38-38.11,33.39,0,68.65,8.21,105.79,24.61,21.48,9.53,35.14,14.29,40.98,14.29,7.47,0,13.95-3.11,19.43-9.33,5.48-6.21,9.05-16.07,10.69-29.57h13.66Z"/><path fill="#fff" d="M1163.15,398.11l3.85,179.43h-14.35c-6.78-44.99-23.42-81.18-49.92-108.57-26.51-27.39-55.17-41.08-85.99-41.08-23.82,0-42.68,7.21-56.57,21.63-13.9,14.42-20.85,31.03-20.85,49.82,0,11.92,2.45,22.5,7.36,31.76,6.77,12.44,17.63,24.75,32.58,36.92,10.98,8.73,36.31,24.22,76.01,46.45,55.57,30.96,93.05,60.21,112.44,87.74,19.15,27.52,28.73,59.02,28.73,94.48,0,45-15.47,83.7-46.41,116.12-30.95,32.43-70.23,48.63-117.87,48.63-14.95,0-29.07-1.72-42.39-5.16-13.31-3.45-30.01-9.92-50.09-19.45-11.21-5.3-20.44-7.94-27.68-7.94-6.07,0-12.49,2.64-19.26,7.94-6.77,5.3-12.27,13.36-16.46,24.22h-12.97v-203.26h12.97c10.27,57.17,30.06,100.77,59.37,130.81,29.3,30.04,60.89,45.05,94.75,45.05,26.15,0,46.99-8.07,62.52-24.22,15.53-16.14,23.29-34.93,23.29-56.37,0-12.7-2.97-25-8.93-36.92-5.96-11.91-15.01-23.22-27.15-33.94-12.14-10.72-33.62-24.67-64.45-41.88-43.21-24.07-74.26-44.59-93.18-61.53-18.91-16.94-33.45-35.86-43.61-56.77-10.16-20.9-15.24-43.93-15.24-69.07,0-42.88,13.89-79.4,41.69-109.57,27.78-30.17,62.81-45.26,105.08-45.26,15.41,0,30.36,2.13,44.84,6.36,10.97,3.17,24.34,9.06,40.11,17.66,15.76,8.6,26.79,12.9,33.1,12.9s10.86-2.12,14.36-6.35c3.5-4.23,6.77-14.42,9.81-30.57h10.51Z"/></svg></div>
+    <div><div class="app-hdr-name">Cristian Sanchez Propiedades</div>
+    <div class="app-hdr-sub">Administración de Alquileres</div></div>
+  </a>
+  <nav class="app-hdr-nav">
+    <a href="dashboard.html" class="nav-lnk">🏠 Dashboard</a>
+    <a href="ventas.html" class="nav-lnk">🏘️ Propiedades</a>
+    <a href="visitas.html" class="nav-lnk">📅 Visitas</a>
+    <a href="tasaciones.html" class="nav-lnk">📋 Tasaciones</a>
+    <a href="banco.html" class="nav-lnk">👤 Banco</a>
+    <a href="index.html" class="nav-lnk">📄 Contratos</a>
+    <a href="administracion.html" class="nav-lnk active">🧾 Administración</a>
+    <a href="configuracion.html" class="nav-lnk">⚙️ Configuración</a>
+    <div class="nav-font">
+      <button onclick="(function(){var fs=parseInt(localStorage.getItem('app_fs'))||15;fs=Math.max(11,fs-1);localStorage.setItem('app_fs',fs);document.documentElement.style.fontSize=fs+'px';})()" title="Reducir">A-</button>
+      <button onclick="(function(){localStorage.setItem('app_fs',15);document.documentElement.style.fontSize='15px';})()" title="Defecto">↺</button>
+      <button onclick="(function(){var fs=parseInt(localStorage.getItem('app_fs'))||15;fs=Math.min(20,fs+1);localStorage.setItem('app_fs',fs);document.documentElement.style.fontSize=fs+'px';})()" title="Agrandar">A+</button>
+    </div>
+  </nav>
+</header>
+
+<!-- Summary bar — sticky -->
+<div class="summary-bar" id="summaryBar">
+    <div class="summary-item">
+        <span class="summary-label">Total alquileres</span>
+        <span class="summary-value accent" id="sumAlq">—</span>
+    </div>
+    <div class="summary-item">
+        <span class="summary-label">Total inmobiliaria</span>
+        <span class="summary-value accent" id="sumInmob">—</span>
+    </div>
+    <div class="summary-item">
+        <span class="summary-label">Sin pago (luego del día 10)</span>
+        <span class="summary-value warning" id="sumMora">—</span>
+    </div>
+    <div class="summary-item">
+        <span class="summary-label">Retirados</span>
+        <span class="summary-value green" id="sumRetirados">—</span>
+    </div>
+    <div class="summary-item">
+        <span class="summary-label">Hon. pendientes</span>
+        <span class="summary-value" id="sumHonPendientes" style="color:var(--text-muted)">—</span>
+    </div>
+</div>
+
+<!-- Month nav — sticky -->
+<div class="month-nav">
+    <button class="btn-month" id="btnPrev">&#8592;</button>
+    <h2 id="monthTitle">ENERO 2026</h2>
+    <button class="btn-month" id="btnNext">&#8594;</button>
+
+    <!-- Month picker popup -->
+    <div class="month-picker" id="monthPicker">
+        <div class="picker-year">
+            <button id="pickerPrevYear">&#8592;</button>
+            <span id="pickerYearLabel">2026</span>
+            <button id="pickerNextYear">&#8594;</button>
+        </div>
+        <div class="picker-months" id="pickerMonths"></div>
+    </div>
+
+    <input type="search" id="adminSearch" placeholder="Buscar dirección…"
+        style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:7px;
+               padding:.28rem .7rem;color:var(--text-primary);font-size:0.82rem;font-family:inherit;width:190px;margin-left:.5rem"
+        oninput="renderMonth()">
+</div>
+
+<!-- Table -->
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th style="min-width:150px">Dirección / Inquilino</th>
+                <th style="min-width:112px">Fecha pago</th>
+                <th style="min-width:95px">Monto alquiler</th>
+                <th style="min-width:100px">Estado</th>
+                <th style="min-width:105px">Para el dueño</th>
+                <th style="min-width:90px">Inmobiliaria</th>
+                <th style="min-width:44px">WA</th>
+            </tr>
+        </thead>
+        <tbody id="adminBody">
+            <tr><td colspan="7" class="empty">Cargando…</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal: Mensaje WhatsApp -->
+<div id="msgModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center">
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;width:100%;max-width:560px;margin:1rem;box-shadow:0 20px 60px rgba(0,0,0,0.5)">
+        <div style="padding:1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+            <h4 style="margin:0;font-size:0.92rem;color:#25D366">💬 Mensaje WhatsApp</h4>
+            <button id="closeMsgModal" style="background:none;border:none;color:var(--text-muted);font-size:1.3rem;cursor:pointer;line-height:1">&times;</button>
+        </div>
+        <div style="padding:1rem 1.5rem">
+            <pre id="msgText" style="white-space:pre-wrap;font-family:inherit;font-size:0.82rem;color:var(--text-secondary);background:rgba(0,0,0,0.2);padding:0.75rem;border-radius:8px;margin:0;line-height:1.7;max-height:60vh;overflow-y:auto"></pre>
+        </div>
+        <div style="padding:0.75rem 1.5rem 1rem;display:flex;gap:0.5rem;justify-content:flex-end">
+            <button id="btnCopyMsg" style="background:var(--bg-secondary);border:1px solid var(--border);color:var(--text-primary);border-radius:8px;padding:0.4rem 1rem;font-size:0.82rem;cursor:pointer;font-family:inherit">📋 Copiar</button>
+            <button id="btnSendWA" style="background:#25D366;border:none;color:#fff;border-radius:8px;padding:0.4rem 1rem;font-size:0.82rem;cursor:pointer;font-family:inherit;font-weight:600">Enviar WhatsApp</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* ══ Font size ══ */
+        const FONT_DEFAULT = 15;
+        let _fontSize = parseInt(localStorage.getItem('app_fs')) || FONT_DEFAULT;
+        document.documentElement.style.fontSize = _fontSize + 'px';
+        function changeFontSize(delta) {
+            if (delta===0) _fontSize = FONT_DEFAULT;
+            else _fontSize = Math.min(20, Math.max(11, _fontSize + delta));
+            document.documentElement.style.fontSize = _fontSize + 'px';
+            try { localStorage.setItem('app_fs', _fontSize); } catch(e){ console.error("[Admin]",e); }
+        }
+
+    /* ══ URLs ══ */
+    const CONTRACTS_API = ''; // GAS eliminado v5
+    const ADMIN_API     = ''; // GAS eliminado v5
+
+    /* ══ Helpers ══ */
+    const $ = s => document.querySelector(s);
+    const MESES = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+    const fmtCur = n => new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',minimumFractionDigits:0}).format(n||0);
+
+    function showToast(msg, type='info') {
+        const c=$('#toastContainer'), t=document.createElement('div');
+        t.className=`toast ${type}`; t.textContent=msg; c.appendChild(t);
+        setTimeout(()=>{t.style.opacity='0';t.style.transition='0.3s';setTimeout(()=>t.remove(),300);},3000);
+    }
+
+    /* ══ State ══ */
+    const today = new Date();
+    let curYear  = today.getFullYear();
+    let curMonth = today.getMonth();
+    const esc = v => String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    let contracts  = [];
+    let records    = {};
+    let saveTimers = {};
+
+    /* ══ API ══ */
+    async function apiGet(base, params={}, retries=1) {
+        const token = localStorage.getItem('gest_api_token')||'';
+        if(token) params=Object.assign({},params,{token});
+        const WRITES=new Set(['save','delete','saveRecord','deleteRecord']);
+        const isWrite=WRITES.has(params.action||'');
+        for(let i=0;i<=retries;i++){
+            try{
+                let r;
+                if(isWrite){
+                    r=await fetch(base,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams(params).toString()});
+                }else{
+                    r=await fetch(base+'?'+new URLSearchParams(params).toString());
+                }
+                if(!r.ok)throw new Error('HTTP '+r.status);
+                return await r.json();
+            }catch(err){
+                if(i<retries)await new Promise(res=>setTimeout(res,2000));
+                else{console.error('[Admin API]',err);throw err;}
+            }
+        }
+    }
+    async function loadContracts() {
+        contracts = await SupabaseDB.getContratos();
+        contracts.sort((a,b) => a.address.localeCompare(b.address,'es'));
+    }
+    async function loadMonthRecords() {
+        records = {};
+        const rows = await SupabaseDB.getPagosMes(curYear, curMonth);
+        rows.forEach(r => records[r.address] = r);
+    }
+    async function saveRecord(rec) {
+        await SupabaseDB.upsertPago(rec);
+    }
+
+    /* ══ Default values ══ */
+
+    /* ── Cálculo local de montos por período (ICL/FIJO/IPC) ──
+       Misma lógica que index.html pero usando solo la tabla fallback local,
+       para poder calcular 'na' (próximo período) sin depender de la API externa.   */
+    const ICL_ADM = {
+        "2023-07-01":6.90,"2023-10-01":9.19,
+        "2024-01-01":11.85,"2024-04-01":13.73,"2024-07-01":15.10,
+        "2024-10-01":18.92,"2025-01-01":21.44,"2025-04-01":23.59,
+        "2025-07-01":25.93,"2025-10-01":27.72,"2026-01-01":29.36,
+        "2026-04-01":31.20,"2026-07-01":32.52,"2026-10-01":33.85,
+        "2027-01-01":35.20
+    };
+    const IPC_ADM = {
+        "2024-01":20.6,"2024-02":13.2,"2024-03":11.0,"2024-04":8.8,
+        "2024-05":4.2,"2024-06":4.6,"2024-07":4.0,"2024-08":4.0,
+        "2024-09":3.5,"2024-10":2.7,"2024-11":2.4,"2024-12":2.7,
+        "2025-01":2.2,"2025-02":2.4,"2025-03":3.7,"2025-04":2.8,
+        "2025-05":1.5,"2025-06":1.6,"2025-07":1.9,"2025-08":1.9,
+        "2025-09":2.1,"2025-10":2.3,"2025-11":2.5,"2025-12":2.8,
+        "2026-01":2.9
+    };
+    const IPC_LAST = IPC_ADM[Object.keys(IPC_ADM).sort().pop()];
+
+    function _iclVal(date) {
+        const keys = Object.keys(ICL_ADM).sort();
+        const ts = date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-01';
+        if (ICL_ADM[ts]) return ICL_ADM[ts];
+        let best = null;
+        for (const k of keys) { if (k <= ts) best = ICL_ADM[k]; else break; }
+        return best || ICL_ADM[keys[0]];
+    }
+    function _ipcRate(fromDate, freq) {
+        let factor = 1;
+        for (let i = 0; i < freq; i++) {
+            const d = new Date(fromDate); d.setMonth(d.getMonth()+i);
+            const key = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+            factor *= (1 + (IPC_ADM[key] !== undefined ? IPC_ADM[key] : IPC_LAST) / 100);
+        }
+        return factor - 1;
+    }
+    function _normalizeStart(c) {
+        const d = new Date(c.startDate+'T00:00:00');
+        return new Date(d.getFullYear(), d.getMonth(), 1);
+    }
+    function _getUpdateDates(c) {
+        const start = _normalizeStart(c);
+        const dur = parseInt(c.duration), freq = parseInt(c.updateFrequency), dates = [];
+        for (let m = freq; m <= dur; m += freq) {
+            const d = new Date(start); d.setMonth(d.getMonth()+m);
+            dates.push({ date: d, periodNumber: m/freq+1 });
+        }
+        return dates;
+    }
+    function _getNextUpdate(c) {
+        const now = new Date(); now.setHours(0,0,0,0);
+        const history = c.updatesHistory || [];
+        for (const u of _getUpdateDates(c)) {
+            if (!history.some(h => h.periodNumber === u.periodNumber)) {
+                const ud = new Date(u.date); ud.setHours(0,0,0,0);
+                return { ...u, daysUntil: Math.ceil((ud - now) / 864e5) };
+            }
+        }
+        return null;
+    }
+    function _calcPeriodAmount(c, periodNumber) {
+        if (periodNumber <= 1) return parseFloat(c.initialAmount);
+        const start = _normalizeStart(c);
+        const freq  = parseInt(c.updateFrequency);
+        const base  = parseFloat(c.initialAmount);
+        const updateDate = new Date(start); updateDate.setMonth(updateDate.getMonth()+(periodNumber-1)*freq);
+
+        // Si hay acuerdo posterior al inicio, usarlo como base
+        if (c.acuerdoMonto && c.acuerdoFecha) {
+            const af = new Date(c.acuerdoFecha+'T00:00:00');
+            if (updateDate >= af) {
+                const idxAcuerdo = c.acuerdoIndice || c.indexType;
+                const am = parseFloat(c.acuerdoMonto);
+                if (idxAcuerdo === 'ICL') {
+                    return Math.round(am * _iclVal(updateDate) / _iclVal(af));
+                } else if (idxAcuerdo === 'FIJO') {
+                    const periodos = Math.round((updateDate - af) / (freq * 30.44 * 864e5));
+                    return Math.round(am * Math.pow(1 + parseFloat(c.fixedPercent||0)/100, periodos));
+                } else if (idxAcuerdo === 'IPC') {
+                    return Math.round(am * (1 + _ipcRate(af, Math.round((updateDate - af)/(864e5*30.44)))));
+                }
+                return am;
+            }
+        }
+
+        if (c.indexType === 'ICL') {
+            return Math.round(base * _iclVal(updateDate) / _iclVal(start));
+        } else if (c.indexType === 'FIJO') {
+            return Math.round(base * Math.pow(1 + parseFloat(c.fixedPercent||0)/100, periodNumber-1));
+        } else if (c.indexType === 'IPC') {
+            return Math.round(base * (1 + _ipcRate(start, (periodNumber-1)*freq)));
+        }
+        return base;
+    }
+    /** Calcula dif. de depósito para el mes en curso.
+     *  Detecta TANTO actualizaciones pendientes como confirmadas que caigan
+     *  en el mes/año actual. Así no importa si el update se aplicó desde
+     *  index.html antes o después: si cae en este mes, se cobra la diferencia.
+     *
+     *  Regla:
+     *    1. Si hay un update pendiente para este mes → diff = monto próximo - monto previo
+     *    2. Si hay un update confirmado (en updatesHistory) cuya fecha cae en
+     *       este mes → diff = amount confirmado - monto período anterior
+     *    3. Sino → 0.
+     */
+    function calcDefaultDifDeposito(c) {
+        if (!c.depositUpdate) return 0;
+
+        // 1) Update pendiente (comportamiento previo)
+        const nu = _getNextUpdate(c);
+        if (nu) {
+            const ud = new Date(nu.date);
+            if (ud.getMonth() === curMonth && ud.getFullYear() === curYear) {
+                const naAmt = _calcPeriodAmount(c, nu.periodNumber);
+                const history = c.updatesHistory || [];
+                const hPrev = history.find(h => h.periodNumber === nu.periodNumber - 1);
+                const caAmt = hPrev && hPrev.amount ? hPrev.amount : _calcPeriodAmount(c, nu.periodNumber - 1);
+                return Math.max(0, naAmt - caAmt);
+            }
+        }
+
+        // 2) Update ya confirmado en este mes/año (aplicado desde index.html)
+        const history = c.updatesHistory || [];
+        // Buscar updates en el mes en curso — leyendo tanto h.date como las fechas canónicas del contrato
+        const dates = _getUpdateDates(c);
+        for (const h of history) {
+            if (!h.periodNumber || !h.amount) continue;
+            // Fecha del update (puede venir en h.date o derivarse de periodNumber)
+            let updDate;
+            if (h.date) {
+                updDate = new Date(h.date + (h.date.length === 10 ? 'T00:00:00' : ''));
+            } else {
+                const d = dates.find(d => d.periodNumber === h.periodNumber);
+                if (d) updDate = new Date(d.date);
+            }
+            if (!updDate || isNaN(updDate.getTime())) continue;
+            if (updDate.getMonth() !== curMonth || updDate.getFullYear() !== curYear) continue;
+
+            // Monto anterior: período previo confirmado si existe, sino calculado, sino initial
+            const hPrev = history.find(x => x.periodNumber === h.periodNumber - 1);
+            let caAmt;
+            if (hPrev && hPrev.amount) caAmt = hPrev.amount;
+            else if (h.periodNumber > 1) caAmt = _calcPeriodAmount(c, h.periodNumber - 1);
+            else caAmt = parseFloat(c.initialAmount) || 0;
+
+            return Math.max(0, (parseFloat(h.amount)||0) - caAmt);
+        }
+
+        return 0;
+    }
+    function calcMoraAutomatica(montoAlquiler, moraRate, fechaPago) {
+        // Mora = monto × (% mora / 100) × días de mora
+        // Días de mora = día de pago - 10 (si > 10, sino 0)
+        // Si no hay fecha de pago, usa el día de hoy para calcular mora corriente
+        if (moraRate == null) moraRate = 2;
+        if (!moraRate) return 0;
+        let dia;
+        if (fechaPago) {
+            dia = parseInt(fechaPago.split('-')[2]);
+        } else {
+            dia = new Date().getDate();
+        }
+        if (!dia || dia <= 10) return 0;
+        const diasMora = dia - 10;
+        return Math.round(montoAlquiler * (moraRate / 100) * diasMora);
+    }
+
+    /** Devuelve el monto base actual del contrato.
+     *  Prioridad: último período confirmado (updatesHistory) > acuerdoMonto > initialAmount */
+    function getMontoBase(c) {
+        const history = (c.updatesHistory || []).slice().sort((a,b) => b.periodNumber - a.periodNumber);
+        if (history.length && history[0].amount) return history[0].amount;
+        if (c.acuerdoMonto) return parseFloat(c.acuerdoMonto);
+        return parseFloat(c.initialAmount) || 0;
+    }
+
+    /**
+     * Devuelve un rec por defecto para un contrato.
+     * Si ya existe un rec en memoria con campos editados manualmente
+     * (_manualAlquiler, _manualDifDeposito), respeta esos valores
+     * para que el auto-refresh no pise lo ingresado a mano.
+     */
+    function defaultRecord(c) {
+        const montoBase = getMontoBase(c);
+        const existing  = records[c.address]; // rec en memoria (puede tener flags manuales)
+        const alqVal    = (existing && existing._manualAlquiler)    ? existing.montoAlquiler : montoBase;
+        const difVal    = (existing && existing._manualDifDeposito) ? existing.difDeposito   : (calcDefaultDifDeposito(c) || '');
+        return {
+            id: recId(c.address),
+            address:       c.address,
+            contractId:    c.id || '',
+            year:          curYear,
+            month:         curMonth,
+            fechaPago:     existing ? (existing.fechaPago     || '') : '',
+            montoAlquiler: alqVal,
+            adminFee:      parseFloat(c.adminFee) || 0,
+            mora:          existing ? (existing.mora          ?? '') : '',
+            descuento:     existing ? (existing.descuento     ?? '') : '',
+            difDeposito:   difVal,
+            luz: false, gas: false, agua: false, abl: false, expensas: false,
+            montoLuz:      existing ? (existing.montoLuz      ?? '') : '',
+            montoGas:      existing ? (existing.montoGas      ?? '') : '',
+            montoAgua:     existing ? (existing.montoAgua     ?? '') : '',
+            montoAbl:      existing ? (existing.montoAbl      ?? '') : '',
+            montoExpensas: existing ? (existing.montoExpensas ?? '') : '',
+            chkLuz:        existing ? !!existing.chkLuz        : false,
+            chkGas:        existing ? !!existing.chkGas        : false,
+            chkAgua:       existing ? !!existing.chkAgua       : false,
+            chkAbl:        existing ? !!existing.chkAbl        : false,
+            chkExpensas:   existing ? !!existing.chkExpensas   : false,
+            chkOtros:      existing ? !!existing.chkOtros      : false,
+            montoOtros:    existing ? (existing.montoOtros    ?? '') : '',
+            estado:        existing ? (existing.estado        || '') : '',
+            observaciones: existing ? (existing.observaciones || '') : '',
+            // Preservar flags manuales
+            _manualAlquiler:    existing ? !!existing._manualAlquiler    : false,
+            _manualDifDeposito: existing ? !!existing._manualDifDeposito : false,
+            // Estado de cobro de honorarios al dueño
+            honRecibido: existing ? !!existing.honRecibido : false,
+        };
+    }
+    function recId(addr) { return `${addr}__${curYear}__${curMonth}`.replace(/\s+/g,'_'); }
+
+    /* ══ Calc:
+       - Honorarios = % sobre (alquiler + mora) únicamente
+       - Descuento, dif. depósito y pago de servicios NO entran en la base de honorarios
+       - Para el dueño = alq + mora - descuento - honorarios + pagosServ + difDeposito  ══ */
+    function calcRow(rec) {
+        const alq          = parseFloat(rec.montoAlquiler) || 0;
+        const mora         = parseFloat(rec.mora) || 0;
+        const descuento    = parseFloat(rec.descuento) || 0;
+        const difDeposito  = parseFloat(rec.difDeposito) || 0;
+        const fee          = parseFloat(rec.adminFee) || 0;
+        // Montos individuales (siempre visibles)
+        const mLuz      = parseFloat(rec.montoLuz)      || 0;
+        const mGas      = parseFloat(rec.montoGas)      || 0;
+        const mAgua     = parseFloat(rec.montoAgua)     || 0;
+        const mAbl      = parseFloat(rec.montoAbl)      || 0;
+        const mExpensas = parseFloat(rec.montoExpensas) || 0;
+        const mOtros   = parseFloat(rec.montoOtros)    || 0;
+        // Solo se suman al total los servicios con checkbox marcado
+        const pagosServ = (rec.chkLuz      ? mLuz      : 0)
+                        + (rec.chkGas      ? mGas      : 0)
+                        + (rec.chkAgua     ? mAgua     : 0)
+                        + (rec.chkAbl      ? mAbl      : 0)
+                        + (rec.chkExpensas ? mExpensas : 0)
+                        + (rec.chkOtros    ? mOtros    : 0);
+        const base         = alq + mora;
+        const honorarios   = Math.round(base * fee / 100);
+        const paraDueno    = alq + mora - descuento - honorarios + pagosServ + difDeposito;
+        return { alq, mora, descuento, pagosServ, difDeposito, base, honorarios, paraDueno,
+                 mLuz, mGas, mAgua, mAbl, mExpensas, mOtros };
+    }
+
+    function buildParaDuenoHtml(v) {
+        return `<span style="font-weight:700">${fmtCur(v.paraDueno)}</span>`;
+    }
+
+    /* ══ Imprimir Recibo (2 por hoja A4: original + copia) ══ */
+    // SVG isotipo compacto inline
+    const LOGO_SVG_RECIBO = `<div style="width:42px;height:42px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1.5px solid #222"><svg viewBox="0 0 1532.9 1229.94" xmlns="http://www.w3.org/2000/svg" style="width:32px;height:32px"><path fill="#222" d="M766.45,39.94L54.91,353.68h229.76c-3.51,0-6.36,3-6.36,6.7v677.09c0,72.57,55.77,131.39,124.57,131.39h788.13c35.1,0,63.56-30.01,63.56-67.04V353.68h223.41L766.45,39.94Z"/><path fill="#fff" d="M786.94,398.11v186.57h-13.66c-10.28-48.68-29.43-86-57.45-111.94-28.03-25.94-59.78-38.9-95.28-38.9-29.66,0-56.87,9.66-81.61,28.98-24.75,19.32-42.86,44.59-54.3,75.82-14.71,39.96-22.06,84.42-22.06,133.39s5.37,92.03,16.11,131.59c10.75,39.57,27.55,69.47,50.44,89.72,22.89,20.25,52.55,30.37,88.97,30.37,29.89,0,57.27-7.4,82.14-22.23,24.88-14.82,51.09-40.35,78.64-76.62v46.45c-26.62,31.5-54.35,54.33-83.19,68.48-28.84,14.15-62.52,21.24-101.06,21.24-50.67,0-95.69-11.51-135.04-34.54-39.35-23.03-69.7-56.11-91.07-99.24-21.37-43.13-32.06-89.06-32.06-137.75,0-51.34,11.85-100.05,35.56-146.09,23.7-46.05,55.69-81.77,95.98-107.19,40.28-25.4,83.07-38.11,128.38-38.11,33.39,0,68.65,8.21,105.79,24.61,21.48,9.53,35.14,14.29,40.98,14.29,7.47,0,13.95-3.11,19.43-9.33,5.48-6.21,9.05-16.07,10.69-29.57h13.66Z"/><path fill="#fff" d="M1163.15,398.11l3.85,179.43h-14.35c-6.78-44.99-23.42-81.18-49.92-108.57-26.51-27.39-55.17-41.08-85.99-41.08-23.82,0-42.68,7.21-56.57,21.63-13.9,14.42-20.85,31.03-20.85,49.82,0,11.92,2.45,22.5,7.36,31.76,6.77,12.44,17.63,24.75,32.58,36.92,10.98,8.73,36.31,24.22,76.01,46.45,55.57,30.96,93.05,60.21,112.44,87.74,19.15,27.52,28.73,59.02,28.73,94.48,0,45-15.47,83.7-46.41,116.12-30.95,32.43-70.23,48.63-117.87,48.63-14.95,0-29.07-1.72-42.39-5.16-13.31-3.45-30.01-9.92-50.09-19.45-11.21-5.3-20.44-7.94-27.68-7.94-6.07,0-12.49,2.64-19.26,7.94-6.77,5.3-12.27,13.36-16.46,24.22h-12.97v-203.26h12.97c10.27,57.17,30.06,100.77,59.37,130.81,29.3,30.04,60.89,45.05,94.75,45.05,26.15,0,46.99-8.07,62.52-24.22,15.53-16.14,23.29-34.93,23.29-56.37,0-12.7-2.97-25-8.93-36.92-5.96-11.91-15.01-23.22-27.15-33.94-12.14-10.72-33.62-24.67-64.45-41.88-43.21-24.07-74.26-44.59-93.18-61.53-18.91-16.94-33.45-35.86-43.61-56.77-10.16-20.9-15.24-43.93-15.24-69.07,0-42.88,13.89-79.4,41.69-109.57,27.78-30.17,62.81-45.26,105.08-45.26,15.41,0,30.36,2.13,44.84,6.36,10.97,3.17,24.34,9.06,40.11,17.66,15.76,8.6,26.79,12.9,33.1,12.9s10.86-2.12,14.36-6.35c3.5-4.23,6.77-14.42,9.81-30.57h10.51Z"/></svg></div>`;
+
+    /* ── Helpers de recibo ── */
+    const R = {
+        row: (lbl, val, bold=false) => val
+            ? `<tr>
+                <td style="padding:2px 0;color:#111;font-size:8.5pt;width:42%">${lbl}</td>
+                <td style="padding:2px 0;text-align:right;font-size:${bold?'9pt':'8.5pt'};font-weight:${bold?700:600};color:#111">${val}</td>
+               </tr>`
+            : '',
+        sep: () => `<tr><td colspan="2" style="padding:3px 0"><div style="border-top:1px solid #ccc"></div></td></tr>`,
+        sec: (t) => `<tr><td colspan="2" style="padding:3px 0 1px;font-size:7.5pt;font-weight:700;color:#111;text-transform:uppercase;letter-spacing:.5px">${t}</td></tr>`,
+    };
+
+    function buildReciboHtml(c, rec, destino) {
+        // destino: 'INQUILINO' | 'DUENO'
+        const esInquilino = destino === 'INQUILINO';
+        const { alq, mora, descuento, difDeposito, pagosServ, honorarios, paraDueno,
+                mLuz, mGas, mAgua, mAbl, mExpensas, mOtros } = calcRow(rec);
+        const totalInquilino = alq + mora - descuento + difDeposito + pagosServ;
+        const adminFee   = parseFloat(c.adminFee) || parseFloat(rec.adminFee) || 0;
+        const fechaPago  = rec.fechaPago ? new Date(rec.fechaPago+'T00:00:00').toLocaleDateString('es-AR') : '—';
+        const idxEf      = (c.acuerdoIndice && c.acuerdoFecha) ? c.acuerdoIndice : c.indexType;
+        const idxLabel   = idxEf==='FIJO' ? `Fijo ${c.fixedPercent}% c/${c.updateFrequency}m` : `${idxEf} c/${c.updateFrequency}m`;
+        const MESES      = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+        const mesAnio    = `${MESES[curMonth]} ${curYear}`;
+        const ownerAlias = [c.aliasOwner1, c.aliasOwner2, c.aliasOwner3, c.aliasOwner4].filter(Boolean)[0] || '';
+        const aliasInmob = c.aliasInmobiliaria || 'cristian.912.sapa.mp';
+        const hayExtras  = mora>0 || descuento>0 || difDeposito>0 || pagosServ>0;
+        const total      = hayExtras ? totalInquilino : alq;
+
+
+        // Helper: fila de servicio — si no está marcado aparece en gris como informativo
+        const rowSvc = (lbl, monto, activo) => monto ? `<tr>
+            <td style="padding:2px 0;color:#111;font-size:8.5pt;width:42%">${activo?'Pago '+lbl.toLowerCase():'Pago '+lbl.toLowerCase()+' <span style="font-size:5.5pt">(informativo)</span>'}</td>
+            <td style="padding:2px 0;text-align:right;font-size:8.5pt;font-weight:600;color:#111">${fmtCur(monto)}</td>
+            </tr>` : '';
+        // Filas de detalle de pago (izquierda)
+        const detalleRows = `
+            ${R.sec('Detalle')}
+            ${R.row('Alquiler ' + mesAnio, fmtCur(alq))}
+            ${mora       ? R.row('Mora', fmtCur(mora)) : ''}
+            ${descuento  ? R.row('Descuento', '- '+fmtCur(descuento)) : ''}
+            ${difDeposito? R.row('Actualiz. deposito', fmtCur(difDeposito)) : ''}
+            ${rowSvc('Luz',      mLuz,      rec.chkLuz)}
+            ${rowSvc('Gas',      mGas,      rec.chkGas)}
+            ${rowSvc('Agua',     mAgua,     rec.chkAgua)}
+            ${rowSvc('ABL',      mAbl,      rec.chkAbl)}
+            ${rowSvc('Expensas', mExpensas, rec.chkExpensas)}
+            ${rowSvc('Otros',     mOtros,    rec.chkOtros)}
+            ${R.sep()}
+            ${R.row('TOTAL', fmtCur(total), true)}`;
+
+        // Columna derecha: destinos de pago
+        let depositoHtml = '';
+        if (esInquilino) {
+            // Inquilino: muestra dónde depositar pero SIN revelar comisión del dueño
+            if (honorarios > 0 && !c.honorariosPorDueno) {
+                depositoHtml = `
+                <div style="margin-bottom:4px">
+                    <div style="font-size:7.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#111;margin-bottom:1px">Depositar a la inmobiliaria</div>
+                    <div style="font-size:10pt;font-weight:700;color:#111">${fmtCur(honorarios)}</div>
+                    <div style="font-size:8pt;color:#111">${aliasInmob}</div>
+                </div>
+                <div style="border-top:1px solid #ddd;margin:3px 0"></div>
+                <div>
+                    <div style="font-size:7.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#111;margin-bottom:1px">Depositar al propietario</div>
+                    <div style="font-size:10pt;font-weight:700;color:#111">${fmtCur(paraDueno)}</div>
+                    ${ownerAlias ? `<div style="font-size:8pt;color:#111">${ownerAlias}</div>` : ''}
+                </div>`;
+            } else {
+                depositoHtml = `
+                <div>
+                    <div style="font-size:7.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#111;margin-bottom:1px">Depositar al propietario</div>
+                    <div style="font-size:10pt;font-weight:700;color:#111">${fmtCur(total)}</div>
+                    ${ownerAlias ? `<div style="font-size:8pt;color:#111">${ownerAlias}</div>` : ''}
+                </div>`;
+            }
+        } else {
+            // Dueño: detalle completo con comisión
+            if (honorarios > 0) {
+                if (c.honorariosPorDueno) {
+                    depositoHtml = `
+                    <div style="margin-bottom:4px">
+                        <div style="font-size:7.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#111;margin-bottom:1px">Cobrado del inquilino</div>
+                        <div style="font-size:10pt;font-weight:700;color:#111">${fmtCur(total)}</div>
+                        ${ownerAlias ? `<div style="font-size:8pt;color:#111">${ownerAlias}</div>` : ''}
+                    </div>
+                    <div style="border-top:1px solid #ddd;margin:3px 0"></div>
+                    <div>
+                        <div style="font-size:7.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#111;margin-bottom:1px">Honorarios inmobiliaria (${adminFee}%)</div>
+                        <div style="font-size:9pt;font-weight:700;color:#111">- ${fmtCur(honorarios)}</div>
+                        <div style="font-size:8pt;color:#111">${aliasInmob}</div>
+                    </div>
+                    <div style="border-top:1px solid #ddd;margin:3px 0"></div>
+                    <div>
+                        <div style="font-size:7.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#111;margin-bottom:1px">Neto para el dueño</div>
+                        <div style="font-size:10pt;font-weight:700;color:#111">${fmtCur(paraDueno)}</div>
+                    </div>
+                    <div style="border-top:1px solid #ddd;margin:3px 0"></div>
+                    <div style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:7.5pt;font-weight:700;${rec.honRecibido ? 'background:#e6f9f2;color:#166534;border:1px solid #bbf7d0' : 'background:#fff7ed;color:#9a3412;border:1px solid #fed7aa'}">
+                        ${rec.honRecibido ? '✓ Honorarios recibidos' : '⏳ Honorarios pendientes'}
+                    </div>`;
+                } else {
+                    depositoHtml = `
+                    <div style="margin-bottom:4px">
+                        <div style="font-size:7.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#111;margin-bottom:1px">Inmobiliaria (${adminFee}%)</div>
+                        <div style="font-size:8.5pt;font-weight:700;color:#111">${fmtCur(honorarios)}</div>
+                        <div style="font-size:7.5pt;color:#111">${aliasInmob}</div>
+                    </div>
+                    <div style="border-top:1px solid #ddd;margin:3px 0"></div>
+                    <div>
+                        <div style="font-size:7.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#111;margin-bottom:1px">Para el dueño</div>
+                        <div style="font-size:10.5pt;font-weight:700;color:#111">${fmtCur(paraDueno)}</div>
+                        ${ownerAlias ? `<div style="font-size:8pt;color:#111">${ownerAlias}</div>` : ''}
+                        <div style="font-size:7.5pt;color:#111;margin-top:2px">Alq ${fmtCur(alq)}${mora?` + Mora ${fmtCur(mora)}`:''}${descuento?` - Desc ${fmtCur(descuento)}`:''}${difDeposito?` + Dep ${fmtCur(difDeposito)}`:''}${pagosServ?` + Serv ${fmtCur(pagosServ)}`:''}${honorarios?` - Hon ${fmtCur(honorarios)}`:''}</div>
+                    </div>
+                    <div style="border-top:1px solid #ddd;margin:3px 0"></div>
+                    <div style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:7.5pt;font-weight:700;${rec.honRecibido ? 'background:#e6f9f2;color:#166534;border:1px solid #bbf7d0' : 'background:#fff7ed;color:#9a3412;border:1px solid #fed7aa'}">
+                        ${rec.honRecibido ? '✓ Honorarios recibidos' : '⏳ Honorarios pendientes'}
+                    </div>`;
+                }
+            } else {
+                depositoHtml = `
+                <div>
+                    <div style="font-size:7.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#111;margin-bottom:1px">Para el dueño</div>
+                    <div style="font-size:10pt;font-weight:700;color:#111">${fmtCur(paraDueno)}</div>
+                    ${ownerAlias ? `<div style="font-size:8pt;color:#111">${ownerAlias}</div>` : ''}
+                </div>`;
+            }
+        }
+
+        return `<div style="border:1px solid #999;font-family:Arial,sans-serif;width:100%;page-break-inside:avoid">
+            <!-- Header -->
+            <div style="border-bottom:1.5px solid #222;padding:5px 10px;display:flex;align-items:center;gap:8px">
+                ${LOGO_SVG_RECIBO}
+                <div style="flex:1">
+                    <div style="font-size:10pt;font-weight:700;color:#111;line-height:1.2">Cristian Sanchez Propiedades</div>
+                    <div style="font-size:7.5pt;color:#111">Av. Segurola 1197, CABA</div>
+                </div>
+                <div style="text-align:center;border:1.5px solid #222;border-radius:4px;padding:3px 10px;min-width:70px">
+                    <div style="font-size:8pt;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#111">Recibo</div>
+                    <div style="font-size:9.5pt;font-weight:700;color:#111">${mesAnio}</div>
+                </div>
+                <div style="border:2px solid #111;border-radius:4px;padding:3px 10px;text-align:center;min-width:80px">
+                    <div style="font-size:9pt;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#111">Para el</div>
+                    <div style="font-size:10pt;font-weight:700;text-transform:uppercase;color:#111">${destino}</div>
+                </div>
+            </div>
+            <!-- Body: 2 columnas -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;padding:5px 10px">
+                <!-- Columna izquierda: datos + detalle -->
+                <div style="padding-right:8px;border-right:1px solid #ddd">
+                    <table style="width:100%;border-collapse:collapse">
+                        ${R.sec('Datos del contrato')}
+                        ${R.row('Propiedad', c.address)}
+                        ${R.row('Inquilino', c.tenant)}
+                        ${R.row('Propietario', c.owner)}
+
+                        ${R.row('Fecha de pago', fechaPago)}
+                        ${R.row('Actualizacion', idxLabel)}
+                        ${detalleRows}
+                    </table>
+                </div>
+                <!-- Columna derecha: destino de pagos -->
+                <div style="padding-left:8px;display:flex;flex-direction:column;justify-content:center">
+                    <div style="font-size:6pt;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#444;margin-bottom:5px;border-bottom:1px solid #ccc;padding-bottom:2px">Destino del pago</div>
+                    ${depositoHtml}
+                    ${rec.observaciones ? `<div style="margin-top:6px;border-top:1px solid #ddd;padding-top:4px;font-size:6.5pt;color:#444;font-style:italic">${rec.observaciones}</div>` : ''}
+                </div>
+            </div>
+            <!-- Pie -->
+            <div style="border-top:1px solid #ccc;padding:3px 10px;display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:7.5pt;color:#111">Cristian Sanchez Propiedades — Av. Segurola 1197, CABA</span>
+                <div style="display:flex;align-items:flex-end;gap:8px">
+                    <div style="text-align:center"><div style="width:80px;border-top:1px solid #999;margin-bottom:1px"></div><span style="font-size:7.5pt;color:#111">Firma y sello</span></div>
+                </div>
+            </div>
+        </div>`;
+    }
+
+    function printRecibo(c, rec) {
+        const reciboInquilino = buildReciboHtml(c, rec, 'INQUILINO');
+        const reciboDueno     = buildReciboHtml(c, rec, 'DUENO');
+        const win = window.open('', '_blank');
+        win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+        <title>Recibo — ${c.address}</title>
+        <style>
+            @page { size: A4 portrait; margin: 12mm 12mm 12mm 12mm; }
+            * { box-sizing: border-box; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            body { font-family: Arial, sans-serif; background: #fff; }
+            .page { width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; gap: 0; }
+            .recibo-wrap { flex: 1; display: flex; align-items: center; }
+            .recibo-wrap > div { width: 100%; }
+            .separator { border: none; border-top: 1.5px dashed #999; margin: 4mm 0; flex-shrink: 0; }
+            @media print { body { margin: 0; } }
+        </style>
+        </head><body>
+        <div class="page">
+            <div class="recibo-wrap">${reciboInquilino}</div>
+            <hr class="separator">
+            <div class="recibo-wrap">${reciboDueno}</div>
+        </div>
+        <script>window.onload=function(){ window.print(); }<\/script>
+        <script src="supabase.js"><\/script>
+</body></html>`);
+        win.document.close();
+    }
+
+    /** Devuelve los nombres de los meses que cubre el período actualmente cobrado */
+    function getCurrentPeriodMonths(c) {
+        const MESES_NOM = ['enero','febrero','marzo','abril','mayo','junio',
+                           'julio','agosto','septiembre','octubre','noviembre','diciembre'];
+        const freq = parseInt(c.updateFrequency) || 3;
+        const history = (c.updatesHistory || []).slice().sort((a,b) => b.periodNumber - a.periodNumber);
+
+        // Determinar desde qué fecha empieza el período actual
+        let periodStart;
+        if (history.length) {
+            const lastPeriod = history[0];
+            const start = _normalizeStart(c);
+            periodStart = new Date(start);
+            periodStart.setMonth(periodStart.getMonth() + (lastPeriod.periodNumber - 1) * freq);
+        } else {
+            periodStart = _normalizeStart(c);
+        }
+
+        const names = [];
+        for (let i = 0; i < freq; i++) {
+            const d = new Date(periodStart);
+            d.setMonth(d.getMonth() + i);
+            names.push(MESES_NOM[d.getMonth()]);
+        }
+        if (!names.length) return '';
+        if (names.length === 1) return names[0];
+        return names.slice(0, -1).join(', ') + ' y ' + names[names.length - 1];
+    }
+
+    function genAdminMsg(c, rec) {
+        const { alq, mora, descuento, pagosServ, difDeposito, base, honorarios, paraDueno,
+                mLuz, mGas, mAgua, mAbl, mExpensas, mOtros } = calcRow(rec);
+
+        const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                       'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+        const B = '*'; // negrita WhatsApp
+        const fechaPago = rec.fechaPago
+            ? new Date(rec.fechaPago + 'T00:00:00').toLocaleDateString('es-AR')
+            : null;
+
+        // Mora en días
+        let diasMora = 0, moraPorDia = 0;
+        if (mora > 0 && rec.fechaPago) {
+            const dia = parseInt(rec.fechaPago.split('-')[2]);
+            if (dia > 10) { diasMora = dia - 10; moraPorDia = Math.round(mora / diasMora); }
+        }
+
+        const totalInquilino = alq + mora - descuento + difDeposito + pagosServ;
+        const adminFee = parseFloat(c.adminFee) || parseFloat(rec.adminFee) || 0;
+        const hayExtras = mora > 0 || descuento > 0 || difDeposito > 0 || pagosServ > 0
+                        || mLuz || mGas || mAgua || mAbl || mExpensas;
+
+        // ── Cabecera ──────────────────────────────────────────
+        let msg = `ALQUILER ${MESES[curMonth].toUpperCase()} ${curYear}\n`;
+        msg += `${c.address}\n\n`;
+
+        // ── Detalle ───────────────────────────────────────────
+        msg += `Alquiler ${MESES[curMonth]}: ${fmtCur(alq)}\n`;
+
+        if (mora > 0) {
+            if (diasMora > 0 && moraPorDia > 0) {
+                msg += `Mora (${diasMora} dia${diasMora !== 1 ? 's' : ''}): ${fmtCur(mora)}\n`;
+                msg += `   (dia ${Array.from({length:diasMora},(_,i)=>i+11).join(', ')} - ${fmtCur(moraPorDia)} por dia)\n`;
+            } else {
+                msg += `Mora: ${fmtCur(mora)}\n`;
+            }
+        }
+        if (descuento > 0)   msg += `Descuento: -${fmtCur(descuento)}\n`;
+        if (difDeposito > 0) msg += `Actualizacion deposito: ${fmtCur(difDeposito)}\n`;
+
+        // Servicios: marcados normal, desmarcados con (inf.)
+        if (mLuz)      msg += rec.chkLuz      ? `Pago luz: ${fmtCur(mLuz)}\n`  : `Pago luz: ${fmtCur(mLuz)} (informativo)\n`;
+        if (mGas)      msg += rec.chkGas      ? `Pago gas: ${fmtCur(mGas)}\n`  : `Pago gas: ${fmtCur(mGas)} (informativo)\n`;
+        if (mAgua)     msg += rec.chkAgua     ? `Pago agua: ${fmtCur(mAgua)}\n`    : `Pago agua: ${fmtCur(mAgua)} (informativo)\n`;
+        if (mAbl)      msg += rec.chkAbl      ? `Pago abl: ${fmtCur(mAbl)}\n`  : `Pago abl: ${fmtCur(mAbl)} (informativo)\n`;
+        if (mExpensas) msg += rec.chkExpensas ? `Pago expensas: ${fmtCur(mExpensas)}\n` : `Pago expensas: ${fmtCur(mExpensas)} (informativo)\n`;
+        if (mOtros)    msg += rec.chkOtros    ? `Otros: ${fmtCur(mOtros)}\n`           : `Otros: ${fmtCur(mOtros)} (informativo)\n`;
+
+        if (hayExtras) msg += `Total a pagar: ${fmtCur(totalInquilino)}\n`;
+
+        // ── Fecha de pago (si existe) ──────────────────────────
+        if (fechaPago) msg += `\nFecha de pago: ${fechaPago}\n`;
+
+        msg += `\n`;
+
+        // ── Destino de pagos ──────────────────────────────────
+        const ownerAliases = [c.aliasOwner1, c.aliasOwner2, c.aliasOwner3, c.aliasOwner4].filter(Boolean);
+        const aliasInmob   = c.aliasInmobiliaria || 'cristian.912.sapa.mp';
+
+        if (honorarios > 0 && !c.honorariosPorDueno) {
+            // Inmobiliaria cobra su parte
+            msg += `${B}Depositar a la inmobiliaria: ${fmtCur(honorarios)} (${adminFee}% sobre ${fmtCur(base)})${B}\n`;
+            msg += `   Alias Inmobiliaria: ${aliasInmob}\n\n`;
+            msg += `${B}Depositar al propietario: ${fmtCur(paraDueno)}${B}\n`;
+            if (ownerAliases.length) msg += `   Alias dueno: ${ownerAliases.join(' / ')}\n`;
+        } else {
+            // Sin honorarios separados o los paga el dueño
+            const totalDueno = c.honorariosPorDueno ? totalInquilino : paraDueno;
+            msg += `${B}Depositar al propietario: ${fmtCur(totalDueno)}${B}\n`;
+            if (ownerAliases.length) msg += `   Alias dueno: ${ownerAliases.join(' / ')}\n`;
+        }
+
+        if (rec.observaciones && rec.observaciones.trim())
+            msg += `\nObservaciones: ${rec.observaciones.trim()}\n`;
+
+        return msg;
+    }
+    async function copyText(t) {
+        try { await navigator.clipboard.writeText(t); return true; }
+        catch { const ta=document.createElement('textarea'); ta.value=t; ta.style.position='fixed'; ta.style.left='-9999px'; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');document.body.removeChild(ta);return true;}catch{document.body.removeChild(ta);return false;} }
+    }
+
+    /* ══ Render ══ */
+    function saveFocusAdm() {
+        const el = document.activeElement;
+        if (!el || el === document.body) return null;
+        return { id: el.id || null, cls: el.className || null, tag: el.tagName,
+                 start: el.selectionStart != null ? el.selectionStart : null,
+                 end:   el.selectionEnd   != null ? el.selectionEnd   : null };
+    }
+    function restoreFocusAdm(saved) {
+        if (!saved) return;
+        let el = saved.id ? document.getElementById(saved.id) : null;
+        if (!el) return;
+        try { el.focus(); if (saved.start !== null) el.setSelectionRange(saved.start, saved.end); } catch {}
+    }
+    function isUserTypingAdm() {
+        const el = document.activeElement;
+        if (!el) return false;
+        return el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || !!el.isContentEditable;
+    }
+
+    function renderMonth() {
+        $('#monthTitle').textContent = `${MESES[curMonth]} ${curYear}`;
+        const searchTerm = ($('#adminSearch')?.value || '').toLowerCase().trim();
+
+        const focusState = saveFocusAdm();  // guardar foco antes de destruir DOM
+
+        const body = $('#adminBody');
+        if (!contracts.length) {
+            body.innerHTML = '<tr><td colspan="11" class="empty">No hay contratos. Verificá la URL de CONTRACTS_API.</td></tr>';
+            updateSummary(); return;
+        }
+        body.innerHTML = '';
+        const filtered = searchTerm
+            ? contracts.filter(c => c.address.toLowerCase().includes(searchTerm))
+            : contracts;
+        if (!filtered.length) {
+            body.innerHTML = `<tr><td colspan="11" class="empty">Sin resultados para "${searchTerm}"</td></tr>`;
+            updateSummary();
+            restoreFocusAdm(focusState);
+            return;
+        }
+        filtered.forEach(c => body.appendChild(buildRow(c, records[c.address] || defaultRecord(c))));
+        updateSummary();
+        restoreFocusAdm(focusState);  // restaurar foco después de reconstruir DOM
+    }
+
+    function rowClass(estado) {
+        if (!estado) return 'row-neutral';
+        return `estado-${estado}`;
+    }
+
+    function buildRow(c, rec) {
+        const {honorarios, paraDueno} = calcRow(rec);
+        const estadoClass = rowClass(rec.estado);
+        const fragment = document.createDocumentFragment();
+
+        // ── Renglón 1: datos principales ──
+        const tr1 = document.createElement('tr');
+        tr1.dataset.address = c.address;
+        tr1.className = estadoClass;
+        tr1.innerHTML = `
+        <td>
+            <div class="addr" title="${esc(c.address)}">${esc(c.address)}</div>
+            <div class="addr-sub" style="color:var(--text-muted)">
+                <span style="font-size:.65rem;text-transform:uppercase;letter-spacing:.4px;color:var(--txt);font-weight:600">Inq.</span>
+                ${esc(c.tenant||'')}
+                ${c.tenantPhone?`<span style="margin-left:2px">${(typeof GestShared!=='undefined'?GestShared.waSpan(c.tenantPhone,c.tenantPhone):('📱 '+c.tenantPhone))}</span>`:''}
+            </div>
+            <div class="addr-sub" style="color:var(--text-muted);margin-top:2px">
+                <span style="font-size:.65rem;text-transform:uppercase;letter-spacing:.4px;color:var(--txt);font-weight:600">Dueño</span>
+                ${esc(c.owner||'')}
+                ${c.ownerPhone?`<span style="margin-left:2px">${(typeof GestShared!=='undefined'?GestShared.waSpan(c.ownerPhone,c.ownerPhone):('📱 '+c.ownerPhone))}</span>`:''}
+            </div>
+        </td>
+        <td><input type="date" class="inp f-fechaPago" value="${rec.fechaPago||''}"></td>
+        <td><div style="display:flex;align-items:center;gap:3px"><span style="color:var(--text-muted);font-size:.82rem">$</span><input type="number" class="inp f-montoAlquiler" value="${rec.montoAlquiler}" min="0" step="1" style="width:90px;-moz-appearance:textfield" onwheel="this.blur()"></div></td>
+        <td>
+            <select class="select-estado f-estado">
+                <option value=""        ${rec.estado===''        ?'selected':''}>—</option>
+                <option value="ESPERAR" ${rec.estado==='ESPERAR' ?'selected':''}>ESPERAR</option>
+                <option value="AVISADO" ${rec.estado==='AVISADO' ?'selected':''}>AVISADO</option>
+                <option value="RETIRADO"${rec.estado==='RETIRADO'?'selected':''}>RETIRADO</option>
+            </select>
+        </td>
+        <td class="amount amount-green f-paraDueno">${buildParaDuenoHtml(calcRow(rec))}</td>
+        <td class="f-honorarios" style="white-space:nowrap">
+            <span style="font-weight:600;color:var(--txt)">${fmtCur(honorarios)}${rec.adminFee ? `<span style="font-size:.75rem;color:var(--text-muted);font-weight:400;margin-left:3px">(${rec.adminFee}%)</span>` : ''}</span>
+            ${honorarios > 0 ? `<br><button class="hon-badge f-honRecibido ${rec.honRecibido ? 'hon-recibido' : 'hon-pendiente'}"
+                data-recibido="${rec.honRecibido ? '1' : '0'}"
+                title="${rec.honRecibido ? 'Honorarios recibidos — click para marcar pendiente' : 'Honorarios pendientes — click para marcar recibido'}"
+                style="margin-top:3px;cursor:pointer;border:none;border-radius:12px;padding:2px 7px;font-size:.66rem;font-weight:700;letter-spacing:.3px;transition:all .18s">
+                ${rec.honRecibido ? '✓ Recibido' : '⏳ Pendiente'}
+            </button>` : ''}
+        </td>
+        <td></td>`;
+        fragment.appendChild(tr1);
+
+        // ── Renglón 2: ajustes y detalles ──
+        const tr2 = document.createElement('tr');
+        tr2.dataset.address = c.address;
+        tr2.className = estadoClass;
+        tr2.innerHTML = `
+        <td class="row2" colspan="2">
+            <span class="r2-lbl">Observaciones</span>
+            <textarea class="inp f-observaciones" placeholder="—" style="resize:none;height:2.6em;overflow-y:auto;width:100%">${rec.observaciones||''}</textarea>
+        </td>
+        <td class="row2"></td>
+        <td class="row2" colspan="2">
+            <div style="display:flex;justify-content:space-between;gap:.4rem;flex-wrap:wrap">
+                <div class="r2-cell">
+                    <span class="r2-lbl">Descuento ($)</span>
+                    <div style="display:flex;align-items:center;gap:2px"><span style="color:var(--text-muted);font-size:.82rem">$</span><input type="number" class="inp f-descuento" value="${rec.descuento||''}" min="0" step="1" placeholder="0" style="width:60px;-moz-appearance:textfield" onwheel="this.blur()"></div>
+                </div>
+
+                <div class="r2-cell">
+                    <span class="r2-lbl">Mora ($)</span>
+                    <div style="display:flex;align-items:center;gap:2px"><span style="color:var(--text-muted);font-size:.82rem">$</span><input type="number" class="inp f-mora" value="${rec.mora||''}" min="0" step="1" placeholder="0" style="width:60px;-moz-appearance:textfield" onwheel="this.blur()"></div>
+                </div>
+                <div class="r2-cell">
+                    <span class="r2-lbl">Dif. Depósito ($)</span>
+                    <div style="display:flex;align-items:center;gap:2px"><span style="color:var(--text-muted);font-size:.82rem">$</span><input type="number" class="inp f-difDeposito" value="${rec.difDeposito||''}" min="0" step="1" placeholder="0" style="width:60px;-moz-appearance:textfield;${c.depositUpdate?'border-color:rgba(123,31,162,.4);background:rgba(123,31,162,.06)':''}" onwheel="this.blur()"></div>
+                </div>
+            </div>
+        </td>
+        <td class="row2">
+            <span class="r2-lbl">Servicios</span>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:2px">
+                <div class="r2-cell"><div class="svc-lbl-wrap"><input type="checkbox" class="svc-chk f-chkLuz" title="Tildar si se cuenta en el monto final" ${rec.chkLuz?'checked':''}><span class="r2-lbl">Luz</span></div><div class="svc-monto ${rec.chkLuz?'':'svc-inact'}"><span class="svc-peso">$</span><input type="number" class="inp f-montoLuz" value="${rec.montoLuz||''}" min="0" step="1" placeholder="0" style="width:58px;-moz-appearance:textfield" onwheel="this.blur()"></div></div>
+                <div class="r2-cell"><div class="svc-lbl-wrap"><input type="checkbox" class="svc-chk f-chkGas" title="Tildar si se cuenta en el monto final" ${rec.chkGas?'checked':''}><span class="r2-lbl">Gas</span></div><div class="svc-monto ${rec.chkGas?'':'svc-inact'}"><span class="svc-peso">$</span><input type="number" class="inp f-montoGas" value="${rec.montoGas||''}" min="0" step="1" placeholder="0" style="width:58px;-moz-appearance:textfield" onwheel="this.blur()"></div></div>
+                <div class="r2-cell"><div class="svc-lbl-wrap"><input type="checkbox" class="svc-chk f-chkAgua" title="Tildar si se cuenta en el monto final" ${rec.chkAgua?'checked':''}><span class="r2-lbl">Agua</span></div><div class="svc-monto ${rec.chkAgua?'':'svc-inact'}"><span class="svc-peso">$</span><input type="number" class="inp f-montoAgua" value="${rec.montoAgua||''}" min="0" step="1" placeholder="0" style="width:58px;-moz-appearance:textfield" onwheel="this.blur()"></div></div>
+                <div class="r2-cell"><div class="svc-lbl-wrap"><input type="checkbox" class="svc-chk f-chkAbl" title="Tildar si se cuenta en el monto final" ${rec.chkAbl?'checked':''}><span class="r2-lbl">ABL</span></div><div class="svc-monto ${rec.chkAbl?'':'svc-inact'}"><span class="svc-peso">$</span><input type="number" class="inp f-montoAbl" value="${rec.montoAbl||''}" min="0" step="1" placeholder="0" style="width:58px;-moz-appearance:textfield" onwheel="this.blur()"></div></div>
+                <div class="r2-cell"><div class="svc-lbl-wrap"><input type="checkbox" class="svc-chk f-chkExpensas" title="Tildar si se cuenta en el monto final" ${rec.chkExpensas?'checked':''}><span class="r2-lbl">Expensas</span></div><div class="svc-monto ${rec.chkExpensas?'':'svc-inact'}"><span class="svc-peso">$</span><input type="number" class="inp f-montoExpensas" value="${rec.montoExpensas||''}" min="0" step="1" placeholder="0" style="width:58px;-moz-appearance:textfield" onwheel="this.blur()"></div></div>
+                <div class="r2-cell"><div class="svc-lbl-wrap"><input type="checkbox" class="svc-chk f-chkOtros" title="Tildar si se cuenta en el monto final" ${rec.chkOtros?'checked':''}><span class="r2-lbl">Otros</span></div><div class="svc-monto ${rec.chkOtros?'':'svc-inact'}"><span class="svc-peso">$</span><input type="number" class="inp f-montoOtros" value="${rec.montoOtros||''}" min="0" step="1" placeholder="0" style="width:58px;-moz-appearance:textfield" onwheel="this.blur()"></div></div>
+            </div>
+        </td>
+        <td class="row2" style="text-align:center;vertical-align:top;padding-top:.4rem">
+            <span class="r2-lbl" style="display:block;margin-bottom:4px;text-align:center">WA / IMP</span>
+            <div style="display:flex;gap:4px;justify-content:center">
+                <button class="btn-wa-row" title="Generar mensaje WhatsApp" data-act="wa">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.999 2C6.477 2 2 6.484 2 12.017c0 1.99.525 3.86 1.438 5.472L2 22l4.641-1.406A9.955 9.955 0 0 0 12 22c5.522 0 10-4.484 10-10.017S17.522 2 12 2z"/></svg>
+                </button>
+                <button class="btn-wa-row" title="Imprimir recibo" data-act="print" style="color:#7b8fa1">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                </button>
+            </div>
+        </td>`;
+        fragment.appendChild(tr2);
+
+        // ── Separador visual ──
+        const sep = document.createElement('tr');
+        sep.className = 'tr-sep';
+        sep.innerHTML = '<td colspan="7"></td>';
+        fragment.appendChild(sep);
+
+        attachListeners(tr1, c, rec, tr2);
+        return fragment;
+    }
+
+    function attachListeners(tr, c, rec, tr2) {
+        // Buscar en ambas filas
+        const get = s => tr.querySelector(s) || (tr2 && tr2.querySelector(s));
+
+        function refresh() {
+            rec.montoAlquiler  = parseFloat(get('.f-montoAlquiler').value)||0;
+            rec.mora           = parseFloat(get('.f-mora').value)||0;
+            rec.descuento      = parseFloat(get('.f-descuento').value)||0;
+            rec.difDeposito    = parseFloat(get('.f-difDeposito').value)||0;
+            rec.montoLuz      = parseFloat(get('.f-montoLuz')?.value)||0;
+            rec.montoGas      = parseFloat(get('.f-montoGas')?.value)||0;
+            rec.montoAgua     = parseFloat(get('.f-montoAgua')?.value)||0;
+            rec.montoAbl      = parseFloat(get('.f-montoAbl')?.value)||0;
+            rec.montoExpensas = parseFloat(get('.f-montoExpensas')?.value)||0;
+            rec.montoOtros    = parseFloat(get('.f-montoOtros')?.value)||0;
+            rec.chkLuz        = get('.f-chkLuz')?.checked      || false;
+            rec.chkGas        = get('.f-chkGas')?.checked      || false;
+            rec.chkAgua       = get('.f-chkAgua')?.checked     || false;
+            rec.chkAbl        = get('.f-chkAbl')?.checked      || false;
+            rec.chkExpensas   = get('.f-chkExpensas')?.checked || false;
+            rec.chkOtros      = get('.f-chkOtros')?.checked      || false;
+            const {honorarios, paraDueno} = calcRow(rec);
+            get('.f-paraDueno').innerHTML = buildParaDuenoHtml(calcRow(rec));
+            get('.f-honorarios').textContent = fmtCur(honorarios);
+            const cls = rowClass(rec.estado);
+            tr.className = cls;
+            if (tr2) tr2.className = cls;
+            updateSummary();
+        }
+
+        function collectAndSave() {
+            rec.fechaPago      = get('.f-fechaPago').value;
+            const alqInput = get('.f-montoAlquiler');
+            rec.montoAlquiler  = parseFloat(alqInput.value)||0;
+            // Preservar flags de edición manual para que el auto-refresh no pise
+            if (alqInput.dataset.manual)              rec._manualAlquiler   = true;
+            const difInput = get('.f-difDeposito');
+            if (difInput.dataset.manual)              rec._manualDifDeposito = true;
+            // Calcular mora automática si el contrato tiene % mora y el campo mora no fue editado manualmente
+            const moraInput = get('.f-mora');
+            const moraAuto = calcMoraAutomatica(rec.montoAlquiler, c.moraRate != null ? c.moraRate : 2, rec.fechaPago);
+            const _moraRate = c.moraRate != null ? c.moraRate : 2;
+            if (_moraRate && rec.fechaPago && !moraInput.dataset.manual) {
+                moraInput.value = moraAuto;
+            }
+            rec.mora           = parseFloat(get('.f-mora').value)||0;
+            rec.descuento      = parseFloat(get('.f-descuento').value)||0;
+            rec.difDeposito    = parseFloat(difInput.value)||0;
+            rec.montoLuz      = parseFloat(get('.f-montoLuz').value)||0;
+            rec.montoGas      = parseFloat(get('.f-montoGas').value)||0;
+            rec.montoAgua     = parseFloat(get('.f-montoAgua').value)||0;
+            rec.montoAbl      = parseFloat(get('.f-montoAbl').value)||0;
+            rec.montoExpensas = parseFloat(get('.f-montoExpensas').value)||0;
+            rec.montoOtros    = parseFloat(get('.f-montoOtros').value)||0;
+            rec.chkLuz        = get('.f-chkLuz')?.checked      || false;
+            rec.chkGas        = get('.f-chkGas')?.checked      || false;
+            rec.chkAgua       = get('.f-chkAgua')?.checked     || false;
+            rec.chkAbl        = get('.f-chkAbl')?.checked      || false;
+            rec.chkExpensas   = get('.f-chkExpensas')?.checked || false;
+            rec.chkOtros      = get('.f-chkOtros')?.checked      || false;
+            rec.estado        = get('.f-estado').value;
+            rec.observaciones = get('.f-observaciones').value;
+            // Leer estado del badge de honorarios (si existe)
+            const honBadge = get('.f-honRecibido');
+            if (honBadge) rec.honRecibido = honBadge.dataset.recibido === '1';
+            rec.id            = recId(c.address);
+            rec.year          = curYear;
+            rec.month         = curMonth;
+            rec.adminFee      = parseFloat(c.adminFee)||0;
+            records[c.address] = rec;
+            refresh();
+
+            clearTimeout(saveTimers[c.address]);
+            saveTimers[c.address] = setTimeout(async () => {
+                try { await saveRecord(rec); }
+                catch(e) { showToast('Error al guardar', 'error'); }
+            }, 800);
+        }
+
+        /**
+         * Bloquea/desbloquea todos los inputs excepto el selector de estado
+         * y los botones WA/Imprimir (que son <button>, no input/select/textarea).
+         * Solo se puede editar cuando estado === '' (guión).
+         */
+        function setLocked(locked) {
+            const rows = [tr, tr2].filter(Boolean);
+            rows.forEach(row => {
+                row.querySelectorAll('input, select, textarea').forEach(el => {
+                    if (el.classList.contains('f-estado')) return; // estado siempre editable
+                    el.disabled = locked;
+                    el.style.opacity = locked ? '0.4' : '';
+                    el.style.cursor  = locked ? 'not-allowed' : '';
+                    if (locked) el.style.pointerEvents = 'none';
+                    else        el.style.pointerEvents = '';
+                });
+            });
+        }
+
+        [tr, tr2].filter(Boolean).forEach(row => {
+            row.querySelectorAll('input, select, textarea').forEach(el => {
+                el.oninput = el.onchange = collectAndSave;
+            });
+        });
+        // Toggle clase svc-inact al cambiar checkbox: atenúa el monto si no está marcado
+        ['Luz','Gas','Agua','Abl','Expensas','Otros'].forEach(s => {
+            const chk = get(`.f-chk${s}`);
+            if(!chk) return;
+            chk.addEventListener('change', function() {
+                const montoWrap = this.closest('.r2-cell')?.querySelector('.svc-monto');
+                if(montoWrap) montoWrap.classList.toggle('svc-inact', !this.checked);
+            });
+        });
+
+        // Bloquear cuando estado != '' (cualquier estado distinto de "—")
+        get('.f-estado').addEventListener('change', function() {
+            setLocked(this.value !== '');
+            collectAndSave();
+            this.blur(); // sacar el foco para evitar cambio accidental
+        });
+
+        // Si ya tenía estado al cargar, bloquear
+        if (rec.estado && rec.estado !== '') setLocked(true);
+        // Marcar campos editados manualmente para que el auto-refresh no los pise
+        get('.f-mora').addEventListener('input', function() {
+            this.dataset.manual = '1';
+        });
+        get('.f-montoAlquiler').addEventListener('input', function() {
+            this.dataset.manual = '1';
+            // Si se edita el monto manualmente, limpiar mora para que se recalcule
+            // con el nuevo monto al próxima cambio de fecha
+            const moraInput = get('.f-mora');
+            if (!moraInput.dataset.manual) moraInput.value = '';
+        });
+        get('.f-difDeposito').addEventListener('input', function() {
+            this.dataset.manual = '1';
+        });
+        // Al cambiar la fecha, recalcular mora automática (si no fue tocada manualmente)
+        get('.f-fechaPago').addEventListener('change', function() {
+            const moraInput = get('.f-mora');
+            const _mr = c.moraRate != null ? c.moraRate : 2;
+            if (_mr && !moraInput.dataset.manual) {
+                const monto = parseFloat(get('.f-montoAlquiler').value)||0;
+                moraInput.value = calcMoraAutomatica(monto, _mr, this.value);
+                collectAndSave();
+            }
+        });
+
+        // Badge honorarios: toggle al hacer click
+        const honBadgeEl = get('.f-honRecibido');
+        if (honBadgeEl) {
+            honBadgeEl.addEventListener('click', function(e) {
+                e.stopPropagation();
+                // Si la fila está bloqueada (estado != ''), igual permitir este toggle
+                const nuevo = this.dataset.recibido !== '1';
+                this.dataset.recibido = nuevo ? '1' : '0';
+                this.classList.toggle('hon-recibido',  nuevo);
+                this.classList.toggle('hon-pendiente', !nuevo);
+                this.textContent = nuevo ? '✓ Recibido' : '⏳ Pendiente';
+                this.title = nuevo
+                    ? 'Honorarios recibidos — click para marcar pendiente'
+                    : 'Honorarios pendientes — click para marcar recibido';
+                // Guardar inmediatamente
+                rec.honRecibido = nuevo;
+                records[c.address] = rec;
+                clearTimeout(saveTimers[c.address + '_hon']);
+                saveTimers[c.address + '_hon'] = setTimeout(async () => {
+                    try { await saveRecord(rec); }
+                    catch(e) { showToast('Error al guardar', 'error'); }
+                }, 600);
+                updateSummary();
+            });
+        }
+
+        // WhatsApp button
+        get('[data-act="wa"]').onclick = () => {
+            const msg = genAdminMsg(c, rec);
+            $('#msgText').textContent = msg;
+            $('#msgModal').style.display = 'flex';
+            $('#btnCopyMsg').onclick = async () => {
+                const ok = await copyText(msg);
+                showToast(ok ? 'Copiado al portapapeles' : 'Error al copiar', ok ? 'success' : 'error');
+            };
+            $('#btnSendWA').onclick = () => window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+        };
+
+        // Print button
+        get('[data-act="print"]').onclick = () => printRecibo(c, rec);
+    }
+
+    /* ══ Summary ══ */
+    function updateSummary() {
+        let sumAlq=0, sumInmob=0, retirados=0, sinPago=0, honPendientes=0;
+
+        const isCurrentMonth = (today.getFullYear()===curYear && today.getMonth()===curMonth);
+        const pastDay10 = isCurrentMonth && today.getDate() > 10;
+
+        contracts.forEach(c => {
+            const rec = records[c.address];
+            const {alq, honorarios} = calcRow(rec || defaultRecord(c));
+            sumAlq   += alq;
+            sumInmob += honorarios;
+            if (rec && rec.estado==='RETIRADO') retirados++;
+            if (pastDay10 && (!rec || !rec.fechaPago)) sinPago++;
+            // Honorarios pendientes: tiene honorarios, el dueño debería pagar, y aún no confirmó
+            if (honorarios > 0 && rec && !rec.honRecibido) honPendientes++;
+        });
+
+        $('#sumAlq').textContent       = fmtCur(sumAlq);
+        $('#sumInmob').textContent     = fmtCur(sumInmob);
+        $('#sumMora').textContent      = sinPago > 0 ? `${sinPago} contrato${sinPago!==1?'s':''}` : '—';
+        $('#sumRetirados').textContent = `${retirados} / ${contracts.length}`;
+        // Mostrar hon. pendientes en el pill de summary si hay alguno
+        const honPill = $('#sumHonPendientes');
+        if (honPill) {
+            honPill.textContent = honPendientes > 0 ? `${honPendientes} pend.` : '—';
+            honPill.style.color = honPendientes > 0 ? 'var(--accent)' : 'var(--text-muted)';
+        }
+    }
+
+    /* ══ Navigation ══ */
+    async function goTo(y, m) { curYear=y; curMonth=m; await loadPage(); }
+
+    async function loadPage() {
+        const b=$('#loadingBanner'); b.textContent='🔄 Cargando datos…'; b.style.display='block';
+        try { await loadMonthRecords(); renderMonth(); }
+        catch(e) { showToast('Error al cargar datos', 'error'); }
+        finally { b.style.display='none'; }
+    }
+
+    /* ══ Init ══ */
+    document.addEventListener('DOMContentLoaded', async () => {
+    // header hardcoded — no JS needed
+        const b=$('#loadingBanner'); b.textContent='🔄 Cargando contratos…'; b.style.display='block';
+        try { await loadContracts(); } catch(e) { showToast('Error al cargar contratos','error'); }
+        try { await loadMonthRecords(); } catch(e){ console.error("[Admin]",e); }
+        renderMonth();
+        b.style.display='none';
+
+        $('#btnPrev').onclick = () => { let m=curMonth-1,y=curYear; if(m<0){m=11;y--;} goTo(y,m); };
+        $('#btnNext').onclick = () => { let m=curMonth+1,y=curYear; if(m>11){m=0;y++;} goTo(y,m); };
+        $('#closeMsgModal').onclick = () => { $('#msgModal').style.display = 'none'; };
+        $('#msgModal').onclick = e => { if (e.target === $('#msgModal')) $('#msgModal').style.display = 'none'; };
+
+        // Auto-refresh inteligente cada 60 segundos
+        async function silentRefreshAdm() {
+            if (isUserTypingAdm()) return;  // no interrumpir al usuario
+            try {
+                await loadContracts();
+                await loadMonthRecords();
+                renderMonth();
+            } catch(e){ console.error("[Admin]",e); }
+        }
+        setInterval(silentRefreshAdm, 60000+Math.random()*15000);
+
+        // Refrescar al volver a esta pestaña
+        document.addEventListener('visibilitychange', async () => {
+            if (document.visibilityState === 'visible') await silentRefreshAdm();
+        });
+
+        // Ajustar altura del table-wrap dinámicamente
+        function updateTableHeight() {
+            const wrap = document.querySelector('.table-wrap');
+            if (!wrap) return;
+            const top = wrap.getBoundingClientRect().top;
+            wrap.style.maxHeight = (window.innerHeight - top - 16) + 'px';
+        }
+        updateTableHeight();
+        window.addEventListener('resize', updateTableHeight);
+        document.querySelectorAll('.btn-fs').forEach(b => b.addEventListener('click', () => setTimeout(updateTableHeight, 50)));
+
+        /* ── Month picker ── */
+        const MESES_SHORT = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+        let pickerYear = curYear;
+
+        function renderPicker() {
+            $('#pickerYearLabel').textContent = pickerYear;
+            const grid = $('#pickerMonths');
+            grid.innerHTML = '';
+            MESES_SHORT.forEach((m, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'picker-month-btn' + (pickerYear===curYear && i===curMonth ? ' active' : '');
+                btn.textContent = m;
+                btn.onclick = () => {
+                    $('#monthPicker').classList.remove('open');
+                    goTo(pickerYear, i);
+                };
+                grid.appendChild(btn);
+            });
+        }
+
+        $('#monthTitle').onclick = (e) => {
+            e.stopPropagation();
+            pickerYear = curYear;
+            renderPicker();
+            $('#monthPicker').classList.toggle('open');
+        };
+        $('#pickerPrevYear').onclick = (e) => { e.stopPropagation(); pickerYear--; renderPicker(); };
+        $('#pickerNextYear').onclick = (e) => { e.stopPropagation(); pickerYear++; renderPicker(); };
+
+        // Cerrar al hacer click afuera
+        document.addEventListener('click', () => $('#monthPicker').classList.remove('open'));
+    });
+</script>
+</body>
+</html>

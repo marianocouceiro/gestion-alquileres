@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Cristian Sanchez Propiedades</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="logger.js"></script>
+    <script src="shared.js"></script>
+    <script src="supabase.js"></script>
+    <script src="notif_email.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0d0d;--bg2:#151515;--bg3:#1c1c1c;--bg4:#252525;
+  --txt:#f5f5f5;--txt2:#b0b0b0;--muted:#717171;
+  --acc:#f57c00;--glow:rgba(245,124,0,.28);--soft:rgba(245,124,0,.12);
+  --ok:#10b981;--warn:#f59e0b;--danger:#ef4444;--info:#378ADD;
+  --border:rgba(255,255,255,.08);
+  --grad:linear-gradient(135deg,#f57c00,#ff9800);
+  --gh:linear-gradient(135deg,#0d0d0d 0%,#1a1206 50%,#0d0d0d 100%);
+  --sh:0 4px 12px rgba(0,0,0,.5);--r:12px;--tr:.2s cubic-bezier(.4,0,.2,1);
+}
+html{font-size:15px;background:var(--bg)}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;line-height:1.5;overflow-x:hidden}
+body::before{content:'';position:fixed;top:0;left:0;right:0;height:400px;background:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(245,124,0,.08),transparent);pointer-events:none;z-index:0}
+.hdr{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:.7rem 1.5rem;background:var(--gh);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);gap:1rem;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:.75rem}
+.logo-ico{width:36px;height:36px;background:var(--soft);border:1px solid var(--glow);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+.logo-txt h1{color:#fff;font-size:.92rem;font-weight:700}
+.logo-txt span{font-size:.68rem;color:var(--muted)}
+.hdr-nav{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.nav-btn{background:rgba(255,255,255,.06);color:var(--txt2);border:1px solid var(--border);border-radius:8px;padding:.35rem .8rem;font-size:.76rem;font-weight:600;cursor:pointer;text-decoration:none;font-family:inherit;display:inline-flex;align-items:center;gap:.35rem;transition:all var(--tr)}
+.nav-btn:hover{background:var(--soft);color:var(--acc);border-color:rgba(245,124,0,.3)}
+.nav-btn.current{background:var(--soft);color:var(--acc);border-color:rgba(245,124,0,.4)}
+main{max-width:1400px;margin:0 auto;padding:1.5rem;position:relative;z-index:1}
+/* Sección */
+.section-title{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--acc);margin:1.5rem 0 .7rem;display:flex;align-items:center;gap:.4rem}
+.section-title::after{content:'';flex:1;height:1px;background:rgba(245,124,0,.2);margin-left:.3rem}
+/* Grid de cards resumen */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.75rem;margin-bottom:.5rem}
+.stat-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:1rem 1.1rem;transition:border-color var(--tr)}
+.stat-card:hover{border-color:rgba(245,124,0,.3)}
+.stat-label{font-size:.64rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:600;margin-bottom:.3rem}
+.stat-value{font-size:1.5rem;font-weight:800;color:var(--txt);line-height:1.1}
+.stat-sub{font-size:.68rem;color:var(--muted);margin-top:.2rem}
+.stat-card.accent .stat-value{color:var(--acc)}
+.stat-card.ok .stat-value{color:var(--ok)}
+.stat-card.warn .stat-value{color:var(--warn)}
+.stat-card.danger .stat-value{color:var(--danger)}
+.stat-card.info .stat-value{color:var(--info)}
+/* Listas */
+.list-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:.75rem}
+.list-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:1rem 1.1rem}
+.list-body{max-height:260px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(245,124,0,.3) transparent}
+.list-body::-webkit-scrollbar{width:4px}
+.list-body::-webkit-scrollbar-track{background:transparent}
+.list-body::-webkit-scrollbar-thumb{background:rgba(245,124,0,.3);border-radius:2px}
+.list-card-title{font-size:.92rem;font-weight:700;color:var(--acc);margin-bottom:.7rem;display:flex;align-items:center;gap:.4rem}
+.list-item{font-size:.88rem;padding:.42rem 0;border-bottom:1px solid rgba(255,255,255,.04);display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem}
+.list-item:last-child{border-bottom:none}
+.list-item-main{color:var(--txt);font-weight:500;line-height:1.35}
+.list-item-sub{font-size:.76rem;color:var(--muted)}
+.list-item-badge{font-size:.74rem;padding:.14rem .55rem;border-radius:10px;font-weight:600;white-space:nowrap;flex-shrink:0}
+.badge-danger{background:rgba(239,68,68,.12);color:var(--danger)}
+.badge-warn{background:rgba(245,158,11,.12);color:var(--warn)}
+.badge-ok{background:rgba(16,185,129,.12);color:var(--ok)}
+.badge-acc{background:rgba(245,124,0,.12);color:var(--acc)}
+.badge-info{background:rgba(55,138,221,.12);color:var(--info)}
+.empty-list{font-size:.86rem;color:var(--muted);padding:.6rem 0;text-align:center}
+/* Charts */
+.charts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:.75rem}
+.chart-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:1rem;min-height:260px}
+.chart-title{font-size:.92rem;font-weight:700;color:var(--txt2);margin-bottom:.85rem}
+.chart-wrap{position:relative;height:200px}
+/* Loading */
+#loadingOverlay{position:fixed;inset:0;background:rgba(13,13,13,.85);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem}
+.spinner{width:36px;height:36px;border:3px solid rgba(245,124,0,.2);border-top-color:var(--acc);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:.82rem;color:var(--muted)}
+/* Refresh btn */
+.refresh-btn{background:none;border:1px solid var(--border);border-radius:8px;padding:.35rem .7rem;color:var(--muted);cursor:pointer;font-size:.76rem;font-family:inherit;transition:all var(--tr);display:inline-flex;align-items:center;gap:.3rem}
+.refresh-btn:hover{border-color:var(--acc);color:var(--acc)}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px}
+</style>
+  <style id="gs-hdr-css">
+    .app-hdr{position:sticky;top:0;z-index:300;display:flex;align-items:center;justify-content:space-between;padding:.55rem 1.4rem;background:linear-gradient(135deg,#0d0d0d 0%,#1a1206 50%,#0d0d0d 100%);border-bottom:1px solid rgba(255,255,255,.08);backdrop-filter:blur(20px);gap:.8rem;flex-wrap:wrap}
+    .app-hdr-logo{display:flex;align-items:center;gap:.65rem;text-decoration:none;flex-shrink:0}
+    .app-hdr-ico{width:34px;height:34px;flex-shrink:0;border-radius:9px;overflow:hidden;border:1px solid rgba(245,124,0,.35);padding:2px;background:rgba(245,124,0,.1)}
+    .app-hdr-ico svg{width:100%;height:100%;display:block}
+    .app-hdr-name{font-family:'Inter',-apple-system,sans-serif;font-size:.88rem;font-weight:700;color:#fff;line-height:1.2}
+    .app-hdr-sub{font-family:'Inter',-apple-system,sans-serif;font-size:.64rem;color:#717171;line-height:1}
+    .app-hdr-nav{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
+    .nav-lnk{display:inline-flex;align-items:center;gap:.3rem;padding:.35rem .75rem;border-radius:8px;font-family:'Inter',-apple-system,sans-serif;font-size:.76rem;font-weight:600;color:rgba(245,124,0,.85);background:rgba(245,124,0,.1);border:1px solid rgba(245,124,0,.22);text-decoration:none;transition:background .15s;white-space:nowrap}
+    .nav-lnk:hover{background:rgba(245,124,0,.22);color:#f57c00;border-color:rgba(245,124,0,.45)}
+    .nav-lnk.active{background:rgba(245,124,0,.25);color:#ff9800;border-color:rgba(245,124,0,.6)}
+    .nav-font{display:flex;align-items:center;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;overflow:hidden;flex-shrink:0}
+    .nav-font button{background:none;border:none;color:#b0b0b0;cursor:pointer;padding:.28rem .48rem;font-family:'Inter',-apple-system,sans-serif;font-size:.8rem;font-weight:600}
+    .nav-font button:hover{color:#f57c00;background:rgba(245,124,0,.1)}
+    .wa-phone-link{color:#378ADD;text-decoration:none;cursor:pointer}
+    .wa-phone-link:hover{text-decoration:underline;color:#25d366}
+  </style>
+</head>
+<body>
+
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loadingMsg">Cargando datos…</div>
+</div>
+
+<header class="app-hdr">
+  <a href="index.html" class="app-hdr-logo">
+    <div class="app-hdr-ico"><svg viewBox="0 0 1532.9 1229.94" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><path fill="#f39200" d="M766.45,39.94L54.91,353.68h229.76c-3.51,0-6.36,3-6.36,6.7v677.09c0,72.57,55.77,131.39,124.57,131.39h788.13c35.1,0,63.56-30.01,63.56-67.04V353.68h223.41L766.45,39.94Z"/><path fill="#fff" d="M786.94,398.11v186.57h-13.66c-10.28-48.68-29.43-86-57.45-111.94-28.03-25.94-59.78-38.9-95.28-38.9-29.66,0-56.87,9.66-81.61,28.98-24.75,19.32-42.86,44.59-54.3,75.82-14.71,39.96-22.06,84.42-22.06,133.39s5.37,92.03,16.11,131.59c10.75,39.57,27.55,69.47,50.44,89.72,22.89,20.25,52.55,30.37,88.97,30.37,29.89,0,57.27-7.4,82.14-22.23,24.88-14.82,51.09-40.35,78.64-76.62v46.45c-26.62,31.5-54.35,54.33-83.19,68.48-28.84,14.15-62.52,21.24-101.06,21.24-50.67,0-95.69-11.51-135.04-34.54-39.35-23.03-69.7-56.11-91.07-99.24-21.37-43.13-32.06-89.06-32.06-137.75,0-51.34,11.85-100.05,35.56-146.09,23.7-46.05,55.69-81.77,95.98-107.19,40.28-25.4,83.07-38.11,128.38-38.11,33.39,0,68.65,8.21,105.79,24.61,21.48,9.53,35.14,14.29,40.98,14.29,7.47,0,13.95-3.11,19.43-9.33,5.48-6.21,9.05-16.07,10.69-29.57h13.66Z"/><path fill="#fff" d="M1163.15,398.11l3.85,179.43h-14.35c-6.78-44.99-23.42-81.18-49.92-108.57-26.51-27.39-55.17-41.08-85.99-41.08-23.82,0-42.68,7.21-56.57,21.63-13.9,14.42-20.85,31.03-20.85,49.82,0,11.92,2.45,22.5,7.36,31.76,6.77,12.44,17.63,24.75,32.58,36.92,10.98,8.73,36.31,24.22,76.01,46.45,55.57,30.96,93.05,60.21,112.44,87.74,19.15,27.52,28.73,59.02,28.73,94.48,0,45-15.47,83.7-46.41,116.12-30.95,32.43-70.23,48.63-117.87,48.63-14.95,0-29.07-1.72-42.39-5.16-13.31-3.45-30.01-9.92-50.09-19.45-11.21-5.3-20.44-7.94-27.68-7.94-6.07,0-12.49,2.64-19.26,7.94-6.77,5.3-12.27,13.36-16.46,24.22h-12.97v-203.26h12.97c10.27,57.17,30.06,100.77,59.37,130.81,29.3,30.04,60.89,45.05,94.75,45.05,26.15,0,46.99-8.07,62.52-24.22,15.53-16.14,23.29-34.93,23.29-56.37,0-12.7-2.97-25-8.93-36.92-5.96-11.91-15.01-23.22-27.15-33.94-12.14-10.72-33.62-24.67-64.45-41.88-43.21-24.07-74.26-44.59-93.18-61.53-18.91-16.94-33.45-35.86-43.61-56.77-10.16-20.9-15.24-43.93-15.24-69.07,0-42.88,13.89-79.4,41.69-109.57,27.78-30.17,62.81-45.26,105.08-45.26,15.41,0,30.36,2.13,44.84,6.36,10.97,3.17,24.34,9.06,40.11,17.66,15.76,8.6,26.79,12.9,33.1,12.9s10.86-2.12,14.36-6.35c3.5-4.23,6.77-14.42,9.81-30.57h10.51Z"/></svg></div>
+    <div><div class="app-hdr-name">Cristian Sanchez Propiedades</div>
+    <div class="app-hdr-sub">Administración de Alquileres</div></div>
+  </a>
+  <nav class="app-hdr-nav">
+    <a href="dashboard.html" class="nav-lnk active">🏠 Dashboard</a>
+    <a href="ventas.html" class="nav-lnk">🏘️ Propiedades</a>
+    <a href="visitas.html" class="nav-lnk">📅 Visitas</a>
+    <a href="tasaciones.html" class="nav-lnk">📋 Tasaciones</a>
+    <a href="banco.html" class="nav-lnk">👤 Banco</a>
+    <a href="index.html" class="nav-lnk">📄 Contratos</a>
+    <a href="administracion.html" class="nav-lnk">🧾 Administración</a>
+    <a href="configuracion.html" class="nav-lnk">⚙️ Configuración</a>
+    <div class="nav-font">
+      <button onclick="(function(){var fs=parseInt(localStorage.getItem('app_fs'))||15;fs=Math.max(11,fs-1);localStorage.setItem('app_fs',fs);document.documentElement.style.fontSize=fs+'px';})()" title="Reducir">A-</button>
+      <button onclick="(function(){localStorage.setItem('app_fs',15);document.documentElement.style.fontSize='15px';})()" title="Defecto">↺</button>
+      <button onclick="(function(){var fs=parseInt(localStorage.getItem('app_fs'))||15;fs=Math.min(20,fs+1);localStorage.setItem('app_fs',fs);document.documentElement.style.fontSize=fs+'px';})()" title="Agrandar">A+</button>
+    </div>
+  </nav>
+</header>
+
+<main>
+  <!-- Stats resumen -->
+  <div class="section-title">📊 Resumen general</div>
+  <div class="stats-grid" id="statsGrid">
+    <div class="stat-card"><div class="stat-label">Contratos activos</div><div class="stat-value" id="stContratos">—</div></div>
+    <div class="stat-card warn"><div class="stat-label">Por actualizar ≤10d</div><div class="stat-value" id="stPorActualizar">—</div></div>
+    <div class="stat-card danger"><div class="stat-label">Por vencer ≤65d</div><div class="stat-value" id="stPorVencer">—</div></div>
+    <div class="stat-card ok"><div class="stat-label">Visitas hoy</div><div class="stat-value" id="stVisitas">—</div></div>
+    <div class="stat-card info"><div class="stat-label">Propiedades en venta</div><div class="stat-value" id="stPropVenta">—</div></div>
+    <div class="stat-card accent"><div class="stat-label">Proc. venta activos</div><div class="stat-value" id="stProcesos">—</div></div>
+    <div class="stat-card"><div class="stat-label">Tasaciones activas</div><div class="stat-value" id="stTasaciones">—</div></div>
+    <div class="stat-card ok" style="position:relative">
+      <div class="stat-label">Compradores activos</div>
+      <div class="stat-value" id="stCompradores">—</div>
+      <div style="font-size:.68rem;color:var(--ok,#10b981);margin-top:3px;opacity:.85">
+        🎯 <span id="stMatches">—</span> con matches
+      </div>
+    </div>
+  </div>
+
+  <!-- Listas operativas -->
+  <div class="section-title">⚡ Requieren atención</div>
+  <div class="list-grid">
+
+    <div class="list-card">
+      <div class="list-card-title">🔔 Contratos a actualizar (≤10 días)</div>
+      <div class="list-body"><div id="listActualizar"><div class="empty-list">Sin pendientes</div></div></div>
+    </div>
+
+    <div class="list-card">
+      <div class="list-card-title">⏰ Contratos por vencer (≤65 días)</div>
+      <div class="list-body"><div id="listVencer"><div class="empty-list">Sin vencimientos próximos</div></div></div>
+    </div>
+
+    <div class="list-card">
+      <div class="list-card-title">📅 Visitas de hoy</div>
+      <div class="list-body"><div id="listVisitas"><div class="empty-list">Sin visitas hoy</div></div></div>
+    </div>
+
+    <div class="list-card">
+      <div class="list-card-title">💰 Procesos de venta activos</div>
+      <div class="list-body"><div id="listProcesos"><div class="empty-list">Sin procesos activos</div></div></div>
+    </div>
+
+    <div class="list-card">
+      <div class="list-card-title">📊 Tasaciones recientes</div>
+      <div class="list-body"><div id="listTasaciones"><div class="empty-list">Sin tasaciones</div></div></div>
+    </div>
+
+    <div class="list-card">
+      <div class="list-card-title">🎯 Compradores activos con matches</div>
+      <div class="list-body"><div id="listMatches"><div class="empty-list">Sin matches activos</div></div></div>
+    </div>
+
+  </div>
+
+  <!-- Gráficos -->
+  <div class="section-title">📈 Gráficos</div>
+  <div class="charts-grid">
+
+    <div class="chart-card">
+      <div class="chart-title">Honorarios cobrados — últimos 6 meses</div>
+      <div class="chart-wrap"><canvas id="chartHonorarios"></canvas></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">Administración — Cobrados vs Pendientes (mes actual)</div>
+      <div class="chart-wrap"><canvas id="chartAdminTorta"></canvas></div>
+      <div id="admMontos" style="display:flex;justify-content:center;gap:1.5rem;margin-top:.6rem;font-size:.8rem;flex-wrap:wrap"></div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+/* ══ APIs ══ */
+const CONTRACTS_API = ''; // GAS eliminado v5
+const ADMIN_API     = ''; // GAS eliminado v5
+const VENTAS_API    = ''; // GAS eliminado v5
+const TAS_API       = ''; // GAS eliminado v5
+const BANCO_API     = ''; // GAS eliminado v5
+const VISITAS_API   = ''; // GAS eliminado v5
+
+const $ = id => document.getElementById(id);
+const fmtCur = n => new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',minimumFractionDigits:0}).format(n||0);
+const fmtDate = s => { try{const d=new Date(s+'T00:00:00');return d.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});}catch{return s||'';} };
+const MESES_SHORT = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+// Supabase v5 — apiFetch reemplazado por adaptadores SupabaseDB
+async function apiFetch(url, params={}, retries=1) {
+    // Legacy shim: no-op (URLs están vacías en v5)
+    return null;
+}
+
+/* ══ Cálculos de contratos ══ */
+function normalizeStart(c){const d=new Date(c.startDate+'T00:00:00');return new Date(d.getFullYear(),d.getMonth(),1);}
+function getTotalDuration(c){return parseInt(c.duration)+((c.prorrogas||[]).reduce((s,p)=>s+parseInt(p.months||0),0));}
+function getEndDate(c){const s=new Date(c.startDate+'T00:00:00'),e=new Date(s);e.setMonth(e.getMonth()+getTotalDuration(c));e.setDate(e.getDate()-1);return e;}
+function getUpdateDates(c){const start=normalizeStart(c),dur=getTotalDuration(c),freq=parseInt(c.updateFrequency),ed=getEndDate(c),dates=[];for(let m=freq;m<=dur;m+=freq){const d=new Date(start);d.setMonth(d.getMonth()+m);const sm=d.getFullYear()===ed.getFullYear()&&d.getMonth()===ed.getMonth();if(sm&&ed.getDate()<=10)continue;dates.push({date:d,periodNumber:m/freq+1});}return dates;}
+function getNextUpdate(c){const now=new Date();now.setHours(0,0,0,0);const history=c.updatesHistory||[];for(const u of getUpdateDates(c)){if(!history.some(h=>h.periodNumber===u.periodNumber)){const ud=new Date(u.date);ud.setHours(0,0,0,0);return{...u,daysUntil:Math.ceil((ud-now)/864e5)};}}return null;}
+function isExpired(c){const s=new Date(c.startDate+'T00:00:00'),e=new Date(s);e.setMonth(e.getMonth()+getTotalDuration(c));return new Date()>e;}
+
+/* ══ Match simple (igual que banco.html) ══ */
+function matchear(comp,propiedades){
+    const v=comp.vistasProps||[],n=comp.noInteresaProps||[];
+    return propiedades.filter(p=>{
+        if(p.venta||p.tipo==='alquiler'||p.proceso)return false;
+        if(v.includes(p.address)||n.includes(p.address))return false;
+        if(comp.credito&&p.cCredito===false)return false;
+        if(comp.rubros&&comp.rubros.length&&(!p.rubro||!comp.rubros.includes(p.rubro)))return false;
+        const precio=parseFloat(p.precioAut||p.precioPubl)||0,presup=parseFloat(comp.presupuesto)||0;
+        if(presup>0&&precio>0&&(precio<presup*0.85||precio>presup*1.15))return false;
+        if(comp.zonas&&comp.zonas.length&&(!p.zona||!comp.zonas.includes(p.zona)))return false;
+        return true;
+    });
+}
+
+/* ══ Helpers de render ══ */
+function setEl(id,val){const el=$(id);if(el)el.textContent=val;}
+
+function renderList(id, items, emptyMsg='Sin datos') {
+    const el=$(id); if(!el)return;
+    if(!items||!items.length){el.innerHTML='<div class="empty-list">'+emptyMsg+'</div>';return;}
+    el.innerHTML=items.map(it=>`
+        <div class="list-item">
+            <div>
+                <div class="list-item-main">${it.title}</div>
+                ${it.sub?'<div class="list-item-sub">'+it.sub+'</div>':''}
+            </div>
+            ${it.badge?'<span class="list-item-badge '+it.badgeCls+'">'+ it.badge+'</span>':''}
+        </div>`).join('');
+}
+
+let chartHon=null, chartAdm=null;
+
+function buildBarChart(canvasId, labels, data, color, existing) {
+    const ctx=document.getElementById(canvasId);if(!ctx)return null;
+    if(existing){existing.data.labels=labels;existing.data.datasets[0].data=data;existing.update();return existing;}
+    return new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'',data,backgroundColor:color+'33',borderColor:color,borderWidth:2,borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#717171',font:{size:11}},grid:{display:false}},y:{ticks:{color:'#717171',font:{size:11},callback:v=>v>=1000?Math.round(v/1000)+'k':v},grid:{color:'rgba(255,255,255,.05)'}}}}});
+}
+function buildPieChart(canvasId, labels, data, colors, existing) {
+    const ctx=document.getElementById(canvasId);if(!ctx)return null;
+    if(existing){existing.data.datasets[0].data=data;existing.update();return existing;}
+    return new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:colors,borderColor:'#1c1c1c',borderWidth:3}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{color:'#b0b0b0',font:{size:11},padding:12}}}}});
+}
+
+// ── renderAdmChart: siempre mes actual, calcula esperado si no hay pagos ──
+async function renderAdmChart(contracts, year, month) {
+    const fmtAdm = n => new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(n);
+    const canvas = document.getElementById('chartAdminTorta');
+    const montos = $('admMontos');
+
+    // 1. Leer pagos del mes actual desde Supabase
+    const admRecs = await SupabaseDB.getPagosMes(year, month); // month ya es 0-indexed, igual que en administracion
+
+    let cobrados = 0, pendientes = 0;
+
+    if (admRecs && admRecs.length) {
+        // Hay pagos cargados: usar datos reales
+        // Crear índice de contratos por dirección para fallback de adminFee
+        const feeByAddress = {};
+        (contracts || []).forEach(ct => {
+            if (ct.address && ct.adminFee) feeByAddress[ct.address] = parseFloat(ct.adminFee) || 0;
+        });
+        admRecs.forEach(rec => {
+            const alq  = parseFloat(rec.montoAlquiler) || 0;
+            const mora = parseFloat(rec.mora)          || 0;
+            // Usar adminFee del registro; si es 0 buscar en el contrato correspondiente
+            const fee  = parseFloat(rec.adminFee) || feeByAddress[rec.address] || 0;
+            const hon  = fee > 0 ? Math.round((alq + mora) * fee / 100) : 0;
+            if (hon <= 0) return;
+            // honRecibido puede ser boolean true/false o truthy value
+            if (rec.honRecibido) cobrados += hon; else pendientes += hon;
+        });
+    } else {
+        // No hay pagos aún para este mes: calcular ESPERADO desde contratos activos
+        // (mismo cálculo que administracion usa para calcRow antes de que entren los pagos)
+        const hoy = new Date(); hoy.setHours(0,0,0,0);
+        contracts.forEach(ct => {
+            if (isExpired(ct)) return;
+            const fee = parseFloat(ct.adminFee) || 0;
+            if (fee <= 0) return;
+            // Usar monto inicial como estimado base (mejor que nada sin schedule cache)
+            const base = parseFloat(ct.initialAmount) || 0;
+            const hon = Math.round(base * fee / 100);
+            if (hon > 0) pendientes += hon;
+        });
+    }
+
+    const total = cobrados + pendientes;
+    const hayDatos = total > 0;
+    const esEsperado = admRecs && admRecs.length === 0 && hayDatos;
+
+    // Nombre del mes y título del card
+    const MESES_NOM = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+        'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const mesNombre = MESES_NOM[month];
+    const admCard = canvas && canvas.closest('.chart-card');
+    if (admCard) {
+        const t = admCard.querySelector('.chart-title');
+        if (t) t.textContent = `Administración — ${mesNombre}`;
+    }
+
+    // Mostrar/ocultar canvas
+    if (canvas) canvas.style.display = hayDatos ? '' : 'none';
+
+    if (hayDatos) {
+        chartAdm = buildPieChart('chartAdminTorta',
+            ['Cobrados', 'Pendientes'],
+            [cobrados, pendientes],
+            ['rgba(16,185,129,.8)', 'rgba(245,124,0,.7)'],
+            chartAdm
+        );
+        montos.innerHTML = `
+            ${esEsperado
+                ? '<div style="font-size:.7rem;color:var(--muted);margin-bottom:.35rem">⚡ Estimado — cargá los pagos en Administración para actualizar</div>'
+                : ''}
+            <span style="color:#10b981;font-weight:700">✓ Cobrados: ${fmtAdm(cobrados)}</span>
+            <span style="color:#f57c00;font-weight:700">⏳ Pendientes: ${fmtAdm(pendientes)}</span>
+            <span style="color:var(--muted)">Total: ${fmtAdm(total)}</span>`;
+    } else {
+        montos.innerHTML = '<span style="color:var(--muted);font-size:.8rem">Sin contratos activos con honorarios</span>';
+    }
+}
+
+/* ══ Carga de datos ══ */
+async function loadAll() {
+  try {
+    $('loadingOverlay').style.display='flex';
+    $('loadingMsg').textContent='Conectando con Supabase…';
+
+    const hoy = new Date(); hoy.setHours(0,0,0,0);
+    const todayStr = hoy.toISOString().slice(0,10);
+    const curYear  = hoy.getFullYear();
+    const curMonth = hoy.getMonth();
+
+    // Llamadas paralelas principales — Supabase v5
+    $('loadingMsg').textContent='Cargando contratos y propiedades…';
+    const [contractsRaw, propsRaw, tasRaw, comprRaw, visitasRaw] = await Promise.all([
+        SupabaseDB.getContratos(),
+        SupabaseDB.getPropiedades(),
+        SupabaseDB.getTasaciones(),
+        SupabaseDB.getCompradores(),
+        SupabaseDB.getVisitas(),
+    ]);
+
+    /* ── Contratos ── */
+    const contracts = contractsRaw.sort((a,b)=>a.address.localeCompare(b.address,'es',{sensitivity:'base'}));
+    window._dashContracts = contracts; // para el auto-refresh del pie chart
+
+    // Notificación diaria por email (solo si no se mandó hoy y EmailJS está configurado)
+    if (typeof NotifEmail !== 'undefined') {
+      NotifEmail.enviarResumen(contracts).then(r => {
+        if (r.ok) console.log('[Email] Resumen diario enviado');
+        else if (r.error) console.warn('[Email]', r.error);
+      });
+    }
+    const contractsActivos = contracts.filter(c=>!isExpired(c));
+    const porActualizar = contractsActivos.filter(c=>{const nu=getNextUpdate(c);return nu&&nu.daysUntil>=0&&nu.daysUntil<=10;});
+    const porVencer     = contractsActivos.filter(c=>{const ed=getEndDate(c);const days=Math.ceil((ed-hoy)/864e5);return days>=0&&days<=65;});
+
+    setEl('stContratos',     contractsActivos.length);
+    setEl('stPorActualizar', porActualizar.length);
+    setEl('stPorVencer',     porVencer.length);
+
+    renderList('listActualizar', porActualizar.map(c=>{
+        const nu=getNextUpdate(c);
+        return {title:c.address,sub:c.tenant+' · '+c.indexType,badge:nu.daysUntil===0?'Hoy':'En '+nu.daysUntil+'d',badgeCls:nu.daysUntil<=3?'badge-danger':'badge-warn'};
+    }), 'Sin contratos pendientes');
+
+    renderList('listVencer', porVencer.slice(0,8).map(c=>{
+        const ed=getEndDate(c);const days=Math.ceil((ed-hoy)/864e5);
+        return {title:c.address,sub:c.tenant+' · Vence: '+fmtDate(ed.toISOString().slice(0,10)),badge:days+'d',badgeCls:days<=30?'badge-danger':'badge-warn'};
+    }), 'Sin vencimientos próximos');
+
+    /* ── Visitas ── */
+    const visitas = visitasRaw || [];
+    const visitasHoy = visitas.filter(v=>v.fecha===todayStr&&v.estado!=='cancelada').sort((a,b)=>(a.hora||'').localeCompare(b.hora||''));
+    setEl('stVisitas', visitasHoy.length);
+    renderList('listVisitas', visitasHoy.map(v=>({
+        title:(v.hora?v.hora+' hs — ':'')+v.propiedad,
+        sub:v.cliente||(v.tipo==='tasacion'?'Tasación':''),
+        badge:v.tipo==='tasacion'?'Tasación':v.estado==='por_visitar'?'Pendiente':'',
+        badgeCls:v.tipo==='tasacion'?'badge-acc':'badge-info'
+    })), 'Sin visitas para hoy');
+
+    /* ── Ventas / Propiedades ── */
+    const props = (propsRaw || []).filter(p=>!p.contratoCreado);
+    const propVenta  = props.filter(p=>p.tipo!=='alquiler');
+    const enProceso  = props.filter(p=>p.proceso&&!p.venta);
+    setEl('stPropVenta', propVenta.length);
+    setEl('stProcesos',  enProceso.length);
+    renderList('listProcesos', enProceso.slice(0,8).map(p=>({
+        title:p.address,
+        sub:(p.owners||[]).map(o=>o.name).join(', '),
+        badge:(p.proceso&&p.proceso.completadas?(p.proceso.completadas[p.proceso.completadas.length-1]||{}).nombre||'—':'—'),
+        badgeCls:'badge-acc'
+    })), 'Sin procesos activos');
+
+    /* ── Tasaciones ── */
+    let tasLista = [];
+    try{ tasLista=(tasRaw||[]).filter(t=>t.estado!=='rechazada'); }catch{}
+    setEl('stTasaciones', tasLista.filter(t=>t.estado!=='tomada').length);
+    renderList('listTasaciones', tasLista.slice(0,8).map(t=>({
+        title:t.direccion||'—',
+        sub:t.propietario||'',
+        badge:t.estado==='tomada'?'Tomada':t.estado==='en_seguimiento'?'Seguimiento':'Otro',
+        badgeCls:t.estado==='tomada'?'badge-ok':t.estado==='en_seguimiento'?'badge-info':'badge-warn'
+    })), 'Sin tasaciones activas');
+
+    /* ── Compradores / Matches ── */
+    let buyersActivos=[];
+    try{
+        buyersActivos=(comprRaw||[]).filter(c=>c.estado==='activo');
+    }catch{}
+    setEl('stCompradores', buyersActivos.length);
+    const hits=buyersActivos.map(c=>({comp:c,ms:matchear(c,propVenta)})).filter(x=>x.ms.length>0);
+    setEl('stMatches', hits.length);
+    renderList('listMatches', hits.slice(0,8).map(({comp,ms})=>({
+        title:comp.nombre,
+        sub:ms.map(p=>p.address).join(', '),
+        badge:ms.length+' propiedad'+(ms.length!==1?'es':''),
+        badgeCls:'badge-ok'
+    })), 'Sin matches activos');
+
+    /* ── Gráfico admin (cobrados vs pendientes mes actual) ── */
+    $('loadingMsg').textContent='Calculando honorarios…';
+    const fmtAdm = n => new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(n);
+    await renderAdmChart(contracts, curYear, curMonth);
+
+    /* ── Gráfico honorarios últimos 6 meses ── */
+    $('loadingMsg').textContent='Cargando honorarios históricos…';
+    const last6months=[];
+    for(let i=5;i>=0;i--){const d=new Date(curYear,curMonth-i,1);last6months.push({year:d.getFullYear(),month:d.getMonth(),label:MESES_SHORT[d.getMonth()]+' '+String(d.getFullYear()).slice(2)});}
+    const honData=await Promise.all(last6months.map(m=>SupabaseDB.getPagosMes(m.year,m.month))); // month 0-indexed
+    const honVals=honData.map((recs)=>{
+        if(!recs||!recs.length) return 0;
+        return recs.reduce((s,r)=>{
+            const alq = parseFloat(r.montoAlquiler)||0;
+            const mora= parseFloat(r.mora)||0;
+            const fee = parseFloat(r.adminFee)||0;
+            return s + (fee>0 ? Math.round((alq+mora)*fee/100) : 0);
+        }, 0);
+    });
+    chartHon=buildBarChart('chartHonorarios',last6months.map(m=>m.label),honVals,'#f57c00',chartHon);
+
+    } catch(e) {
+        console.error('[Dashboard] error:', e);
+    } finally {
+        $('loadingOverlay').style.display='none';
+    }
+}
+
+
+document.addEventListener('DOMContentLoaded',()=>{
+    // header hardcoded — no JS needed
+    loadAll();
+    $('btnRefresh').onclick=loadAll;
+    // Auto-refresh completo cada 5 minutos
+    setInterval(loadAll, 300000 + Math.random()*30000);
+    // Auto-refresh del gráfico honorarios cada 60 segundos, solo cuando la pestaña está visible
+    setInterval(async () => {
+        if (document.hidden) return; // no hacer nada si el tab no está activo
+        const hoy = new Date();
+        const yr = hoy.getFullYear(), mo = hoy.getMonth();
+        const cached = window._dashContracts;
+        if (cached) await renderAdmChart(cached, yr, mo);
+    }, 60000);
+});
+</script>
+</body>
+</html>

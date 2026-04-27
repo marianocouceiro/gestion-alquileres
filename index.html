@@ -1,1440 +1,442 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gestión de Alquileres</title>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
+    <title>Cristian Sanchez Propiedades - Gestión de Alquileres</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="logger.js"></script>
+    <script src="shared.js"></script>
+    <script src="supabase.js"></script>
+    <link rel="stylesheet" href="style.css">
     <style>
-        :root {
-            --primary: #2b5876;
-            --primary-light: #4e89ae;
-            --primary-dark: #1a3a4d;
-            --accent: #f39c12;
-            --accent-bright: #f1c40f;
-            --danger: #e74c3c;
-            --success: #27ae60;
-            --warning: #ff6b6b;
-            --bg-main: #f8f9fa;
-            --bg-card: #ffffff;
-            --text-primary: #2c3e50;
-            --text-secondary: #7f8c8d;
-            --border: #e0e6ed;
-            --shadow: rgba(43, 88, 118, 0.08);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Manrope', sans-serif;
-            background: var(--bg-main);
-            color: var(--text-primary);
-            line-height: 1.6;
-        }
-
-        .header {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-            color: white;
-            padding: 2rem 0;
-            box-shadow: 0 4px 20px var(--shadow);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .header-content {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .logo-icon {
-            width: 50px;
-            height: 50px;
-            background: white;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .logo h1 {
-            font-family: 'Montserrat', sans-serif;
-            font-size: 1.8rem;
-            font-weight: 900;
-            letter-spacing: -0.5px;
-        }
-
-        .header-stats {
-            display: flex;
-            gap: 2rem;
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 1.8rem;
-            font-weight: 800;
-            display: block;
-        }
-
-        .stat-label {
-            font-size: 0.85rem;
-            opacity: 0.9;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-
-        .alert-banner {
-            background: linear-gradient(135deg, var(--warning) 0%, var(--danger) 100%);
-            color: white;
-            padding: 1.5rem;
-            border-radius: 16px;
-            margin-bottom: 2rem;
-            display: none;
-            align-items: center;
-            gap: 1rem;
-            box-shadow: 0 8px 24px rgba(255, 107, 107, 0.3);
-            animation: slideDown 0.5s ease;
-        }
-
-        .alert-banner.show {
-            display: flex;
-        }
-
-        .alert-icon {
-            font-size: 2rem;
-            animation: pulse 2s infinite;
-        }
-
-        .alert-content h3 {
-            font-size: 1.2rem;
-            margin-bottom: 0.25rem;
-        }
-
-        .tabs {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            border-bottom: 2px solid var(--border);
-            flex-wrap: wrap;
-        }
-
-        .tab {
-            padding: 1rem 2rem;
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            position: relative;
-            transition: all 0.3s;
-            border-radius: 8px 8px 0 0;
-        }
-
-        .tab:hover {
-            color: var(--primary);
-            background: rgba(43, 88, 118, 0.05);
-        }
-
-        .tab.active {
-            color: var(--primary);
-            background: var(--bg-card);
-        }
-
-        .tab.active::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: var(--primary);
-            border-radius: 3px 3px 0 0;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .card {
-            background: var(--bg-card);
-            border-radius: 16px;
-            padding: 2rem;
-            box-shadow: 0 4px 20px var(--shadow);
-            margin-bottom: 2rem;
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid var(--border);
-        }
-
-        .card-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        label {
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: var(--text-primary);
-            font-size: 0.95rem;
-        }
-
-        input, select, textarea {
-            padding: 0.875rem;
-            border: 2px solid var(--border);
-            border-radius: 10px;
-            font-size: 1rem;
-            font-family: 'Manrope', sans-serif;
-            transition: all 0.3s;
-            background: white;
-        }
-
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(43, 88, 118, 0.1);
-        }
-
-        .btn {
-            padding: 0.875rem 2rem;
-            border: none;
-            border-radius: 10px;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-family: 'Manrope', sans-serif;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-            color: white;
-            box-shadow: 0 4px 12px rgba(43, 88, 118, 0.3);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(43, 88, 118, 0.4);
-        }
-
-        .btn-secondary {
-            background: var(--text-secondary);
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: var(--text-primary);
-        }
-
-        .btn-success {
-            background: var(--success);
-            color: white;
-        }
-
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
-
-        .btn-warning {
-            background: var(--accent);
-            color: white;
-        }
-
-        .table-container {
-            overflow-x: auto;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-        }
-
-        thead {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-            color: white;
-        }
-
-        th {
-            padding: 1.25rem 1rem;
-            text-align: left;
-            font-weight: 700;
-            font-size: 0.95rem;
-            letter-spacing: 0.3px;
-        }
-
-        td {
-            padding: 1.25rem 1rem;
-            border-bottom: 1px solid var(--border);
-        }
-
-        tbody tr {
-            transition: background 0.2s;
-        }
-
-        tbody tr:hover {
-            background: rgba(43, 88, 118, 0.03);
-        }
-
-        tbody tr.urgent {
-            background: rgba(255, 107, 107, 0.08);
-        }
-
-        tbody tr.expiring {
-            background: rgba(243, 156, 18, 0.08);
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 0.4rem 1rem;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-
-        .badge-active {
-            background: rgba(39, 174, 96, 0.15);
-            color: var(--success);
-        }
-
-        .badge-urgent {
-            background: rgba(255, 107, 107, 0.15);
-            color: var(--warning);
-        }
-
-        .badge-expiring {
-            background: rgba(243, 156, 18, 0.15);
-            color: var(--accent);
-        }
-
-        .badge-paused {
-            background: rgba(127, 140, 141, 0.15);
-            color: var(--text-secondary);
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-
-        .action-buttons button {
-            padding: 0.5rem 1rem;
-            font-size: 0.85rem;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(4px);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-        }
-
-        .modal.show {
-            display: flex;
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 20px;
-            padding: 2.5rem;
-            max-width: 600px;
-            width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            animation: modalSlideIn 0.3s ease;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid var(--border);
-        }
-
-        .modal-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--primary);
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: var(--text-secondary);
-            padding: 0;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-            transition: all 0.3s;
-        }
-
-        .close-btn:hover {
-            background: rgba(0, 0, 0, 0.05);
-            color: var(--text-primary);
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-        }
-
-        .empty-state-icon {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-        }
-
-        .empty-state h3 {
-            font-size: 1.3rem;
-            margin-bottom: 0.5rem;
-            color: var(--text-primary);
-        }
-
-        .empty-state p {
-            color: var(--text-secondary);
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes slideDown {
-            from { transform: translateY(-20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        @keyframes modalSlideIn {
-            from { transform: scale(0.9); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-
-        @media (max-width: 768px) {
-            .header-content {
-                flex-direction: column;
-                gap: 1.5rem;
-            }
-
-            .header-stats {
-                width: 100%;
-                justify-content: space-around;
-            }
-
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .tabs {
-                overflow-x: auto;
-            }
-
-            .tab {
-                white-space: nowrap;
-            }
-
-            .table-container {
-                font-size: 0.9rem;
-            }
-
-            th, td {
-                padding: 0.75rem 0.5rem;
-            }
-
-            .action-buttons {
-                flex-direction: column;
-            }
-
-            .action-buttons button {
-                width: 100%;
-            }
-        }
+        body { overflow-x: hidden; }
+        .table-container { overflow: visible; }
+        .table-wrapper   { overflow-x: auto; }
+            select { color-scheme: dark; }
+        select option { background: #1c1c2e; color: #e8eaf0; }
     </style>
 </head>
+
 <body>
-    <header class="header">
-        <div class="header-content">
-            <div class="logo">
-                <div class="logo-icon">🏠</div>
-                <h1>Gestión de Alquileres</h1>
-            </div>
-            <div class="header-stats">
-                <div class="stat-item">
-                    <span class="stat-value" id="headerTotalContracts">0</span>
-                    <span class="stat-label">Contratos</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-value" id="headerUrgent">0</span>
-                    <span class="stat-label">Urgentes</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-value" id="headerExpiring">0</span>
-                    <span class="stat-label">Por vencer</span>
-                </div>
+    <header><!-- GestShared.initHeader --></header>
+
+    <div class="app-toolbar" style="display:flex;align-items:center;justify-content:space-between;padding:.55rem 1.4rem;background:#0d0d0d;border-bottom:1px solid rgba(255,255,255,.06);gap:.75rem;flex-wrap:wrap;position:sticky;top:52px;z-index:150">
+    <div style="display:flex;align-items:center;gap:.5rem;flex:1;min-width:0">
+        <svg style="flex-shrink:0;color:#717171" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="searchInput" placeholder="Buscar por dirección, inquilino o propietario…" class="search-input" style="flex:1;min-width:0">
+    </div>
+    <div style="display:flex;align-items:center;gap:.5rem;flex-shrink:0">
+        <div class="header-stats" id="headerStats">
+            <div class="stat-pill"><span class="stat-label">Contratos</span><span class="stat-value" id="totalContracts">0</span></div>
+            <div class="stat-pill alert-pill" id="alertPill" style="display:none">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <span id="alertCount">0</span> alertas
             </div>
         </div>
-    </header>
-
-    <div class="container">
-        <!-- Alert Banners -->
-        <div id="alertUpdateBanner" class="alert-banner">
-            <div class="alert-icon">⚠️</div>
-            <div class="alert-content">
-                <h3>Actualizaciones Urgentes</h3>
-                <p id="alertUpdateText"></p>
-            </div>
+        <button class="btn btn-primary" id="btnNewContract">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nuevo Contrato
+        </button>
+    </div>
+</div>
+<div class="filter-bar">
+        <div class="filter-group">
+            <button class="filter-btn active" data-filter="all">Todos</button>
+            <button class="filter-btn" data-filter="alerts">🔔 Con Alertas</button>
+            <button class="filter-btn" data-filter="next-month">📅 Actualiza Mes Siguiente</button>
+            <button class="filter-btn" data-filter="month-after">📅 Actualiza Mes Subsiguiente</button>
+            <button class="filter-btn" data-filter="expiring-soon">⏳ Finaliza en 2 Meses</button>
+            <button class="filter-btn" data-filter="expiring-next-month">📆 Finaliza Mes Siguiente</button>
         </div>
-
-        <div id="alertExpirationBanner" class="alert-banner">
-            <div class="alert-icon">📅</div>
-            <div class="alert-content">
-                <h3>Contratos por Vencer</h3>
-                <p id="alertExpirationText"></p>
-            </div>
+        <div class="filter-group">
+            <select id="filterIndex" class="filter-select">
+                <option value="all">Todos los índices</option>
+                <option value="IPC">IPC</option>
+                <option value="ICL">ICL</option>
+                <option value="FIJO">% Fijo</option>
+            </select>
         </div>
-
-        <!-- Tabs -->
-        <div class="tabs">
-            <button class="tab active" onclick="switchTab('dashboard')">📊 Dashboard</button>
-            <button class="tab" onclick="switchTab('contracts')">📋 Contratos</button>
-            <button class="tab" onclick="switchTab('add')">➕ Nuevo Contrato</button>
-            <button class="tab" onclick="switchTab('edit')">✏️ Editar Contratos</button>
-        </div>
-
-        <!-- Dashboard Tab -->
-        <div id="dashboardTab" class="tab-content active">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">📊 Resumen General</h2>
-                    <button class="btn btn-primary" onclick="exportToCSV()">
-                        📥 Exportar CSV
-                    </button>
-                </div>
-                <div class="form-grid">
-                    <div class="stat-item" style="background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; padding: 1.5rem; border-radius: 12px;">
-                        <span class="stat-value" id="dashTotalContracts">0</span>
-                        <span class="stat-label">Contratos Activos</span>
-                    </div>
-                    <div class="stat-item" style="background: linear-gradient(135deg, var(--warning), var(--danger)); color: white; padding: 1.5rem; border-radius: 12px;">
-                        <span class="stat-value" id="dashUrgent">0</span>
-                        <span class="stat-label">Actualizaciones Urgentes</span>
-                    </div>
-                    <div class="stat-item" style="background: linear-gradient(135deg, var(--accent), var(--accent-bright)); color: white; padding: 1.5rem; border-radius: 12px;">
-                        <span class="stat-value" id="dashExpiring">0</span>
-                        <span class="stat-label">Contratos por Vencer</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">🔄 Próximas Actualizaciones (30 días)</h2>
-                </div>
-                <div id="upcomingUpdates"></div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">📅 Contratos por Vencer (90 días)</h2>
-                </div>
-                <div id="upcomingExpirations"></div>
-            </div>
-        </div>
-
-        <!-- Contracts Tab -->
-        <div id="contractsTab" class="tab-content">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">📋 Todos los Contratos</h2>
-                </div>
-                <div id="contractsList"></div>
-            </div>
-        </div>
-
-        <!-- Add Contract Tab -->
-        <div id="addTab" class="tab-content">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">➕ Nuevo Contrato</h2>
-                </div>
-                <form id="contractForm" onsubmit="addContract(event)">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="address">Dirección *</label>
-                            <input type="text" id="address" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="ownerName">Nombre del Propietario *</label>
-                            <input type="text" id="ownerName" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="ownerPhone">Teléfono del Propietario *</label>
-                            <input type="tel" id="ownerPhone" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="tenantName">Nombre del Inquilino *</label>
-                            <input type="text" id="tenantName" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="tenantPhone">Teléfono del Inquilino *</label>
-                            <input type="tel" id="tenantPhone" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="currentAmount">Monto Actual *</label>
-                            <input type="number" id="currentAmount" step="0.01" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="indexType">Índice de Actualización *</label>
-                            <select id="indexType" required>
-                                <option value="ICL">ICL (Índice Ley de Alquileres)</option>
-                                <option value="IPC">IPC (Índice de Precios al Consumidor)</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="startDate">Fecha de Inicio *</label>
-                            <input type="date" id="startDate" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="duration">Duración (meses) *</label>
-                            <input type="number" id="duration" min="1" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="updateFrequency">Frecuencia de Actualización *</label>
-                            <select id="updateFrequency" required>
-                                <option value="3">Cada 3 meses</option>
-                                <option value="4">Cada 4 meses</option>
-                                <option value="6">Cada 6 meses</option>
-                                <option value="12">Anual</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-                        <button type="submit" class="btn btn-primary">💾 Guardar Contrato</button>
-                        <button type="button" class="btn btn-secondary" onclick="resetForm()">🔄 Limpiar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Edit Contract Tab -->
-        <div id="editTab" class="tab-content">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">✏️ Editar Contratos</h2>
-                </div>
-                <div id="editContractsList"></div>
-            </div>
+        <div class="filter-group">
+            <input type="file" id="csvFileInput" accept=".csv" style="display:none">
         </div>
     </div>
 
-    <!-- Edit Modal -->
-    <div id="editModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Editar Contrato</h3>
-                <button class="close-btn" onclick="closeModal('editModal')">✕</button>
+    <div id="loadingBanner" style="display:none; position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%); z-index:999; background:linear-gradient(90deg,#f57c00,#ff9800); color:#fff; text-align:center; padding:0.6rem 1.5rem; font-size:0.84rem; font-weight:600; letter-spacing:0.3px; border-radius:50px; box-shadow:0 4px 20px rgba(245,124,0,0.5); white-space:nowrap;"><span id="loadingBannerText">🔄 Consultando ARquiler.com y calculando montos…</span></div>
+    <main class="main-content">
+        <div class="empty-state" id="emptyState">
+            <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                    width="80" height="80">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                    <polyline points="9 22 9 12 15 12 15 22" />
+                </svg></div>
+            <h2>No hay contratos cargados</h2>
+            <p>Comenzá agregando tu primer contrato de alquiler.</p>
+            <button class="btn btn-primary btn-lg" id="btnEmptyNew">+ Agregar Primer Contrato</button>
+        </div>
+        <div class="table-container" id="tableContainer" style="display:none">
+            <div class="table-wrapper">
+                <table class="contracts-table" id="contractsTable">
+                    <thead>
+                        <tr>
+                            <th>Dirección</th>
+                            <th>Inquilino</th>
+                            <th>Propietario</th>
+                            <th>Monto Actual</th>
+                            <th>Honorarios</th>
+                            <th>Próx. Monto</th>
+                            <th>Inicio Contrato</th>
+                            <th>Próx. Act.</th>
+                            <th>Fin Contrato</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="contractsBody"></tbody>
+                </table>
             </div>
-            <form id="editForm" onsubmit="saveEdit(event)">
-                <input type="hidden" id="editId">
+        </div>
+    </main>
+
+    <!-- Modal: New/Edit Contract -->
+    <div class="modal-overlay" id="contractModal">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h2 id="modalTitle">Nuevo Contrato</h2>
+                <button class="modal-close" id="btnCloseModal">&times;</button>
+            </div>
+            <form id="contractForm" class="modal-body">
+                <input type="hidden" id="contractId">
                 <div class="form-grid">
-                    <div class="form-group">
-                        <label for="editAddress">Dirección *</label>
-                        <input type="text" id="editAddress" required>
+                    <div class="form-group full-width"><label for="address">Dirección de la propiedad *</label><input
+                            type="text" id="address" required placeholder="Ej: Av. Corrientes 1234, CABA"></div>
+                    <div class="form-group full-width" style="background:rgba(245,124,0,.04);border:1px solid rgba(245,124,0,.15);border-radius:10px;padding:.75rem 1rem">
+                        <div style="font-size:.72rem;font-weight:700;color:var(--accent,#f57c00);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.6rem">🧑 Inquilino</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem">
+                            <div class="form-group" style="margin:0"><label for="tenant">Nombre *</label><input type="text"
+                                id="tenant" required placeholder="Ej: Juan Pérez"></div>
+                            <div class="form-group" style="margin:0"><label for="tenantPhone">Celular</label><input type="tel"
+                                id="tenantPhone" placeholder="Ej: 1122222222"></div>
+                            <div class="form-group" style="margin:0"><label for="tenantEmail">Email</label><input type="email"
+                                id="tenantEmail" placeholder="inquilino@email.com"></div>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="editOwnerName">Nombre del Propietario *</label>
-                        <input type="text" id="editOwnerName" required>
+                    <div class="form-group full-width" style="background:rgba(16,185,129,.04);border:1px solid rgba(16,185,129,.15);border-radius:10px;padding:.75rem 1rem">
+                        <div style="font-size:.72rem;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.6rem">🏠 Propietario</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem">
+                            <div class="form-group" style="margin:0"><label for="owner">Nombre *</label><input type="text"
+                                id="owner" required placeholder="Ej: María García"></div>
+                            <div class="form-group" style="margin:0"><label for="ownerPhone">Celular</label><input type="tel"
+                                id="ownerPhone" placeholder="Ej: 1144445678"></div>
+                            <div class="form-group" style="margin:0"><label for="ownerEmail">Email</label><input type="email"
+                                id="ownerEmail" placeholder="propietario@email.com"></div>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="editOwnerPhone">Teléfono del Propietario *</label>
-                        <input type="tel" id="editOwnerPhone" required>
+                    <div class="form-group"><label for="startDate">Fecha de inicio *</label><input type="date"
+                            id="startDate" required></div>
+                    <div class="form-group"><label for="duration">Duración (meses) *</label><input type="number"
+                            id="duration" required min="1" max="120" value="24"></div>
+                    <div class="form-group"><label for="updateFrequency">Actualiza cada (meses) *</label><select
+                            id="updateFrequency" required>
+                            <option value="1">1 mes</option>
+                            <option value="2">2 meses</option>
+                            <option value="3" selected>3 meses</option>
+                            <option value="4">4 meses</option>
+                            <option value="5">5 meses</option>
+                            <option value="6">6 meses</option>
+                            <option value="7">7 meses</option>
+                            <option value="8">8 meses</option>
+                            <option value="9">9 meses</option>
+                            <option value="10">10 meses</option>
+                            <option value="11">11 meses</option>
+                            <option value="12">12 meses</option>
+                        </select></div>
+                    <div class="form-group"><label for="indexType">Tipo de índice *</label><select id="indexType"
+                            required>
+                            <option value="IPC">IPC</option>
+                            <option value="ICL">ICL</option>
+                            <option value="FIJO">Porcentaje Fijo</option>
+                        </select></div>
+                    <div class="form-group" id="fixedPercentGroup" style="display:none"><label
+                            for="fixedPercent">Porcentaje fijo (%) *</label><input type="number" id="fixedPercent"
+                            min="0" max="500" step="0.1" placeholder="Ej: 25"></div>
+                    <div class="form-group"><label for="initialAmount">Monto inicial ($) *</label><input type="number"
+                            id="initialAmount" required min="0" step="0.01" placeholder="Ej: 150000"></div>
+                    <div class="form-group"><label for="adminFee">Honorario administración</label><select id="adminFee">
+                            <option value="">Sin honorario</option>
+                            <option value="1">1%</option>
+                            <option value="2">2%</option>
+                            <option value="3">3%</option>
+                            <option value="4">4%</option>
+                            <option value="5" selected>5%</option>
+                        </select></div>
+                    <div class="form-group"><label for="moraRate">% mora diario</label><input type="number" id="moraRate" min="0" max="10" step="0.1" placeholder="Ej: 2" value="2"></div>
+                    <div class="form-group full-width" style="background:var(--bg-secondary,#f8f9fb);border-radius:10px;padding:0.85rem 1rem">
+                        <div style="font-weight:600;font-size:0.85rem;color:var(--text-primary,#1a1a2e);margin-bottom:0.6rem">📋 Monto acordado (nuevo valor pactado)</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.5rem">
+                            <div><label style="font-size:0.78rem;color:var(--text-muted)">Nuevo monto ($)</label><input type="number" id="acuerdoMonto" min="0" step="0.01" placeholder="Ej: 850000" style="width:100%;padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border,#ddd);background:var(--bg-card);color:var(--text-primary);font-size:0.82rem;margin-top:2px"></div>
+                            <div><label style="font-size:0.78rem;color:var(--text-muted)">Fecha del acuerdo</label><input type="date" id="acuerdoFecha" style="width:100%;padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border,#ddd);background:var(--bg-card);color:var(--text-primary);font-size:0.82rem;margin-top:2px"></div>
+                            <div><label style="font-size:0.78rem;color:var(--text-muted)">Nuevo índice (opcional)</label><select id="acuerdoIndice" style="width:100%;padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border,#ddd);background:var(--bg-card);color:var(--text-primary);font-size:0.82rem;margin-top:2px"><option value="">— Sin cambio —</option><option value="IPC">IPC</option><option value="ICL">ICL</option><option value="FIJO">FIJO</option></select></div>
+                        </div>
+                        <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.4rem">Si se completa, el sistema usa este monto e índice como nueva base para los cálculos futuros, sin alterar períodos pasados.</div>
                     </div>
-                    <div class="form-group">
-                        <label for="editTenantName">Nombre del Inquilino *</label>
-                        <input type="text" id="editTenantName" required>
+                    <div class="form-group full-width" style="background:var(--bg-secondary,#f8f9fb);border-radius:10px;padding:0.85rem 1rem;display:flex;align-items:center;gap:1rem">
+                        <div style="flex:1">
+                            <div style="font-weight:600;font-size:0.85rem;color:var(--text-primary,#1a1a2e)">¿Quién paga los honorarios?</div>
+                            <div style="color:var(--text-muted,#999);font-size:0.76rem;margin-top:2px">Si los paga el dueño, el mensaje de WhatsApp solo muestra el monto total al propietario.</div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:0.6rem">
+                            <span id="honorariosLabel" style="font-size:0.82rem;font-weight:600;color:#4f8ef7">Inquilino</span>
+                            <div id="honorariosToggle" onclick="
+                                const cb=$('#honorariosPorDueno');
+                                cb.checked=!cb.checked;
+                                $('#honorariosToggle').classList.toggle('on',cb.checked);
+                                $('#honorariosLabel').textContent=cb.checked?'Dueño':'Inquilino';
+                                $('#honorariosLabel').style.color=cb.checked?'#f57c00':'#4f8ef7';
+                            " style="width:44px;height:24px;border-radius:12px;background:#4f8ef7;position:relative;transition:background 0.2s;cursor:pointer;flex-shrink:0">
+                                <div style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:3px;left:3px;transition:left 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2)"></div>
+                            </div>
+                            <input type="checkbox" id="honorariosPorDueno" style="display:none">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="editTenantPhone">Teléfono del Inquilino *</label>
-                        <input type="tel" id="editTenantPhone" required>
+                    <div class="form-group full-width" style="background:var(--bg-secondary,#f8f9fb);border-radius:10px;padding:0.85rem 1rem;display:flex;align-items:center;gap:1rem">
+                        <div style="flex:1">
+                            <div style="font-weight:600;font-size:0.85rem;color:var(--text-primary,#1a1a2e)">Actualización de depósito en garantía</div>
+                            <div style="color:var(--text-muted,#999);font-size:0.76rem;margin-top:2px">Si está activo, se calcula la diferencia a cobrar al inquilino en cada actualización.</div>
+                            <div id="depositAmountRow" style="display:none;margin-top:0.6rem;display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
+                                <label style="font-size:0.78rem;color:var(--text-muted,#999)">Monto inicial depósito:</label>
+                                <input type="number" id="depositAmount" min="0" step="1" placeholder="Igual al alquiler" style="width:130px;padding:0.3rem 0.5rem;border-radius:6px;border:1px solid var(--border,#ddd);background:var(--bg-card);color:var(--text-primary);font-size:0.82rem">
+                                <select id="depositCurrency" style="padding:0.3rem 0.5rem;border-radius:6px;border:1px solid var(--border,#ddd);background:var(--bg-card);color:var(--text-primary);font-size:0.82rem">
+                                    <option value="ARS">$ ARS</option>
+                                    <option value="USD">U$S USD</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:0.6rem">
+                            <span id="depositToggleLabel" style="font-size:0.82rem;font-weight:600;color:#64748b">No</span>
+                            <div id="depositToggle" onclick="
+                                const cb=$('#depositUpdate');
+                                cb.checked=!cb.checked;
+                                $('#depositToggle').classList.toggle('on',cb.checked);
+                                $('#depositToggleLabel').textContent=cb.checked?'Sí':'No';
+                                $('#depositToggleLabel').style.color=cb.checked?'#f57c00':'#64748b';
+                                $('#depositAmountRow').style.display=cb.checked?'flex':'none';
+                                if(cb.checked&&!$('#depositAmount').value) $('#depositAmount').value=$('#initialAmount').value||'';
+                            " style="width:44px;height:24px;border-radius:12px;background:#94a3b8;position:relative;transition:background 0.2s;cursor:pointer;flex-shrink:0">
+                                <div style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:3px;left:3px;transition:left 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2)"></div>
+                            </div>
+                            <input type="checkbox" id="depositUpdate" style="display:none">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="editCurrentAmount">Monto Actual *</label>
-                        <input type="number" id="editCurrentAmount" step="0.01" required>
+                    <!-- DATOS DE SERVICIOS -->
+                    <div class="form-group full-width" style="background:var(--bg-secondary,#f8f9fb);border-radius:10px;padding:0.85rem 1rem">
+                        <div style="font-weight:600;font-size:0.85rem;color:var(--text-primary,#1a1a2e);margin-bottom:0.75rem">🔌 Datos de servicios</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.75rem">
+                            <div><label style="font-size:0.78rem;color:var(--text-muted)">N° Partida ABL</label><input type="text" id="nroAbl" placeholder="Ej: 123456" style="width:100%;padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border,#ddd);background:var(--bg-card);color:var(--text-primary);font-size:0.82rem;margin-top:2px"></div>
+                            <div><label style="font-size:0.78rem;color:var(--text-muted)">N° Cliente AYSA</label><input type="text" id="nroAysa" placeholder="Ej: 123456789" style="width:100%;padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border,#ddd);background:var(--bg-card);color:var(--text-primary);font-size:0.82rem;margin-top:2px"></div>
+                            <div><label style="font-size:0.78rem;color:var(--text-muted)">N° Cliente Luz</label><input type="text" id="nroLuz" placeholder="Ej: 123456789" style="width:100%;padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border,#ddd);background:var(--bg-card);color:var(--text-primary);font-size:0.82rem;margin-top:2px"></div>
+                            <div><label style="font-size:0.78rem;color:var(--text-muted)">N° Cliente Gas</label><input type="text" id="nroGas" placeholder="Ej: 123456789" style="width:100%;padding:0.35rem 0.5rem;border-radius:6px;border:1px solid var(--border,#ddd);background:var(--bg-card);color:var(--text-primary);font-size:0.82rem;margin-top:2px"></div>
+                        </div>
+                        <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.4rem;font-weight:600">Inquilino paga en la inmobiliaria además del alquiler:</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem">
+                            <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;cursor:pointer"><input type="checkbox" id="pagaAbl"> ABL</label>
+                            <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;cursor:pointer"><input type="checkbox" id="pagaAysa"> AYSA</label>
+                            <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;cursor:pointer"><input type="checkbox" id="pagaLuz"> Luz</label>
+                            <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;cursor:pointer"><input type="checkbox" id="pagaGas"> Gas</label>
+                            <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;cursor:pointer"><input type="checkbox" id="pagaExpensas"> Expensas</label>
+                        </div>
+                        <div style="margin-top:0.75rem"><label style="font-size:0.78rem;color:var(--text-muted);font-weight:600">Notas / Observaciones</label><textarea id="notes" rows="2" placeholder="Observaciones..." style="width:100%;margin-top:4px;padding:0.4rem 0.5rem;border-radius:6px;border:1px solid var(--border,#ddd);background:var(--bg-card);color:var(--text-primary);font-size:0.82rem;box-sizing:border-box;resize:vertical"></textarea></div>
                     </div>
-                    <div class="form-group">
-                        <label for="editIndexType">Índice de Actualización *</label>
-                        <select id="editIndexType" required>
-                            <option value="ICL">ICL (Índice Ley de Alquileres)</option>
-                            <option value="IPC">IPC (Índice de Precios al Consumidor)</option>
-                        </select>
+                    <!-- ALIAS -->
+                    <div class="form-group full-width" style="background:var(--bg-secondary,#f8f9fb);border-radius:10px;padding:0.85rem 1rem">
+                        <div style="font-weight:600;font-size:0.85rem;color:var(--text-primary,#1a1a2e);margin-bottom:0.6rem">🏦 Alias para depósitos del propietario</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">
+                            <input type="text" id="aliasOwner1" placeholder="Alias 1" style="padding:0.45rem 0.7rem;border-radius:7px;border:1px solid var(--border,#ddd);background:var(--bg-card);color:var(--text-primary);font-size:0.82rem">
+                            <input type="text" id="aliasOwner2" placeholder="Alias 2" style="padding:0.45rem 0.7rem;border-radius:7px;border:1px solid var(--border,#ddd);background:var(--bg-card);color:var(--text-primary);font-size:0.82rem">
+                            <input type="text" id="aliasOwner3" placeholder="Alias 3" style="padding:0.45rem 0.7rem;border-radius:7px;border:1px solid var(--border,#ddd);background:var(--bg-card);color:var(--text-primary);font-size:0.82rem">
+                            <input type="text" id="aliasOwner4" placeholder="Alias 4" style="padding:0.45rem 0.7rem;border-radius:7px;border:1px solid var(--border,#ddd);background:var(--bg-card);color:var(--text-primary);font-size:0.82rem">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="editStartDate">Fecha de Inicio *</label>
-                        <input type="date" id="editStartDate" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="editDuration">Duración (meses) *</label>
-                        <input type="number" id="editDuration" min="1" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="editUpdateFrequency">Frecuencia de Actualización *</label>
-                        <select id="editUpdateFrequency" required>
-                            <option value="3">Cada 3 meses</option>
-                            <option value="4">Cada 4 meses</option>
-                            <option value="6">Cada 6 meses</option>
-                            <option value="12">Anual</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="editStatus">Estado *</label>
-                        <select id="editStatus" required>
-                            <option value="active">Activo</option>
-                            <option value="paused">Pausado</option>
-                            <option value="completed">Finalizado</option>
-                        </select>
+                    <div class="form-group full-width" style="background:var(--bg-secondary,#f8f9fb);border-radius:10px;padding:0.85rem 1rem">
+                        <div style="font-weight:600;font-size:0.85rem;color:var(--text-primary,#1a1a2e);margin-bottom:0.6rem">🏢 Alias de la inmobiliaria</div>
+                        <input type="text" id="aliasInmobiliaria" placeholder="cristian.912.sapa.mp" value="cristian.912.sapa.mp" style="width:100%;padding:0.45rem 0.7rem;border-radius:7px;border:1px solid var(--border,#ddd);background:var(--bg-card);color:var(--text-primary);font-size:0.82rem;box-sizing:border-box">
                     </div>
                 </div>
-                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-                    <button type="submit" class="btn btn-success">💾 Guardar Cambios</button>
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('editModal')">Cancelar</button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-ghost" id="btnCancelModal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Contrato</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <script>
-        // Sample Data - Replace with real data
-        let contracts = [
-            {
-                id: 1,
-                address: 'Av. Córdoba 1234',
-                ownerName: 'Juan Pérez',
-                ownerPhone: '1123456789',
-                tenantName: 'María González',
-                tenantPhone: '1198765432',
-                currentAmount: 150000,
-                indexType: 'ICL',
-                startDate: '2024-01-15',
-                duration: 24,
-                updateFrequency: 4,
-                status: 'active'
-            },
-            {
-                id: 2,
-                address: 'Av. Santa Fe 5678',
-                ownerName: 'Ana Rodríguez',
-                ownerPhone: '1145678912',
-                tenantName: 'Carlos López',
-                tenantPhone: '1156789123',
-                currentAmount: 200000,
-                indexType: 'IPC',
-                startDate: '2023-06-01',
-                duration: 36,
-                updateFrequency: 3,
-                status: 'active'
-            }
-        ];
-
-        let nextId = 3;
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            loadData();
-            updateDashboard();
-            renderAllContracts();
-            renderEditContracts();
-            checkAlerts();
-        });
-
-        // Load data from localStorage
-        function loadData() {
-            const saved = localStorage.getItem('contracts');
-            if (saved) {
-                contracts = JSON.parse(saved);
-                if (contracts.length > 0) {
-                    nextId = Math.max(...contracts.map(c => c.id)) + 1;
-                }
-            }
-        }
-
-        // Save data to localStorage
-        function saveData() {
-            localStorage.setItem('contracts', JSON.stringify(contracts));
-        }
-
-        // Tab Switching
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            
-            event.target.classList.add('active');
-            document.getElementById(tabName + 'Tab').classList.add('active');
-            
-            if (tabName === 'contracts') {
-                renderAllContracts();
-            } else if (tabName === 'edit') {
-                renderEditContracts();
-            }
-        }
-
-        // Add Contract
-        function addContract(event) {
-            event.preventDefault();
-            
-            const contract = {
-                id: nextId++,
-                address: document.getElementById('address').value,
-                ownerName: document.getElementById('ownerName').value,
-                ownerPhone: document.getElementById('ownerPhone').value,
-                tenantName: document.getElementById('tenantName').value,
-                tenantPhone: document.getElementById('tenantPhone').value,
-                currentAmount: parseFloat(document.getElementById('currentAmount').value),
-                indexType: document.getElementById('indexType').value,
-                startDate: document.getElementById('startDate').value,
-                duration: parseInt(document.getElementById('duration').value),
-                updateFrequency: parseInt(document.getElementById('updateFrequency').value),
-                status: 'active'
-            };
-            
-            contracts.push(contract);
-            saveData();
-            
-            alert('✅ Contrato agregado exitosamente');
-            resetForm();
-            updateDashboard();
-            checkAlerts();
-        }
-
-        // Edit Contract (Open Modal)
-        function editContract(id) {
-            const contract = contracts.find(c => c.id === id);
-            if (!contract) return;
-            
-            document.getElementById('editId').value = contract.id;
-            document.getElementById('editAddress').value = contract.address;
-            document.getElementById('editOwnerName').value = contract.ownerName;
-            document.getElementById('editOwnerPhone').value = contract.ownerPhone;
-            document.getElementById('editTenantName').value = contract.tenantName;
-            document.getElementById('editTenantPhone').value = contract.tenantPhone;
-            document.getElementById('editCurrentAmount').value = contract.currentAmount;
-            document.getElementById('editIndexType').value = contract.indexType;
-            document.getElementById('editStartDate').value = contract.startDate;
-            document.getElementById('editDuration').value = contract.duration;
-            document.getElementById('editUpdateFrequency').value = contract.updateFrequency;
-            document.getElementById('editStatus').value = contract.status;
-            
-            document.getElementById('editModal').classList.add('show');
-        }
-
-        // Save Edit
-        function saveEdit(event) {
-            event.preventDefault();
-            
-            const id = parseInt(document.getElementById('editId').value);
-            const index = contracts.findIndex(c => c.id === id);
-            
-            if (index !== -1) {
-                contracts[index] = {
-                    id: id,
-                    address: document.getElementById('editAddress').value,
-                    ownerName: document.getElementById('editOwnerName').value,
-                    ownerPhone: document.getElementById('editOwnerPhone').value,
-                    tenantName: document.getElementById('editTenantName').value,
-                    tenantPhone: document.getElementById('editTenantPhone').value,
-                    currentAmount: parseFloat(document.getElementById('editCurrentAmount').value),
-                    indexType: document.getElementById('editIndexType').value,
-                    startDate: document.getElementById('editStartDate').value,
-                    duration: parseInt(document.getElementById('editDuration').value),
-                    updateFrequency: parseInt(document.getElementById('editUpdateFrequency').value),
-                    status: document.getElementById('editStatus').value
-                };
-                
-                saveData();
-                closeModal('editModal');
-                updateDashboard();
-                renderAllContracts();
-                renderEditContracts();
-                checkAlerts();
-                alert('✅ Contrato actualizado exitosamente');
-            }
-        }
-
-        // Delete Contract
-        function deleteContract(id) {
-            if (confirm('¿Estás seguro de que quieres eliminar este contrato?')) {
-                contracts = contracts.filter(c => c.id !== id);
-                saveData();
-                updateDashboard();
-                renderAllContracts();
-                renderEditContracts();
-                checkAlerts();
-                alert('✅ Contrato eliminado');
-            }
-        }
-
-        // Calculate Next Update Date
-        function calculateNextUpdate(contract) {
-            const start = new Date(contract.startDate);
-            const today = new Date();
-            const monthsSinceStart = (today.getFullYear() - start.getFullYear()) * 12 + (today.getMonth() - start.getMonth());
-            
-            // Calcular cuántos períodos de actualización han pasado
-            const periodsPassed = Math.floor(monthsSinceStart / contract.updateFrequency);
-            
-            // Calcular la próxima fecha de actualización
-            const nextUpdateMonths = (periodsPassed + 1) * contract.updateFrequency;
-            const nextUpdate = new Date(start);
-            nextUpdate.setMonth(start.getMonth() + nextUpdateMonths);
-            
-            return nextUpdate;
-        }
-
-        // Calculate End Date
-        function calculateEndDate(contract) {
-            const start = new Date(contract.startDate);
-            const end = new Date(start);
-            end.setMonth(start.getMonth() + contract.duration);
-            return end;
-        }
-
-        // Calculate New Amount (simplified - would need real index data)
-        function calculateNewAmount(contract) {
-            // Simulación: incremento del 10% por actualización
-            const increment = contract.indexType === 'ICL' ? 1.10 : 1.08;
-            return Math.round(contract.currentAmount * increment);
-        }
-
-        // Get Days Until
-        function getDaysUntil(date) {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const target = new Date(date);
-            target.setHours(0, 0, 0, 0);
-            const diffTime = target - today;
-            return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        }
-
-        // Check if Update is Urgent (10 days or less)
-        function isUrgent(date) {
-            const days = getDaysUntil(date);
-            return days >= 0 && days <= 10;
-        }
-
-        // Check if Contract is Expiring (60 days or less)
-        function isExpiring(date) {
-            const days = getDaysUntil(date);
-            return days >= 0 && days <= 60;
-        }
-
-        // Format Currency
-        function formatCurrency(amount) {
-            return new Intl.NumberFormat('es-AR', {
-                style: 'currency',
-                currency: 'ARS',
-                minimumFractionDigits: 0
-            }).format(amount);
-        }
-
-        // Format Date
-        function formatDate(date) {
-            if (typeof date === 'string') {
-                date = new Date(date);
-            }
-            return new Intl.DateTimeFormat('es-AR', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit'
-            }).format(date);
-        }
-
-        // Generate WhatsApp Message
-        function generateWhatsAppMessage(id) {
-            const contract = contracts.find(c => c.id === id);
-            if (!contract) return;
-            
-            const nextUpdate = calculateNextUpdate(contract);
-            const newAmount = calculateNewAmount(contract);
-            
-            const message = `Hola ${contract.tenantName}, te informo que el ${formatDate(nextUpdate)} se realizará la actualización del contrato de alquiler de ${contract.address}. El nuevo monto será de ${formatCurrency(newAmount)}. Saludos!`;
-            
-            const encodedMessage = encodeURIComponent(message);
-            const phoneNumber = contract.tenantPhone.replace(/\D/g, '');
-            const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
-            
-            window.open(whatsappUrl, '_blank');
-        }
-
-        // Generate Expiration Messages
-        function generateExpirationMessages(id) {
-            const contract = contracts.find(c => c.id === id);
-            if (!contract) return;
-            
-            const endDate = calculateEndDate(contract);
-            
-            // Message for Tenant
-            const tenantMessage = `Hola ${contract.tenantName}, te informo que el contrato de alquiler de ${contract.address} vence el ${formatDate(endDate)}. Por favor, comunicate para coordinar la renovación o finalización. Saludos!`;
-            
-            // Message for Owner
-            const ownerMessage = `Hola ${contract.ownerName}, te informo que el contrato de alquiler de ${contract.address} vence el ${formatDate(endDate)}. Te mantendremos informado sobre la renovación o finalización. Saludos!`;
-            
-            const encodedTenantMsg = encodeURIComponent(tenantMessage);
-            const encodedOwnerMsg = encodeURIComponent(ownerMessage);
-            
-            const tenantPhone = contract.tenantPhone.replace(/\D/g, '');
-            const ownerPhone = contract.ownerPhone.replace(/\D/g, '');
-            
-            const tenantUrl = `https://wa.me/${tenantPhone}?text=${encodedTenantMsg}`;
-            const ownerUrl = `https://wa.me/${ownerPhone}?text=${encodedOwnerMsg}`;
-            
-            if (confirm('¿Enviar mensaje al inquilino primero?')) {
-                window.open(tenantUrl, '_blank');
-                setTimeout(() => {
-                    if (confirm('¿Enviar mensaje al propietario ahora?')) {
-                        window.open(ownerUrl, '_blank');
-                    }
-                }, 1000);
-            }
-        }
-
-        // Render All Contracts
-        function renderAllContracts() {
-            const container = document.getElementById('contractsList');
-            const activeContracts = contracts.filter(c => c.status === 'active');
-            
-            if (activeContracts.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📋</div>
-                        <h3>No hay contratos registrados</h3>
-                        <p>Comienza agregando un nuevo contrato</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            container.innerHTML = `
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Dirección</th>
-                                <th>Propietario</th>
-                                <th>Inquilino</th>
-                                <th>Monto Actual</th>
-                                <th>Índice</th>
-                                <th>Próxima Actualización</th>
-                                <th>Fecha Finalización</th>
-                                <th>Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${activeContracts.map(contract => {
-                                const nextUpdate = calculateNextUpdate(contract);
-                                const endDate = calculateEndDate(contract);
-                                const daysUntilUpdate = getDaysUntil(nextUpdate);
-                                const daysUntilEnd = getDaysUntil(endDate);
-                                const isUrgentUpdate = isUrgent(nextUpdate);
-                                const isExpiringContract = isExpiring(endDate);
-                                
-                                return `
-                                    <tr class="${isUrgentUpdate ? 'urgent' : (isExpiringContract ? 'expiring' : '')}">
-                                        <td><strong>${contract.address}</strong></td>
-                                        <td>${contract.ownerName}<br><small>${contract.ownerPhone}</small></td>
-                                        <td>${contract.tenantName}<br><small>${contract.tenantPhone}</small></td>
-                                        <td><strong>${formatCurrency(contract.currentAmount)}</strong></td>
-                                        <td>${contract.indexType}</td>
-                                        <td>
-                                            ${formatDate(nextUpdate)}
-                                            <br>
-                                            <span class="badge ${isUrgentUpdate ? 'badge-urgent' : 'badge-active'}">
-                                                ${daysUntilUpdate} días
-                                            </span>
-                                        </td>
-                                        <td>
-                                            ${formatDate(endDate)}
-                                            <br>
-                                            <span class="badge ${isExpiringContract ? 'badge-expiring' : 'badge-active'}">
-                                                ${daysUntilEnd} días
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span class="badge badge-active">Activo</span>
-                                        </td>
-                                    </tr>
-                                `;
-                            }).join('')}
-                        </tbody>
-                    </table>
+    <!-- Modal: Detail -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h2 id="detailTitle">Detalle</h2>
+                <div style="display:flex;gap:0.5rem;align-items:center">
+                    <button class="btn btn-sm btn-ghost" id="btnPrintContract" title="Imprimir hoja A4">🖨️ Imprimir</button>
+                    <button class="modal-close" id="btnCloseDetail">&times;</button>
                 </div>
-            `;
-        }
+            </div>
+            <div class="modal-body" id="detailBody"></div>
+        </div>
+    </div>
 
-        // Render Edit Contracts
-        function renderEditContracts() {
-            const container = document.getElementById('editContractsList');
-            
-            if (contracts.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📋</div>
-                        <h3>No hay contratos para editar</h3>
-                    </div>
-                `;
-                return;
-            }
-            
-            container.innerHTML = `
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Dirección</th>
-                                <th>Propietario</th>
-                                <th>Inquilino</th>
-                                <th>Monto</th>
-                                <th>Estado</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${contracts.map(contract => `
-                                <tr>
-                                    <td><strong>${contract.address}</strong></td>
-                                    <td>${contract.ownerName}</td>
-                                    <td>${contract.tenantName}</td>
-                                    <td>${formatCurrency(contract.currentAmount)}</td>
-                                    <td>
-                                        <span class="badge badge-${contract.status === 'active' ? 'active' : 'paused'}">
-                                            ${contract.status === 'active' ? 'Activo' : contract.status === 'paused' ? 'Pausado' : 'Finalizado'}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <button class="btn btn-primary" onclick="editContract(${contract.id})">
-                                                ✏️ Editar
-                                            </button>
-                                            <button class="btn btn-danger" onclick="deleteContract(${contract.id})">
-                                                🗑️ Eliminar
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
+    <div class="toast-container" id="toastContainer"></div>
+
+    
+<script src="script.js"></script>
+
+<!-- ══ MODAL: Confirmar Actualización de Alquiler ══ -->
+<div id="updConfirmModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:2500;align-items:center;justify-content:center;padding:1rem">
+    <div style="background:#1c1c1c;border:1px solid rgba(255,255,255,0.13);border-radius:18px;width:100%;max-width:470px;box-shadow:0 24px 70px rgba(0,0,0,0.65);font-family:'Inter',-apple-system,sans-serif">
+        <!-- Header -->
+        <div style="padding:1rem 1.5rem;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:space-between">
+            <div style="display:flex;align-items:center;gap:0.6rem">
+                <span style="font-size:1.15rem">✅</span>
+                <h4 style="margin:0;font-size:0.95rem;font-weight:700;color:#f5f5f5">Confirmar Actualización</h4>
+            </div>
+            <button id="btnCloseUpdConfirm" style="background:none;border:none;color:#717171;font-size:1.35rem;cursor:pointer;line-height:1;padding:0">&times;</button>
+        </div>
+        <!-- Body -->
+        <div style="padding:1.25rem 1.5rem;display:flex;flex-direction:column;gap:1rem">
+            <div>
+                <div id="updConfirm_addr" style="font-size:0.9rem;font-weight:700;color:#f5f5f5;margin-bottom:2px"></div>
+                <div id="updConfirm_period" style="font-size:0.76rem;color:#717171"></div>
+            </div>
+
+            <!-- Monto calculado -->
+            <div style="background:rgba(245,124,0,0.08);border:1px solid rgba(245,124,0,0.28);border-radius:10px;padding:0.8rem 1rem">
+                <div style="font-size:0.66rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#717171;margin-bottom:0.25rem">Monto calculado por el índice</div>
+                <div id="updConfirm_calcAmount" style="font-size:1.15rem;font-weight:800;color:#f57c00"></div>
+            </div>
+
+            <!-- Input monto acordado -->
+            <div style="display:flex;flex-direction:column;gap:0.3rem">
+                <label style="font-size:0.7rem;font-weight:700;color:#b0b0b0;text-transform:uppercase;letter-spacing:0.4px">Monto acordado <span style="font-weight:400;color:#717171">(confirmá o cambialo)</span></label>
+                <div style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.14);border-radius:9px;padding:0 0.75rem;transition:border-color 0.2s" id="updConfirm_inputWrap">
+                    <span style="color:#717171;font-size:0.88rem;font-weight:700;flex-shrink:0">$</span>
+                    <input type="number" id="updConfirm_input" min="0" step="1"
+                        style="flex:1;background:transparent;border:none;outline:none;padding:0.6rem 0;color:#f5f5f5;font-family:inherit;font-size:1.05rem;font-weight:700;-moz-appearance:textfield"
+                        onwheel="this.blur()"
+                        onfocus="document.getElementById('updConfirm_inputWrap').style.borderColor='#f57c00'"
+                        onblur="document.getElementById('updConfirm_inputWrap').style.borderColor='rgba(255,255,255,0.14)'">
                 </div>
-            `;
-        }
-
-        // Update Dashboard
-        function updateDashboard() {
-            const activeContracts = contracts.filter(c => c.status === 'active');
-            
-            let urgentCount = 0;
-            let expiringCount = 0;
-            
-            activeContracts.forEach(contract => {
-                const nextUpdate = calculateNextUpdate(contract);
-                const endDate = calculateEndDate(contract);
-                
-                if (isUrgent(nextUpdate)) urgentCount++;
-                if (isExpiring(endDate)) expiringCount++;
-            });
-            
-            document.getElementById('headerTotalContracts').textContent = activeContracts.length;
-            document.getElementById('headerUrgent').textContent = urgentCount;
-            document.getElementById('headerExpiring').textContent = expiringCount;
-            
-            document.getElementById('dashTotalContracts').textContent = activeContracts.length;
-            document.getElementById('dashUrgent').textContent = urgentCount;
-            document.getElementById('dashExpiring').textContent = expiringCount;
-
-            renderUpcomingUpdates();
-            renderUpcomingExpirations();
-        }
-
-        // Render Upcoming Updates
-        function renderUpcomingUpdates() {
-            const container = document.getElementById('upcomingUpdates');
-            const activeContracts = contracts.filter(c => c.status === 'active');
-            
-            const upcoming = activeContracts
-                .map(contract => ({
-                    contract,
-                    nextUpdate: calculateNextUpdate(contract),
-                    daysUntil: getDaysUntil(calculateNextUpdate(contract))
-                }))
-                .filter(item => item.daysUntil >= 0 && item.daysUntil <= 30)
-                .sort((a, b) => a.daysUntil - b.daysUntil);
-
-            if (upcoming.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">✅</div>
-                        <h3>No hay actualizaciones próximas</h3>
-                        <p>No hay contratos que actualicen en los próximos 30 días</p>
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = `
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Dirección</th>
-                                <th>Días restantes</th>
-                                <th>Fecha de actualización</th>
-                                <th>Fecha fin contrato</th>
-                                <th>Monto actual</th>
-                                <th>Nuevo monto</th>
-                                <th>Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${upcoming.map(item => {
-                                const newAmount = calculateNewAmount(item.contract);
-                                const endDate = calculateEndDate(item.contract);
-                                const isUrgentUpdate = item.daysUntil <= 10;
-                                return `
-                                    <tr class="${isUrgentUpdate ? 'urgent' : ''}">
-                                        <td><strong>${item.contract.address}</strong></td>
-                                        <td>
-                                            <span class="badge ${isUrgentUpdate ? 'badge-urgent' : 'badge-active'}">
-                                                ${item.daysUntil} días
-                                            </span>
-                                        </td>
-                                        <td>${formatDate(item.nextUpdate)}</td>
-                                        <td>${formatDate(endDate)}</td>
-                                        <td>${formatCurrency(item.contract.currentAmount)}</td>
-                                        <td><strong>${formatCurrency(newAmount)}</strong></td>
-                                        <td>
-                                            <button class="btn btn-primary" onclick="generateWhatsAppMessage(${item.contract.id})" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
-                                                💬 Notificar
-                                            </button>
-                                        </td>
-                                    </tr>
-                                `;
-                            }).join('')}
-                        </tbody>
-                    </table>
+                <!-- Aviso de cambio -->
+                <div id="updConfirm_changeNote" style="display:none;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.35);border-radius:8px;padding:0.55rem 0.75rem;font-size:0.76rem;color:#f59e0b;line-height:1.45;margin-top:0.15rem">
+                    🔔 <strong>El monto cambió respecto al índice.</strong> El nuevo valor quedará guardado como base para todos los cálculos futuros: mora, diferencia de depósito y mensajes de WhatsApp.
                 </div>
-            `;
-        }
+            </div>
 
-        // Render Upcoming Expirations
-        function renderUpcomingExpirations() {
-            const container = document.getElementById('upcomingExpirations');
-            const activeContracts = contracts.filter(c => c.status === 'active');
-            
-            const expiring = activeContracts
-                .map(contract => ({
-                    contract,
-                    endDate: calculateEndDate(contract),
-                    daysUntil: getDaysUntil(calculateEndDate(contract))
-                }))
-                .filter(item => item.daysUntil >= 0 && item.daysUntil <= 90)
-                .sort((a, b) => a.daysUntil - b.daysUntil);
+            <!-- Nota opcional -->
+            <div style="display:flex;flex-direction:column;gap:0.3rem">
+                <label style="font-size:0.7rem;font-weight:700;color:#b0b0b0;text-transform:uppercase;letter-spacing:0.4px">Nota <span style="font-weight:400;color:#717171">(opcional)</span></label>
+                <input type="text" id="updConfirm_noteInput" placeholder="Ej: Acuerdo entre las partes — contexto inflacionario"
+                    style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:9px;padding:0.45rem 0.75rem;color:#f5f5f5;font-family:inherit;font-size:0.84rem;outline:none;transition:border-color 0.2s"
+                    onfocus="this.style.borderColor='#f57c00'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
+            </div>
+        </div>
+        <!-- Footer -->
+        <div style="padding:0.85rem 1.5rem 1.1rem;display:flex;gap:0.55rem;justify-content:flex-end;border-top:1px solid rgba(255,255,255,0.06)">
+            <button id="btnCancelUpdConfirm" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#b0b0b0;border-radius:8px;padding:0.42rem 1rem;font-size:0.82rem;cursor:pointer;font-family:inherit;transition:background 0.2s"
+                onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">Cancelar</button>
+            <button id="btnConfirmUpdate" style="background:linear-gradient(135deg,#f57c00,#ff9800);border:none;color:#fff;border-radius:8px;padding:0.42rem 1.2rem;font-size:0.84rem;cursor:pointer;font-family:inherit;font-weight:700;transition:opacity 0.2s"
+                onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">Confirmar ✓</button>
+        </div>
+    </div>
+</div>
 
-            if (expiring.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">✅</div>
-                        <h3>No hay contratos próximos a vencer</h3>
-                        <p>No hay contratos que finalicen en los próximos 90 días</p>
-                    </div>
-                `;
-                return;
-            }
+<!-- ══ MODAL: Prórroga de Contrato ══ -->
+<div id="prorrogaModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:2500;align-items:center;justify-content:center;padding:1rem">
+    <div style="background:#1c1c1c;border:1px solid rgba(255,255,255,0.13);border-radius:18px;width:100%;max-width:490px;box-shadow:0 24px 70px rgba(0,0,0,0.65);font-family:'Inter',-apple-system,sans-serif">
 
-            container.innerHTML = `
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Dirección</th>
-                                <th>Propietario</th>
-                                <th>Inquilino</th>
-                                <th>Días restantes</th>
-                                <th>Fecha de finalización</th>
-                                <th>Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${expiring.map(item => {
-                                const isExpiringUrgent = item.daysUntil <= 60;
-                                return `
-                                    <tr class="${isExpiringUrgent ? 'expiring' : ''}">
-                                        <td><strong>${item.contract.address}</strong></td>
-                                        <td>${item.contract.ownerName}</td>
-                                        <td>${item.contract.tenantName}</td>
-                                        <td>
-                                            <span class="badge ${isExpiringUrgent ? 'badge-expiring' : 'badge-active'}">
-                                                ${item.daysUntil} días
-                                            </span>
-                                        </td>
-                                        <td>${formatDate(item.endDate)}</td>
-                                        <td>
-                                            <button class="btn btn-warning" onclick="generateExpirationMessages(${item.contract.id})" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
-                                                📅 Notificar Vencimiento
-                                            </button>
-                                        </td>
-                                    </tr>
-                                `;
-                            }).join('')}
-                        </tbody>
-                    </table>
+        <!-- Header -->
+        <div style="padding:1rem 1.5rem;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:space-between">
+            <div style="display:flex;align-items:center;gap:0.6rem">
+                <span style="font-size:1.15rem">🔄</span>
+                <h4 style="margin:0;font-size:0.95rem;font-weight:700;color:#f5f5f5">Prórroga de Contrato</h4>
+            </div>
+            <button id="btnCloseProrrogaModal" style="background:none;border:none;color:#717171;font-size:1.35rem;cursor:pointer;line-height:1;padding:0">&times;</button>
+        </div>
+
+        <!-- Body -->
+        <div style="padding:1.25rem 1.5rem;display:flex;flex-direction:column;gap:1rem;max-height:75vh;overflow-y:auto">
+
+            <!-- Dirección -->
+            <div>
+                <div id="prorroga_addr" style="font-size:0.9rem;font-weight:700;color:#f5f5f5;margin-bottom:2px"></div>
+                <div style="display:flex;gap:1.2rem;font-size:0.76rem;color:#717171;flex-wrap:wrap">
+                    <span>Vencimiento actual: <strong id="prorroga_finActual" style="color:#f59e0b"></strong></span>
+                    <span>Prórroga desde: <strong id="prorroga_inicio" style="color:#a78bfa"></strong></span>
                 </div>
-            `;
-        }
+            </div>
 
-        // Check Alerts
-        function checkAlerts() {
-            const activeContracts = contracts.filter(c => c.status === 'active');
-            
-            const urgentUpdates = activeContracts.filter(contract => {
-                const nextUpdate = calculateNextUpdate(contract);
-                return isUrgent(nextUpdate);
-            });
+            <!-- Meses -->
+            <div style="display:flex;flex-direction:column;gap:0.3rem">
+                <label style="font-size:0.7rem;font-weight:700;color:#b0b0b0;text-transform:uppercase;letter-spacing:0.4px">Meses a prorrogar *</label>
+                <div style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.14);border-radius:9px;padding:0 0.75rem"
+                     id="prorroga_mesesWrap">
+                    <input type="number" id="prorroga_meses" min="1" max="120" step="1" value="12"
+                        style="flex:1;background:transparent;border:none;outline:none;padding:0.6rem 0;color:#f5f5f5;font-family:inherit;font-size:1.05rem;font-weight:700;-moz-appearance:textfield"
+                        onwheel="this.blur()"
+                        onfocus="document.getElementById('prorroga_mesesWrap').style.borderColor='#7c3aed'"
+                        onblur="document.getElementById('prorroga_mesesWrap').style.borderColor='rgba(255,255,255,0.14)'">
+                    <span style="color:#717171;font-size:0.82rem">meses</span>
+                </div>
+            </div>
 
-            const expiringContracts = activeContracts.filter(contract => {
-                const endDate = calculateEndDate(contract);
-                return isExpiring(endDate);
-            });
+            <!-- Nuevo monto base -->
+            <div style="display:flex;flex-direction:column;gap:0.3rem">
+                <label style="font-size:0.7rem;font-weight:700;color:#b0b0b0;text-transform:uppercase;letter-spacing:0.4px">Nuevo monto base ($) *</label>
+                <div style="font-size:0.7rem;color:#717171;margin-top:-0.15rem">Monto del 1er período de la prórroga. Los siguientes se actualizan según el índice del contrato.</div>
+                <div style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.14);border-radius:9px;padding:0 0.75rem"
+                     id="prorroga_montoWrap">
+                    <span style="color:#717171;font-size:0.88rem;font-weight:700;flex-shrink:0">$</span>
+                    <input type="number" id="prorroga_monto" min="0" step="1"
+                        style="flex:1;background:transparent;border:none;outline:none;padding:0.6rem 0;color:#f5f5f5;font-family:inherit;font-size:1.05rem;font-weight:700;-moz-appearance:textfield"
+                        onwheel="this.blur()"
+                        onfocus="document.getElementById('prorroga_montoWrap').style.borderColor='#7c3aed'"
+                        onblur="document.getElementById('prorroga_montoWrap').style.borderColor='rgba(255,255,255,0.14)'">
+                </div>
+            </div>
 
-            // Update alerts
-            if (urgentUpdates.length > 0) {
-                document.getElementById('alertUpdateBanner').classList.add('show');
-                document.getElementById('alertUpdateText').textContent = 
-                    `Tienes ${urgentUpdates.length} contrato${urgentUpdates.length > 1 ? 's' : ''} que actualiza${urgentUpdates.length > 1 ? 'n' : ''} en los próximos 10 días`;
-            }
+            <!-- Toggle depósito -->
+            <div style="background:rgba(124,58,237,0.07);border:1px solid rgba(124,58,237,0.2);border-radius:10px;padding:0.8rem 1rem;display:flex;align-items:center;gap:1rem">
+                <div style="flex:1">
+                    <div style="font-weight:600;font-size:0.85rem;color:#e8eaf0">¿Actualizar depósito en la prórroga?</div>
+                    <div style="color:#717171;font-size:0.74rem;margin-top:2px">Si está activo, se calcula la diferencia de depósito en cada actualización dentro de la prórroga.</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:0.5rem;flex-shrink:0">
+                    <span id="prorrogaDepositLabel" style="font-size:0.82rem;font-weight:600;color:#64748b">No</span>
+                    <div id="prorrogaDepositToggle" style="width:44px;height:24px;border-radius:12px;background:#64748b;position:relative;transition:background 0.2s;cursor:pointer">
+                        <div style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:3px;left:3px;transition:left 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2)"></div>
+                    </div>
+                    <input type="checkbox" id="prorroga_depositUpdate" style="display:none">
+                </div>
+            </div>
 
-            // Expiration alerts
-            if (expiringContracts.length > 0) {
-                document.getElementById('alertExpirationBanner').classList.add('show');
-                document.getElementById('alertExpirationText').textContent = 
-                    `Tienes ${expiringContracts.length} contrato${expiringContracts.length > 1 ? 's' : ''} que vence${expiringContracts.length > 1 ? 'n' : ''} en los próximos 60 días`;
-            }
-        }
+            <!-- Historial de prórrogas existentes -->
+            <div id="prorroga_historial" style="display:none"></div>
 
-        // Export to CSV
-        function exportToCSV() {
-            const activeContracts = contracts.filter(c => c.status === 'active');
-            
-            let csv = 'Dirección,Propietario,Tel. Propietario,Inquilino,Tel. Inquilino,Monto Actual,Índice,Próxima Actualización,Nuevo Monto,Fecha Finalización,Estado\n';
-            
-            activeContracts.forEach(contract => {
-                const nextUpdate = calculateNextUpdate(contract);
-                const newAmount = calculateNewAmount(contract);
-                const endDate = calculateEndDate(contract);
-                
-                csv += `"${contract.address}","${contract.ownerName}","${contract.ownerPhone}","${contract.tenantName}","${contract.tenantPhone}",${contract.currentAmount},"${contract.indexType}","${formatDate(nextUpdate)}",${newAmount},"${formatDate(endDate)}","${contract.status}"\n`;
-            });
+        </div>
 
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `contratos_${new Date().toISOString().split('T')[0]}.csv`;
-            a.click();
-        }
-
-        // Reset Form
-        function resetForm() {
-            document.getElementById('contractForm').reset();
-        }
-
-        // Close Modal
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.remove('show');
-        }
-
-        // Close modal on outside click
-        document.querySelectorAll('.modal').forEach(modal => {
-            modal.addEventListener('click', function(e) {
-                if (e.target === this) {
-                    this.classList.remove('show');
-                }
-            });
-        });
-    </script>
+        <!-- Footer -->
+        <div style="padding:0.85rem 1.5rem 1.1rem;display:flex;gap:0.55rem;justify-content:flex-end;border-top:1px solid rgba(255,255,255,0.06)">
+            <button id="btnCancelProrroga"
+                style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#b0b0b0;border-radius:8px;padding:0.42rem 1rem;font-size:0.82rem;cursor:pointer;font-family:inherit;transition:background 0.2s"
+                onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">Cancelar</button>
+            <button id="btnConfirmProrroga"
+                style="background:linear-gradient(135deg,#7c3aed,#6d28d9);border:none;color:#fff;border-radius:8px;padding:0.42rem 1.2rem;font-size:0.84rem;cursor:pointer;font-family:inherit;font-weight:700;transition:opacity 0.2s"
+                onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">Confirmar Prórroga ✓</button>
+        </div>
+    </div>
+</div>
 </body>
+
 </html>

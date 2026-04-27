@@ -1,0 +1,55 @@
+{
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://maps.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.estadisticasbcra.com https://corsproxy.io https://api.allorigins.win https://maps.googleapis.com; img-src 'self' data: blob: https://maps.gstatic.com https://maps.googleapis.com; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'"
+        },
+
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=(self), payment=()"
+        },
+
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        }
+
+      ]
+    }
+  ],
+
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/dashboard.html"
+    }
+  ],
+
+  "cleanUrls": false,
+  "trailingSlash": false
+}

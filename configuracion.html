@@ -669,14 +669,19 @@ async function actualizarIndicesSmart() {
       const r = await fetch(url);
       if (!r.ok) continue;
       const json = await r.json();
-      // La API del INDEC devuelve { data: [["YYYY-MM-DD", valor], ...] }
+      // INDEC devuelve nivel acumulado — convertir a variacion mensual
       if (!json.data || !Array.isArray(json.data) || json.data.length < 5) continue;
+      const sorted = [...json.data].sort((a,b) => a[0]<b[0]?-1:1);
       let newCount = 0;
-      for (const [fecha, valor] of json.data) {
-        if (!fecha || valor == null) continue;
-        const key = String(fecha).substring(0, 7); // "YYYY-MM"
-        if (key > lastIpcKey) { ipcExisting[key] = parseFloat(valor); newCount++; }
-        else if (!ipcExisting[key]) { ipcExisting[key] = parseFloat(valor); }
+      for (let i=0; i<sorted.length; i++) {
+        const [fecha, nivel] = sorted[i];
+        if (!fecha || nivel==null) continue;
+        const key = String(fecha).substring(0,7);
+        const prevNivel = i>0 ? sorted[i-1][1] : null;
+        const variacion = prevNivel ? parseFloat(((nivel/prevNivel-1)*100).toFixed(2)) : null;
+        if (variacion===null) continue;
+        if (key > lastIpcKey) { ipcExisting[key] = variacion; newCount++; }
+        else if (!ipcExisting[key]) { ipcExisting[key] = variacion; }
       }
       result.ipc_new = newCount;
       break;

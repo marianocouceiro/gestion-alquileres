@@ -277,7 +277,7 @@ const SupabaseDB = (function () {
     return await upsert('pagos', {
       id: pago.id, address: pago.address || '',
       year: pago.year || 0, month: pago.month || 0,
-      data: pago, updated_at: new Date().toISOString()
+      data: pago, updated_at: new Date().toISOString(), org_id: getOrgId()
     });
   }
   async function deletePago(id) { return await del('pagos', id); }
@@ -290,7 +290,7 @@ const SupabaseDB = (function () {
   async function upsertVisita(v) {
     return await upsert('visitas', {
       id: v.id, fecha: v.fecha || '', hora: v.hora || '00:00',
-      data: v, updated_at: new Date().toISOString()
+      data: v, updated_at: new Date().toISOString(), org_id: getOrgId()
     });
   }
   async function deleteVisita(id) { return await del('visitas', id); }
@@ -313,7 +313,7 @@ const SupabaseDB = (function () {
   async function upsertTasacion(t) {
     return await upsert('tasaciones', {
       id: t.id, fecha: t.fecha || '',
-      data: t, updated_at: new Date().toISOString()
+      data: t, updated_at: new Date().toISOString(), org_id: getOrgId()
     });
   }
   async function deleteTasacion(id) { return await del('tasaciones', id); }
@@ -327,7 +327,7 @@ const SupabaseDB = (function () {
     return await upsert('propiedades', {
       id: p.id, address: p.address || '', tipo: p.tipo || 'venta',
       venta: p.venta || null,          // col separada para getVentasYear
-      data: p, updated_at: new Date().toISOString()
+      data: p, updated_at: new Date().toISOString(), org_id: getOrgId()
     });
   }
   async function deletePropiedad(id) { return await del('propiedades', id); }
@@ -369,7 +369,7 @@ const SupabaseDB = (function () {
   async function upsertComprador(c) {
     return await upsert('compradores', {
       id: c.id, nombre: c.nombre || '',
-      data: c, updated_at: new Date().toISOString()
+      data: c, updated_at: new Date().toISOString(), org_id: getOrgId()
     });
   }
   async function deleteComprador(id) { return await del('compradores', id); }
@@ -384,7 +384,7 @@ const SupabaseDB = (function () {
       method: 'DELETE', headers: getHeaders()
     });
     if (!lista.length) return { success: true };
-    const rows = lista.map((nombre, i) => ({ nombre, activo: true, orden: i }));
+    const rows = lista.map((nombre, i) => ({ nombre, activo: true, orden: i, org_id: getOrgId() }));
     const r = await fetch(`${BASE}/rest/v1/vendedores`, {
       method: 'POST',
       headers: { ...getHeaders(), 'Prefer': 'return=minimal' },

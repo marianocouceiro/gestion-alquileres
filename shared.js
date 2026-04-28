@@ -25,6 +25,11 @@ const GestShared = (function () {
     vendedoresIdx:             0,
     diasExpiracionComprador:   120,
     aniosRetencionVisitas:     10,   // "nunca" o 1..10
+    // ── Branding ──────────────────────────────────────────
+    brandName:     'Cristian Sanchez Propiedades',
+    brandSubtitle: 'Administración de Alquileres',
+    brandColor:    '#f57c00',
+    brandLogo:     '',
   };
 
   // ── Configuración (sync — lee localStorage) ──────────────
@@ -173,6 +178,26 @@ const GestShared = (function () {
     document.head.appendChild(s);
   }
 
+  // ── Branding dinámico ─────────────────────────────────────
+  function hexToRgb(hex) {
+    const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+    return `${r}, ${g}, ${b}`;
+  }
+
+  function applyBranding() {
+    const cfg = getConfig();
+    const color = cfg.brandColor || '#f57c00';
+    const rgb = hexToRgb(color);
+    const root = document.documentElement;
+    root.style.setProperty('--accent',            color);
+    root.style.setProperty('--accent-hover',      color + 'cc');
+    root.style.setProperty('--accent-glow',       `rgba(${rgb}, 0.28)`);
+    root.style.setProperty('--accent-soft',       `rgba(${rgb}, 0.12)`);
+    root.style.setProperty('--info',              color);
+    root.style.setProperty('--info-soft',         `rgba(${rgb}, 0.10)`);
+    root.style.setProperty('--gradient-primary',  `linear-gradient(135deg, ${color} 0%, ${color}cc 100%)`);
+  }
+
   function initHeader(activePage) {
     // Verificar autenticación en cada página (excepto login)
     if (typeof SupabaseDB !== 'undefined' && typeof SupabaseDB.requireAuth === 'function') {
@@ -185,7 +210,13 @@ const GestShared = (function () {
     }).join('');
     const userEmail = (typeof SupabaseDB !== 'undefined' && SupabaseDB.getUserEmail) ? SupabaseDB.getUserEmail().split('@')[0] : '';
     const logoutBtn = `<div style="display:flex;align-items:center;gap:.4rem;padding-left:.5rem;border-left:1px solid rgba(255,255,255,.1)">${userEmail ? `<span style="font-size:.68rem;color:#717171">${userEmail}</span>` : ''}<button onclick="typeof SupabaseDB!=='undefined'&&SupabaseDB.logout()" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#ef4444;border-radius:6px;padding:.22rem .55rem;font-size:.68rem;cursor:pointer;font-family:inherit" title="Cerrar sesión">Salir</button></div>`;
-    const html = `<a href="index.html" class="gs-logo"><div class="gs-logo-ico">${LOGO_SVG}</div><div><div class="gs-logo-name">Cristian Sanchez Propiedades</div><div class="gs-logo-sub">Administración de Alquileres</div></div></a><div class="gs-nav">${navHtml}<div class="gs-font-ctrl"><button onclick="GestShared.changeFontSize(-1)" title="Reducir">A-</button><button onclick="GestShared.changeFontSize(0)" title="Defecto">↺</button><button onclick="GestShared.changeFontSize(1)" title="Agrandar">A+</button></div>${logoutBtn}</div>`;
+    const cfg     = getConfig();
+    const bName    = cfg.brandName     || 'Cristian Sanchez Propiedades';
+    const bSub     = cfg.brandSubtitle || 'Administración de Alquileres';
+    const logoHtml = cfg.brandLogo
+      ? `<img src="${cfg.brandLogo}" alt="${bName}" style="width:100%;height:100%;object-fit:contain;border-radius:7px">`
+      : LOGO_SVG;
+    const html = `<a href="index.html" class="gs-logo"><div class="gs-logo-ico">${logoHtml}</div><div><div class="gs-logo-name">${bName}</div><div class="gs-logo-sub">${bSub}</div></div></a><div class="gs-nav">${navHtml}<div class="gs-font-ctrl"><button onclick="GestShared.changeFontSize(-1)" title="Reducir">A-</button><button onclick="GestShared.changeFontSize(0)" title="Defecto">↺</button><button onclick="GestShared.changeFontSize(1)" title="Agrandar">A+</button></div>${logoutBtn}</div>`;
     let hdr = document.querySelector('header');
     if (!hdr) { hdr = document.createElement('header'); document.body.insertBefore(hdr, document.body.firstChild); }
     hdr.className = 'gs-hdr'; hdr.innerHTML = html;
@@ -196,7 +227,7 @@ const GestShared = (function () {
     getVendedores, saveVendedores, getNextVendedor,
     applyFontSize, changeFontSize,
     esc, waLink, waSpan,
-    initHeader, setIntervalJitter,
+    applyBranding, initHeader, setIntervalJitter,
     // Compatibilidad backward con código que llame a estas (no-ops ahora)
     getToken:       () => '',
     setToken:       () => {},
@@ -218,6 +249,7 @@ window._gsReady = (async () => {
     // Esperar a que SupabaseDB esté disponible (lo define supabase.js, cargado antes)
     if (typeof SupabaseDB === 'undefined') return;
     await GestShared.syncConfigFromSupabase();
+    GestShared.applyBranding();
     // Notificar a las páginas que ya podemos usar vendedores/config actualizados
     window.dispatchEvent(new CustomEvent('gs:config-synced'));
   } catch(e) { console.warn('[GestShared] auto-sync:', e); }

@@ -65,7 +65,6 @@
 <div class="toast" id="toast"></div>
 <script>
 'use strict';
-GestShared.initHeader('tareas');
 let tareas=[],filtro='todas',editandoId=null;
 async function cargarTareas(){tareas=await SupabaseDB.getTareas();renderLista();}
 function setFiltro(f,btn){filtro=f;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderLista();}
@@ -80,8 +79,10 @@ async function eliminarTarea(id){if(!confirm('¿Eliminar esta tarea?'))return;co
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function toast(msg,ok=true){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+(ok?'ok':'err');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3000);}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')cerrarModal();});
-window.addEventListener('gs:config-synced',cargarTareas);
-if(window._gsReady)window._gsReady.then(cargarTareas);else cargarTareas();
+function _initPage(){GestShared.initHeader('tareas');cargarTareas();}
+window.addEventListener('gs:config-synced',()=>{GestShared.initHeader('tareas');cargarTareas();});
+if(window._gsReady)window._gsReady.then(_initPage);
+else document.addEventListener('DOMContentLoaded',_initPage);
 </script>
 </body>
 </html>

@@ -168,6 +168,7 @@ const GestShared = (function () {
     { key:'banco',          href:'banco.html',           icon:'👤', label:'Banco' },
     { key:'contratos',      href:'index.html',           icon:'📄', label:'Contratos' },
     { key:'administracion', href:'administracion.html',  icon:'🧾', label:'Administración' },
+    { key:'tareas',         href:'tareas.html',           icon:'★',  label:'Tareas' },
     { key:'configuracion',  href:'configuracion.html',   icon:'⚙️', label:'Configuración' },
   ];
 

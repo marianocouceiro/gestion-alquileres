@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tareas — GestAlquiler</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="logger.js"></script>
+  <script src="shared.js"></script>
+  <script src="supabase.js"></script>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .pri{display:inline-block;font-size:.68rem;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap}
+    .pri-alta{background:#faeeda;color:#854f0b}.pri-media{background:#e6f1fb;color:#185fa5}.pri-baja{background:#eaf3de;color:#3b6d11}
+    .filters{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1.2rem}
+    .filter-btn{font-size:.75rem;padding:.3rem .75rem;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all var(--tr)}
+    .filter-btn.active{background:var(--soft);border-color:var(--acc);color:var(--acc)}
+    .tarea-item{background:var(--bg2);border:.5px solid var(--border);border-radius:var(--rad);padding:.85rem 1rem;margin-bottom:.5rem;display:flex;align-items:flex-start;gap:.75rem;transition:border var(--tr)}
+    .tarea-item:hover{border-color:rgba(255,255,255,.14)}
+    .tarea-item.completada{opacity:.5}
+    .tarea-item.completada .tarea-texto{text-decoration:line-through;color:var(--muted)}
+    .tarea-check{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;margin-top:1px;transition:all var(--tr)}
+    .tarea-check:hover{border-color:var(--ok)}.tarea-check.checked{background:var(--ok);border-color:var(--ok)}.tarea-check.checked::after{content:'✓';font-size:11px;color:#fff}
+    .tarea-body{flex:1;min-width:0}.tarea-texto{font-size:.88rem;font-weight:500;color:var(--txt);margin-bottom:.2rem}
+    .tarea-meta{font-size:.72rem;color:var(--muted);display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+    .tarea-obs{font-size:.75rem;color:var(--txt2);margin-top:.3rem;font-style:italic}
+    .tarea-acciones{display:flex;gap:.3rem;flex-shrink:0;align-items:flex-start}
+    .btn-ghost{background:transparent;color:var(--muted);border:1px solid transparent;padding:.35rem .6rem;font-size:.75rem;cursor:pointer;border-radius:8px;transition:all var(--tr)}.btn-ghost:hover{background:var(--bg3);color:var(--txt)}
+    .btn-del{background:rgba(239,68,68,.1);color:var(--danger);border:1px solid rgba(239,68,68,.2);padding:.35rem .6rem;font-size:.75rem;cursor:pointer;border-radius:8px;transition:all var(--tr)}.btn-del:hover{background:rgba(239,68,68,.2)}
+    .empty{text-align:center;padding:3rem 1rem;color:var(--muted)}.empty-ico{font-size:2.5rem;margin-bottom:.8rem}
+    .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center;padding:1rem}.modal-bg.open{display:flex}
+    .modal{background:var(--bg2);border:.5px solid var(--border);border-radius:var(--rad);padding:1.5rem;width:440px;max-width:100%}
+    .modal-title{font-size:1rem;font-weight:600;margin-bottom:1.2rem}.field{margin-bottom:.9rem}
+    .lbl2{font-size:.72rem;font-weight:500;color:var(--muted);display:block;margin-bottom:.3rem}
+    .modal-btns{display:flex;gap:.5rem;justify-content:flex-end;margin-top:1.2rem}
+    .toast{position:fixed;bottom:1.2rem;right:1.2rem;padding:.6rem 1.1rem;border-radius:8px;font-size:.82rem;font-weight:500;z-index:999;pointer-events:none;opacity:0;transition:opacity .2s}.toast.show{opacity:1}.toast.ok{background:var(--ok);color:#fff}.toast.err{background:var(--danger);color:#fff}
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+    <div><h1 style="font-size:1.4rem;font-weight:700">★ Tareas</h1><div style="font-size:.8rem;color:var(--muted);margin-top:.2rem">Administrá tus tareas pendientes</div></div>
+    <button class="btn btn-prim" onclick="abrirModal()">+ Nueva tarea</button>
+  </div>
+  <div class="filters">
+    <button class="filter-btn active" onclick="setFiltro('todas',this)">Todas</button>
+    <button class="filter-btn" onclick="setFiltro('pendientes',this)">Pendientes</button>
+    <button class="filter-btn" onclick="setFiltro('completadas',this)">Completadas</button>
+    <button class="filter-btn" onclick="setFiltro('alta',this)">🔴 Alta</button>
+    <button class="filter-btn" onclick="setFiltro('media',this)">🔵 Media</button>
+    <button class="filter-btn" onclick="setFiltro('baja',this)">🟢 Baja</button>
+  </div>
+  <div id="listaTareas"></div>
+</div>
+<div class="modal-bg" id="modalTarea"><div class="modal">
+  <div class="modal-title" id="modalTitulo">Nueva tarea</div>
+  <div class="field"><label class="lbl2">Fecha</label><input class="inp" type="date" id="tFecha"></div>
+  <div class="field"><label class="lbl2">Tarea *</label><textarea class="inp" id="tTexto" placeholder="Describi la tarea..." style="min-height:70px;resize:vertical"></textarea></div>
+  <div class="field"><label class="lbl2">Observaciones</label><textarea class="inp" id="tObs" placeholder="Notas adicionales (opcional)..." rows="2" style="resize:vertical"></textarea></div>
+  <div class="field"><label class="lbl2">Prioridad</label><select class="inp" id="tPrioridad"><option value="alta">Alta</option><option value="media" selected>Media</option><option value="baja">Baja</option></select></div>
+  <div class="modal-btns"><button class="btn btn-sec" onclick="cerrarModal()">Cancelar</button><button class="btn btn-prim" id="btnGuardar" onclick="guardarTarea()">Guardar tarea</button></div>
+</div></div>
+<div class="toast" id="toast"></div>
+<script>
+'use strict';
+GestShared.initHeader('tareas');
+let tareas=[],filtro='todas',editandoId=null;
+async function cargarTareas(){tareas=await SupabaseDB.getTareas();renderLista();}
+function setFiltro(f,btn){filtro=f;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderLista();}
+function tareasFiltradas(){return tareas.filter(t=>{if(filtro==='pendientes')return!t.completada;if(filtro==='completadas')return t.completada;if(filtro==='alta')return t.prioridad==='alta'&&!t.completada;if(filtro==='media')return t.prioridad==='media'&&!t.completada;if(filtro==='baja')return t.prioridad==='baja'&&!t.completada;return true;});}
+function renderLista(){const lista=tareasFiltradas();const cont=document.getElementById('listaTareas');if(!lista.length){cont.innerHTML='<div class="empty"><div class="empty-ico">★</div><div style="font-size:.9rem">No hay tareas'+(filtro==='todas'?'':' en este filtro')+'</div></div>';return;}const orden={alta:0,media:1,baja:2};lista.sort((a,b)=>{if(a.completada!==b.completada)return a.completada?1:-1;if(a.prioridad!==b.prioridad)return(orden[a.prioridad]??1)-(orden[b.prioridad]??1);return(a.fecha||'9999')<(b.fecha||'9999')?-1:1;});cont.innerHTML=lista.map(t=>{const fecha=t.fecha?new Date(t.fecha+'T12:00:00').toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'}):'';const vencida=t.fecha&&!t.completada&&new Date(t.fecha)<new Date().setHours(0,0,0,0);return '<div class="tarea-item'+(t.completada?' completada':'')+'" id="ti-'+t.id+'"><div class="tarea-check'+(t.completada?' checked':'')+'" onclick="toggleCompletar(''+t.id+'')"></div><div class="tarea-body"><div class="tarea-texto">'+esc(t.tarea)+'</div><div class="tarea-meta"><span class="pri pri-'+t.prioridad+'">'+t.prioridad.charAt(0).toUpperCase()+t.prioridad.slice(1)+'</span>'+(fecha?'<span style="color:'+(vencida?'var(--danger)':'var(--muted)')+'">'+fecha+'</span>':'')+'</div>'+(t.observaciones?'<div class="tarea-obs">'+esc(t.observaciones)+'</div>':'')+'</div><div class="tarea-acciones"><button class="btn-ghost" onclick="editarTarea(''+t.id+'')">✎</button><button class="btn-del" onclick="eliminarTarea(''+t.id+'')">✕</button></div></div>';}).join('');}
+async function toggleCompletar(id){const t=tareas.find(x=>x.id===id);if(!t)return;t.completada=!t.completada;renderLista();await SupabaseDB.upsertTarea(t);toast(t.completada?'✓ Tarea completada':'Tarea reabierta');}
+function abrirModal(id=null){editandoId=id;const t=id?tareas.find(x=>x.id===id):null;document.getElementById('modalTitulo').textContent=id?'Editar tarea':'Nueva tarea';document.getElementById('tFecha').value=t?.fecha||'';document.getElementById('tTexto').value=t?.tarea||'';document.getElementById('tObs').value=t?.observaciones||'';document.getElementById('tPrioridad').value=t?.prioridad||'media';document.getElementById('modalTarea').classList.add('open');setTimeout(()=>document.getElementById('tTexto').focus(),100);}
+function editarTarea(id){abrirModal(id);}
+function cerrarModal(){document.getElementById('modalTarea').classList.remove('open');editandoId=null;}
+async function guardarTarea(){const texto=document.getElementById('tTexto').value.trim();if(!texto){document.getElementById('tTexto').focus();return;}const btn=document.getElementById('btnGuardar');btn.disabled=true;btn.textContent='⏳ Guardando…';const tarea={id:editandoId||(Date.now().toString(36)+Math.random().toString(36).slice(2,7)),fecha:document.getElementById('tFecha').value||null,tarea:texto,observaciones:document.getElementById('tObs').value.trim(),prioridad:document.getElementById('tPrioridad').value,completada:editandoId?(tareas.find(x=>x.id===editandoId)?.completada??false):false};const r=await SupabaseDB.upsertTarea(tarea);if(r.success){if(editandoId){const idx=tareas.findIndex(x=>x.id===editandoId);if(idx>=0)tareas[idx]=tarea;else tareas.push(tarea);}else{tareas.push(tarea);}renderLista();cerrarModal();toast(editandoId?'✓ Tarea actualizada':'✓ Tarea creada');}else{toast('Error al guardar',false);}btn.disabled=false;btn.textContent='Guardar tarea';}
+async function eliminarTarea(id){if(!confirm('¿Eliminar esta tarea?'))return;const r=await SupabaseDB.deleteTarea(id);if(r.success){tareas=tareas.filter(x=>x.id!==id);renderLista();toast('✓ Tarea eliminada');}else{toast('Error al eliminar',false);}}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function toast(msg,ok=true){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+(ok?'ok':'err');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3000);}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')cerrarModal();});
+window.addEventListener('gs:config-synced',cargarTareas);
+if(window._gsReady)window._gsReady.then(cargarTareas);else cargarTareas();
+</script>
+</body>
+</html>

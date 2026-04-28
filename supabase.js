@@ -444,6 +444,12 @@ const SupabaseDB = (function () {
     return { success: r.ok };
   }
 
+
+  async function getTareas(soloActivas=false){const filters=soloActivas?'completada=eq.false&order=fecha.asc,prioridad.asc':'order=completada.asc,fecha.asc';const r=await query('tareas',{filters});return r.success?(r.data||[]):[];}
+  async function upsertTarea(t){return await upsert('tareas',{id:t.id,fecha:t.fecha||null,tarea:t.tarea||'',observaciones:t.observaciones||'',prioridad:t.prioridad||'media',completada:t.completada??false,updated_at:new Date().toISOString(),org_id:getOrgId()});}
+  async function deleteTarea(id){return await del('tareas',id);}
+  async function getTareasPendientes(){return await getTareas(true);}
+
   async function ping() {
     try {
       const r = await fetch(`${BASE}/rest/v1/config?limit=1`, {
@@ -463,6 +469,7 @@ const SupabaseDB = (function () {
     getCompradores, upsertComprador, deleteComprador,
     getVendedores, saveVendedores,
     getConfig, saveConfig,
+    getTareas, upsertTarea, deleteTarea, getTareasPendientes,
     ping
   };
 

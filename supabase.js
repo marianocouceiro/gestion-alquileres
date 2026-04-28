@@ -64,6 +64,15 @@ const SupabaseDB = (function () {
     }, extra || {});
   }
 
+  function getOrgId() {
+    try {
+      const s = JSON.parse(localStorage.getItem('ga_session') || '{}');
+      if (!s.access_token) return null;
+      const p = JSON.parse(atob(s.access_token.split('.')[1]));
+      return p.app_metadata?.org_id || null;
+    } catch { return null; }
+  }
+
   // Verifica sesión — redirige a login si no hay (llamar desde initHeader)
   function requireAuth() {
     try {
@@ -250,6 +259,7 @@ const SupabaseDB = (function () {
       acuerdo_indice: c.acuerdoIndice || null,
       acuerdo_nota:   c.acuerdoNota   || null,
       updated_at: new Date().toISOString(),
+      org_id:     getOrgId(),
     };
   }
 

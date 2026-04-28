@@ -346,55 +346,80 @@
 
   </div><!-- end panel-backup -->
 
+  <!-- ══════════════════════════════════════════════════════
+       PANEL: APARIENCIA
+  ══════════════════════════════════════════════════════ -->
   <div id="panel-apariencia" class="tab-panel">
     <div class="cfg-card">
       <div><h2>Identidad de la inmobiliaria</h2><p>Personalizá el nombre, subtítulo y logo que aparecen en el encabezado de todas las páginas.</p></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem">
-        <div><label class="lbl">Nombre de la inmobiliaria</label><input class="inp" id="brNombre" type="text" placeholder="Ej: García Propiedades" maxlength="60"></div>
-        <div><label class="lbl">Subtítulo</label><input class="inp" id="brSubtitulo" type="text" placeholder="Ej: Alquileres y Ventas" maxlength="60"></div>
+        <div>
+          <label class="lbl">Nombre de la inmobiliaria</label>
+          <input class="inp" id="brNombre" type="text" placeholder="Ej: García Propiedades" maxlength="60">
+        </div>
+        <div>
+          <label class="lbl">Subtítulo</label>
+          <input class="inp" id="brSubtitulo" type="text" placeholder="Ej: Alquileres y Ventas" maxlength="60">
+        </div>
         <div style="grid-column:1/-1">
-          <label class="lbl">URL del logo <span style="color:var(--muted);font-weight:400">(PNG/JPG, recomendado fondo transparente)</span></label>
+          <label class="lbl">URL del logo <span style="color:var(--muted);font-weight:400">(imagen PNG/JPG, recomendado fondo transparente)</span></label>
           <input class="inp" id="brLogo" type="url" placeholder="https://tu-sitio.com/logo.png">
-          <div style="font-size:.72rem;color:var(--muted);margin-top:.3rem">💡 Podés subir tu logo gratis en <a href="https://imgbb.com" target="_blank" style="color:var(--acc)">imgbb.com</a> y pegar el link directo acá.</div>
+          <div style="font-size:.72rem;color:var(--muted);margin-top:.3rem">
+            💡 Podés subir tu logo gratis en <a href="https://imgbb.com" target="_blank" style="color:var(--acc)">imgbb.com</a> y pegar el link directo acá.
+          </div>
         </div>
       </div>
     </div>
+
     <div class="cfg-card" style="margin-top:1rem">
       <div><h2>Color principal</h2><p>El color que se usa en botones, íconos activos, bordes y acentos en toda la app.</p></div>
       <div style="display:flex;align-items:center;gap:1.2rem;margin-top:1rem;flex-wrap:wrap">
-        <div><label class="lbl">Elegí un color</label><input type="color" id="brColorPicker" value="#f57c00" style="width:60px;height:40px;border:none;border-radius:8px;cursor:pointer;background:none;padding:2px"></div>
-        <div><label class="lbl">Código hex</label><input class="inp" id="brColorHex" type="text" value="#f57c00" maxlength="7" style="width:110px;font-family:monospace"></div>
         <div>
+          <label class="lbl">Elegí un color</label>
+          <input type="color" id="brColorPicker" value="#f57c00"
+            style="width:60px;height:40px;border:none;border-radius:8px;cursor:pointer;background:none;padding:2px">
+        </div>
+        <div>
+          <label class="lbl">Código hex</label>
+          <input class="inp" id="brColorHex" type="text" value="#f57c00" maxlength="7"
+            style="width:110px;font-family:monospace;text-transform:lowercase">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.4rem">
           <label class="lbl">Colores sugeridos</label>
-          <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.3rem">
-            <button onclick="setBrandColor('#f57c00')" style="width:28px;height:28px;border-radius:6px;border:2px solid transparent;cursor:pointer;background:#f57c00"></button>
-            <button onclick="setBrandColor('#2563eb')" style="width:28px;height:28px;border-radius:6px;border:2px solid transparent;cursor:pointer;background:#2563eb"></button>
-            <button onclick="setBrandColor('#16a34a')" style="width:28px;height:28px;border-radius:6px;border:2px solid transparent;cursor:pointer;background:#16a34a"></button>
-            <button onclick="setBrandColor('#dc2626')" style="width:28px;height:28px;border-radius:6px;border:2px solid transparent;cursor:pointer;background:#dc2626"></button>
-            <button onclick="setBrandColor('#7c3aed')" style="width:28px;height:28px;border-radius:6px;border:2px solid transparent;cursor:pointer;background:#7c3aed"></button>
-            <button onclick="setBrandColor('#0891b2')" style="width:28px;height:28px;border-radius:6px;border:2px solid transparent;cursor:pointer;background:#0891b2"></button>
-            <button onclick="setBrandColor('#be185d')" style="width:28px;height:28px;border-radius:6px;border:2px solid transparent;cursor:pointer;background:#be185d"></button>
-            <button onclick="setBrandColor('#b45309')" style="width:28px;height:28px;border-radius:6px;border:2px solid transparent;cursor:pointer;background:#b45309"></button>
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap" id="brPresets">
+            <button onclick="setBrandColor('#f57c00')" title="Naranja" style="width:28px;height:28px;border-radius:6px;border:2px solid transparent;cursor:pointer;background:#f57c00"></button>
+            <button onclick="setBrandColor('#2563eb')" title="Azul"    style="width:28px;height:28px;border-radius:6px;border:2px solid transparent;cursor:pointer;background:#2563eb"></button>
+            <button onclick="setBrandColor('#16a34a')" title="Verde"   style="width:28px;height:28px;border-radius:6px;border:2px solid transparent;cursor:pointer;background:#16a34a"></button>
+            <button onclick="setBrandColor('#dc2626')" title="Rojo"    style="width:28px;height:28px;border-radius:6px;border:2px solid transparent;cursor:pointer;background:#dc2626"></button>
+            <button onclick="setBrandColor('#7c3aed')" title="Violeta" style="width:28px;height:28px;border-radius:6px;border:2px solid transparent;cursor:pointer;background:#7c3aed"></button>
+            <button onclick="setBrandColor('#0891b2')" title="Celeste" style="width:28px;height:28px;border-radius:6px;border:2px solid transparent;cursor:pointer;background:#0891b2"></button>
+            <button onclick="setBrandColor('#be185d')" title="Rosa"    style="width:28px;height:28px;border-radius:6px;border:2px solid transparent;cursor:pointer;background:#be185d"></button>
+            <button onclick="setBrandColor('#b45309')" title="Marrón"  style="width:28px;height:28px;border-radius:6px;border:2px solid transparent;cursor:pointer;background:#b45309"></button>
           </div>
         </div>
       </div>
     </div>
+
     <div class="cfg-card" style="margin-top:1rem">
       <div><h2>Vista previa del encabezado</h2><p>Así se va a ver el header en todas las páginas.</p></div>
-      <div style="margin-top:.8rem;background:#0d0d0d;border-radius:10px;padding:.6rem 1.2rem;border:1px solid rgba(255,255,255,.08)">
+      <div id="brPreview" style="margin-top:.8rem;background:#0d0d0d;border-radius:10px;padding:.6rem 1.2rem;border:1px solid rgba(255,255,255,.08)">
         <div style="display:flex;align-items:center;gap:.65rem">
           <div id="prevLogoWrap" style="width:34px;height:34px;flex-shrink:0;border-radius:9px;overflow:hidden;border:1px solid rgba(245,124,0,.35);padding:2px;background:rgba(245,124,0,.1);display:flex;align-items:center;justify-content:center;font-size:18px">🏘️</div>
-          <div><div id="prevNombre" style="font-size:.88rem;font-weight:700;color:#fff">Cristian Sanchez Propiedades</div><div id="prevSubtitulo" style="font-size:.64rem;color:#717171">Administración de Alquileres</div></div>
+          <div>
+            <div id="prevNombre" style="font-size:.88rem;font-weight:700;color:#fff">Cristian Sanchez Propiedades</div>
+            <div id="prevSubtitulo" style="font-size:.64rem;color:#717171">Administración de Alquileres</div>
+          </div>
           <div style="margin-left:auto;display:flex;gap:.4rem">
             <div id="prevBtn1" style="padding:.3rem .7rem;border-radius:7px;font-size:.75rem;font-weight:600;background:rgba(245,124,0,.1);border:1px solid rgba(245,124,0,.22);color:rgba(245,124,0,.85)">Dashboard</div>
-            <div id="prevBtn2" style="padding:.3rem .7rem;border-radius:7px;font-size:.75rem;font-weight:600;background:rgba(245,124,0,.25);border:1px solid rgba(245,124,0,.6);color:#f57c00">Contratos</div>
+            <div id="prevBtn2" style="padding:.3rem .7rem;border-radius:7px;font-size:.75rem;font-weight:600;background:rgba(245,124,0,.25);border:1px solid rgba(245,124,0,.6);color:#ff9800">Contratos</div>
           </div>
         </div>
       </div>
     </div>
+
     <div style="margin-top:1.2rem;display:flex;gap:.7rem">
       <button class="btn-prim" id="btnSaveApariencia" onclick="saveApariencia()">💾 Guardar apariencia</button>
-      <button class="btn-sec" onclick="resetApariencia()">↺ Restaurar original</button>
+      <button class="btn-sec"  onclick="resetApariencia()">↺ Restaurar original</button>
     </div>
     <div id="brMsg" style="font-size:.78rem;margin-top:.5rem"></div>
   </div><!-- end panel-apariencia -->
@@ -723,17 +748,18 @@ async function actualizarIndicesSmart() {
       const r = await fetch(url);
       if (!r.ok) continue;
       const json = await r.json();
-      // INDEC devuelve nivel acumulado — convertir a variacion mensual
+      // La API del INDEC devuelve { data: [["YYYY-MM-DD", nivelIndice], ...] }
+      // El nivel es acumulado desde base dic-2016 — convertir a variacion mensual
       if (!json.data || !Array.isArray(json.data) || json.data.length < 5) continue;
-      const sorted = [...json.data].sort((a,b) => a[0]<b[0]?-1:1);
+      const sorted = [...json.data].sort((a, b) => a[0] < b[0] ? -1 : 1);
       let newCount = 0;
-      for (let i=0; i<sorted.length; i++) {
+      for (let i = 0; i < sorted.length; i++) {
         const [fecha, nivel] = sorted[i];
-        if (!fecha || nivel==null) continue;
-        const key = String(fecha).substring(0,7);
-        const prevNivel = i>0 ? sorted[i-1][1] : null;
-        const variacion = prevNivel ? parseFloat(((nivel/prevNivel-1)*100).toFixed(2)) : null;
-        if (variacion===null) continue;
+        if (!fecha || nivel == null) continue;
+        const key = String(fecha).substring(0, 7);
+        const prevNivel = i > 0 ? sorted[i-1][1] : null;
+        const variacion = prevNivel ? parseFloat(((nivel / prevNivel - 1) * 100).toFixed(2)) : null;
+        if (variacion === null) continue;
         if (key > lastIpcKey) { ipcExisting[key] = variacion; newCount++; }
         else if (!ipcExisting[key]) { ipcExisting[key] = variacion; }
       }
@@ -979,91 +1005,142 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 });
 
+/* ══════════════════════════════════════════════════════════
+   APARIENCIA — funciones globales (fuera del DOMContentLoaded)
+══════════════════════════════════════════════════════════ */
 
-/* ── APARIENCIA ─────────────────────────────────────────────── */
+function setBrandColor(hex) {
+  const picker = document.getElementById('brColorPicker');
+  const hexInp = document.getElementById('brColorHex');
+  if (picker) picker.value = hex;
+  if (hexInp) hexInp.value = hex;
+  updateBrandPreview();
+  if (typeof GestShared !== 'undefined') GestShared.applyBranding.__preview = hex;
+  // Aplicar en tiempo real
+  applyColorPreview(hex);
+}
+
 function applyColorPreview(hex) {
   if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return;
-  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
-  const rgb=`${r}, ${g}, ${b}`;
-  const root=document.documentElement;
-  root.style.setProperty('--accent',hex);
-  root.style.setProperty('--accent-glow',`rgba(${rgb},.28)`);
-  root.style.setProperty('--accent-soft',`rgba(${rgb},.12)`);
-  root.style.setProperty('--info',hex);
-  root.style.setProperty('--gradient-primary',`linear-gradient(135deg,${hex} 0%,${hex}cc 100%)`);
-  const b1=$('prevBtn1'),b2=$('prevBtn2'),lw=$('prevLogoWrap');
-  if(b1){b1.style.background=`rgba(${rgb},.1)`;b1.style.borderColor=`rgba(${rgb},.22)`;b1.style.color=`rgba(${rgb},.85)`;}
-  if(b2){b2.style.background=`rgba(${rgb},.25)`;b2.style.borderColor=`rgba(${rgb},.6)`;b2.style.color=hex;}
-  if(lw){lw.style.borderColor=`rgba(${rgb},.35)`;lw.style.background=`rgba(${rgb},.1)`;}
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  const rgb = `${r}, ${g}, ${b}`;
+  const root = document.documentElement;
+  root.style.setProperty('--accent',          hex);
+  root.style.setProperty('--accent-glow',     `rgba(${rgb}, 0.28)`);
+  root.style.setProperty('--accent-soft',     `rgba(${rgb}, 0.12)`);
+  root.style.setProperty('--info',            hex);
+  root.style.setProperty('--info-soft',       `rgba(${rgb}, 0.10)`);
+  root.style.setProperty('--gradient-primary',`linear-gradient(135deg, ${hex} 0%, ${hex}cc 100%)`);
+  // Preview header buttons
+  const b1 = document.getElementById('prevBtn1');
+  const b2 = document.getElementById('prevBtn2');
+  if (b1) { b1.style.background = `rgba(${rgb},.1)`; b1.style.borderColor = `rgba(${rgb},.22)`; b1.style.color = `rgba(${rgb},.85)`; }
+  if (b2) { b2.style.background = `rgba(${rgb},.25)`; b2.style.borderColor = `rgba(${rgb},.6)`; b2.style.color = hex; }
+  const logoWrap = document.getElementById('prevLogoWrap');
+  if (logoWrap) { logoWrap.style.borderColor = `rgba(${rgb},.35)`; logoWrap.style.background = `rgba(${rgb},.1)`; }
 }
-function setBrandColor(hex){
-  const p=$('brColorPicker'),h=$('brColorHex');
-  if(p)p.value=hex; if(h)h.value=hex;
-  applyColorPreview(hex); updateBrandPreview();
+
+function updateBrandPreview() {
+  const nombre    = (document.getElementById('brNombre')?.value    || '').trim() || 'Mi Inmobiliaria';
+  const subtitulo = (document.getElementById('brSubtitulo')?.value || '').trim() || 'Administración de Alquileres';
+  const logoUrl   = (document.getElementById('brLogo')?.value      || '').trim();
+  const hex       = (document.getElementById('brColorHex')?.value  || '#f57c00').trim();
+
+  const pNombre    = document.getElementById('prevNombre');
+  const pSub       = document.getElementById('prevSubtitulo');
+  const pLogoWrap  = document.getElementById('prevLogoWrap');
+  if (pNombre)   pNombre.textContent   = nombre;
+  if (pSub)      pSub.textContent      = subtitulo;
+  if (pLogoWrap) {
+    pLogoWrap.innerHTML = logoUrl
+      ? `<img src="${logoUrl}" style="width:100%;height:100%;object-fit:contain;border-radius:7px" onerror="this.parentNode.innerHTML='❌'">`
+      : '🏘️';
+  }
+  if (/^#[0-9a-fA-F]{6}$/.test(hex)) applyColorPreview(hex);
 }
-function updateBrandPreview(){
-  const nombre=($('brNombre')?.value||'').trim()||'Mi Inmobiliaria';
-  const sub=($('brSubtitulo')?.value||'').trim()||'Administración de Alquileres';
-  const logo=($('brLogo')?.value||'').trim();
-  const hex=($('brColorHex')?.value||'#f57c00').trim();
-  const pN=$('prevNombre'),pS=$('prevSubtitulo'),pL=$('prevLogoWrap');
-  if(pN)pN.textContent=nombre;
-  if(pS)pS.textContent=sub;
-  if(pL)pL.innerHTML=logo?`<img src="${logo}" style="width:100%;height:100%;object-fit:contain;border-radius:7px" onerror="this.parentNode.innerHTML='❌'">`:'🏘️';
-  if(/^#[0-9a-fA-F]{6}$/.test(hex))applyColorPreview(hex);
-}
-async function saveApariencia(){
-  const btn=$('btnSaveApariencia'),msg=$('brMsg');
-  const nombre=($('brNombre')?.value||'').trim();
-  const sub=($('brSubtitulo')?.value||'').trim();
-  const logo=($('brLogo')?.value||'').trim();
-  const hex=($('brColorHex')?.value||'#f57c00').trim();
-  if(nombre&&nombre.length<2){msg.style.color='var(--danger)';msg.textContent='El nombre es muy corto.';return;}
-  if(hex&&!/^#[0-9a-fA-F]{6}$/.test(hex)){msg.style.color='var(--danger)';msg.textContent='Color inválido. Usá #rrggbb';return;}
-  btn.disabled=true;btn.textContent='⏳ Guardando…';msg.textContent='';
-  try{
-    const cfg=GestShared.getConfig();
-    if(nombre)cfg.brandName=nombre;
-    if(sub)cfg.brandSubtitle=sub;
-    if(hex)cfg.brandColor=hex;
-    cfg.brandLogo=logo;
+
+async function saveApariencia() {
+  const btn = document.getElementById('btnSaveApariencia');
+  const msg = document.getElementById('brMsg');
+  const nombre    = (document.getElementById('brNombre')?.value    || '').trim();
+  const subtitulo = (document.getElementById('brSubtitulo')?.value || '').trim();
+  const logoUrl   = (document.getElementById('brLogo')?.value      || '').trim();
+  const hex       = (document.getElementById('brColorHex')?.value  || '#f57c00').trim();
+
+  if (nombre && nombre.length < 2) { msg.style.color='var(--danger)'; msg.textContent='El nombre es muy corto.'; return; }
+  if (hex && !/^#[0-9a-fA-F]{6}$/.test(hex)) { msg.style.color='var(--danger)'; msg.textContent='Color inválido. Usá formato #rrggbb'; return; }
+
+  btn.disabled = true; btn.textContent = '⏳ Guardando…'; msg.textContent = '';
+  try {
+    const cfg = GestShared.getConfig();
+    if (nombre)    cfg.brandName     = nombre;
+    if (subtitulo) cfg.brandSubtitle = subtitulo;
+    if (hex)       cfg.brandColor    = hex;
+    cfg.brandLogo = logoUrl; // puede ser vacío (para quitar el logo)
     GestShared.saveConfig(cfg);
     GestShared.applyBranding();
-    msg.style.color='var(--ok)';msg.textContent='✓ Apariencia guardada. Se aplica en todas las páginas.';
+    msg.style.color = 'var(--ok)'; msg.textContent = '✓ Apariencia guardada. Se aplica en todas las páginas.';
     toast('✓ Apariencia guardada');
-  }catch(e){msg.style.color='var(--danger)';msg.textContent='Error: '+e.message;}
-  finally{btn.disabled=false;btn.textContent='💾 Guardar apariencia';}
+  } catch(e) {
+    msg.style.color = 'var(--danger)'; msg.textContent = 'Error: ' + e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = '💾 Guardar apariencia';
+  }
 }
-function resetApariencia(){
-  if(!confirm('¿Restaurar la apariencia original?'))return;
-  const cfg=GestShared.getConfig();
-  cfg.brandName='Cristian Sanchez Propiedades';cfg.brandSubtitle='Administración de Alquileres';
-  cfg.brandColor='#f57c00';cfg.brandLogo='';
-  GestShared.saveConfig(cfg);GestShared.applyBranding();loadAparienciaFields();toast('✓ Restaurado');
+
+function resetApariencia() {
+  if (!confirm('¿Restaurar la apariencia original? Se perderán los cambios de marca.')) return;
+  const cfg = GestShared.getConfig();
+  cfg.brandName     = 'Cristian Sanchez Propiedades';
+  cfg.brandSubtitle = 'Administración de Alquileres';
+  cfg.brandColor    = '#f57c00';
+  cfg.brandLogo     = '';
+  GestShared.saveConfig(cfg);
+  GestShared.applyBranding();
+  loadAparienciaFields();
+  toast('✓ Apariencia restaurada');
 }
-function loadAparienciaFields(){
-  const cfg=GestShared.getConfig();
-  const n=$('brNombre'),s=$('brSubtitulo'),l=$('brLogo'),p=$('brColorPicker'),h=$('brColorHex');
-  if(n)n.value=cfg.brandName||'Cristian Sanchez Propiedades';
-  if(s)s.value=cfg.brandSubtitle||'Administración de Alquileres';
-  if(l)l.value=cfg.brandLogo||'';
-  const color=cfg.brandColor||'#f57c00';
-  if(p)p.value=color;if(h)h.value=color;
+
+function loadAparienciaFields() {
+  const cfg = GestShared.getConfig();
+  const n = document.getElementById('brNombre');
+  const s = document.getElementById('brSubtitulo');
+  const l = document.getElementById('brLogo');
+  const p = document.getElementById('brColorPicker');
+  const h = document.getElementById('brColorHex');
+  if (n) n.value = cfg.brandName     || 'Cristian Sanchez Propiedades';
+  if (s) s.value = cfg.brandSubtitle || 'Administración de Alquileres';
+  if (l) l.value = cfg.brandLogo     || '';
+  const color = cfg.brandColor || '#f57c00';
+  if (p) p.value = color;
+  if (h) h.value = color;
   updateBrandPreview();
 }
-// Init listeners para el panel de apariencia
-(function(){
-  const init=()=>{
+
+// Inicializar campos y listeners cuando el panel está visible
+document.addEventListener('DOMContentLoaded', () => {
+  // Esperar a que la config esté sincronizada
+  const initApariencia = () => {
     loadAparienciaFields();
-    const p=$('brColorPicker'),h=$('brColorHex'),n=$('brNombre'),s=$('brSubtitulo'),l=$('brLogo');
-    if(p)p.oninput=e=>{if(h)h.value=e.target.value;updateBrandPreview();};
-    if(h)h.oninput=e=>{if(/^#[0-9a-fA-F]{6}$/.test(e.target.value)){if(p)p.value=e.target.value;updateBrandPreview();}};
-    if(n)n.oninput=updateBrandPreview;
-    if(s)s.oninput=updateBrandPreview;
-    if(l)l.oninput=updateBrandPreview;
+    const picker = document.getElementById('brColorPicker');
+    const hexInp = document.getElementById('brColorHex');
+    const nombre  = document.getElementById('brNombre');
+    const sub     = document.getElementById('brSubtitulo');
+    const logo    = document.getElementById('brLogo');
+    if (picker) picker.oninput = e => { hexInp.value = e.target.value; updateBrandPreview(); };
+    if (hexInp) hexInp.oninput = e => {
+      const v = e.target.value;
+      if (/^#[0-9a-fA-F]{6}$/.test(v)) { picker.value = v; updateBrandPreview(); }
+    };
+    if (nombre) nombre.oninput = updateBrandPreview;
+    if (sub)    sub.oninput    = updateBrandPreview;
+    if (logo)   logo.oninput   = updateBrandPreview;
   };
-  if(window._gsReady)window._gsReady.then(init);else document.addEventListener('DOMContentLoaded',init);
-})();
+  if (window._gsReady) window._gsReady.then(initApariencia);
+  else initApariencia();
+});
 </script>
 </body>
 </html>

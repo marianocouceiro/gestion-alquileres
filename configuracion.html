@@ -363,8 +363,32 @@ function switchTab(name) {
 // ── Constants ─────────────────────────────────────────────────
 const SB_URL = 'https://ratkgsxlqjjhjcclpcee.supabase.co';
 const SB_KEY = 'sb_publishable_frPLdQ7k0nOOP5JsULLU-g_XEPjc1Bv';
-const SB_H   = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' };
 const BK_TABLES = ['contratos','pagos','propiedades','compradores','tasaciones','visitas','config','vendedores'];
+
+// Siempre usa el token de sesión del usuario logueado (no el anon key)
+// Necesario para que RLS filtre correctamente por org_id
+function getSBHeaders(extra) {
+  let token = SB_KEY;
+  try {
+    const s = JSON.parse(localStorage.getItem('ga_session') || '{}');
+    if (s.access_token && s.expires_at > Date.now()/1000 + 30) token = s.access_token;
+  } catch {}
+  return Object.assign({
+    'apikey': SB_KEY,
+    'Authorization': 'Bearer ' + token,
+    'Content-Type': 'application/json',
+  }, extra || {});
+}
+
+// org_id del usuario actual (del JWT en localStorage)
+function getCurrentOrgId() {
+  try {
+    const s = JSON.parse(localStorage.getItem('ga_session') || '{}');
+    if (!s.access_token) return null;
+    const payload = JSON.parse(atob(s.access_token.split('.')[1]));
+    return payload.app_metadata?.org_id || null;
+  } catch { return null; }
+}
 
 // Índices base (respaldo hardcodeado — se sobreescriben con datos de Supabase)
 const ICL_HARDCODED = {
@@ -696,7 +720,7 @@ async function fetchAllRows(table, extraFilter='') {
     const sep = extraFilter ? '&' : '';
     const url = `${SB_URL}/rest/v1/${table}?limit=${PAGE}&offset=${offset}${sep}${extraFilter}`;
     const r = await fetch(url, {
-      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Prefer': 'count=exact' }
+      headers: { ...getSBHeaders(), 'Prefer': 'count=exact' }
     });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const chunk = await r.json();
@@ -870,14 +894,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     let backup;
     try { backup = JSON.parse(await file.text()); } catch { toast('Archivo JSON inválido', true); return; }
     if (!backup.tables) { toast('Formato de backup no reconocido', true); return; }
+    const orgId = getCurrentOrgId();
     let ok = 0;
     for (const t of BK_TABLES) {
       const rows = backup.tables[t] || [];
       if (!rows.length) continue;
       bkBadge(t, 'bk-pend', '⏳');
       try {
-        for (let i = 0; i < rows.length; i += 100) {
-          const r = await fetch(`${SB_URL}/rest/v1/${t}`, { method:'POST', headers:SB_H, body:JSON.stringify(rows.slice(i,i+100)) });
+        // Inyectar org_id en filas que no lo tengan (backups anteriores a v5.2)
+        const rowsConOrg = orgId
+          ? rows.map(row => row.org_id ? row : { ...row, org_id: orgId })
+          : rows;
+        for (let i = 0; i < rowsConOrg.length; i += 100) {
+          const r = await fetch(`${SB_URL}/rest/v1/${t}`, {
+            method: 'POST',
+            headers: { ...getSBHeaders(), 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+            body: JSON.stringify(rowsConOrg.slice(i, i+100))
+          });
           if (!r.ok) throw new Error(await r.text());
         }
         bkBadge(t, 'bk-ok', `✓ ${rows.length}`); ok++;

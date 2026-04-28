@@ -405,11 +405,23 @@ const SupabaseDB = (function () {
     return cfg;
   }
   async function saveConfig(cfg) {
+    // Obtener org_id del JWT para incluirlo en cada fila (PK es clave+org_id)
+    let orgId = null;
+    try {
+      const s = JSON.parse(localStorage.getItem('ga_session') || '{}');
+      if (s.access_token) {
+        const p = JSON.parse(atob(s.access_token.split('.')[1]));
+        orgId = p.app_metadata?.org_id || null;
+      }
+    } catch {}
+    if (!orgId) return { success: false, error: 'no org_id' };
+
     const rows = Object.entries(cfg)
       .filter(([, v]) => v !== undefined)
       .map(([clave, valor]) => ({
         clave,
         valor: typeof valor === 'object' ? JSON.stringify(valor) : String(valor),
+        org_id: orgId,
         updated_at: new Date().toISOString()
       }));
     if (!rows.length) return { success: true };

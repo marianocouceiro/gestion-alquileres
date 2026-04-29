@@ -129,12 +129,7 @@ tbody tr.alerta-naranja td{background:rgba(245,124,0,.08);border-left:3px solid 
   @media (max-width: 768px) {
     /* Header: ocultar nav, mostrar hamburguesa */
     .app-hdr { padding: .5rem .9rem; }
-    .app-hdr-nav { display: none; flex-direction: column; position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0; z-index: 999;
-      background: rgba(13,13,13,.97); padding: 4.5rem 1.2rem 1.5rem;
-      gap: .5rem; overflow-y: auto; }
-    .app-hdr-nav.open { display: flex; }
-    .nav-lnk { font-size: .88rem; padding: .65rem 1rem; }
+    .app-hdr-nav { display: none; }
     .nav-font { display: none; }
     /* Hamburger button */
     .hbg-btn { display: flex; flex-direction: column; justify-content: center;
@@ -146,11 +141,27 @@ tbody tr.alerta-naranja td{background:rgba(245,124,0,.08);border-left:3px solid 
     .hbg-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
     .hbg-btn.open span:nth-child(2) { opacity: 0; }
     .hbg-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
-    /* Close X inside open menu */
-    .hbg-close { position: fixed; top: .8rem; right: .9rem; z-index: 1000;
-      background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3);
-      color: #ef4444; border-radius: 8px; padding: .35rem .7rem;
-      font-size: .8rem; font-weight: 700; cursor: pointer; font-family: inherit; }
+    /* Fullscreen mobile menu overlay — fuera del header */
+    #gs-mob-menu { display: none; position: fixed; inset: 0; z-index: 9999;
+      background: rgba(13,13,13,.98); flex-direction: column;
+      padding: 1.2rem; overflow-y: auto; }
+    #gs-mob-menu.open { display: flex; }
+    #gs-mob-menu-top { display: flex; align-items: center;
+      justify-content: space-between; margin-bottom: 1.5rem; padding-bottom: 1rem;
+      border-bottom: 1px solid rgba(255,255,255,.08); }
+    #gs-mob-menu-top .mob-brand { font-size: .9rem; font-weight: 700; color: #fff; }
+    #gs-mob-menu-top .mob-close { background: rgba(239,68,68,.1);
+      border: 1px solid rgba(239,68,68,.3); color: #ef4444; border-radius: 8px;
+      padding: .4rem .8rem; font-size: .9rem; font-weight: 700;
+      cursor: pointer; font-family: inherit; }
+    #gs-mob-menu a { display: flex; align-items: center; gap: .75rem;
+      padding: .85rem 1rem; border-radius: 10px; font-size: .95rem; font-weight: 600;
+      color: rgba(245,124,0,.9); background: rgba(245,124,0,.08);
+      border: 1px solid rgba(245,124,0,.15); text-decoration: none;
+      margin-bottom: .4rem; }
+    #gs-mob-menu a:active { background: rgba(245,124,0,.2); }
+    #gs-mob-menu a.mob-active { background: rgba(245,124,0,.2);
+      color: #ff9800; border-color: rgba(245,124,0,.5); }
     /* Summary: 3 items per row */
     .summary { display: grid; grid-template-columns: repeat(3, 1fr); }
     .sum-item { padding: .5rem .6rem; }
@@ -186,22 +197,36 @@ tbody tr.alerta-naranja td{background:rgba(245,124,0,.08);border-left:3px solid 
 </head>
 <body>
 <div id="lb"></div>
+<div id="gs-mob-menu">
+  <div id="gs-mob-menu-top">
+    <span class="mob-brand">📋 Cristian Sanchez Propiedades</span>
+    <button class="mob-close" onclick="closeMobMenu()">✕ Cerrar</button>
+  </div>
+  <a href="dashboard.html">🏠 Dashboard</a>
+    <a href="ventas.html">🏘️ Propiedades</a>
+    <a href="visitas.html">📅 Visitas</a>
+    <a href="tasaciones.html" class="mob-active">📋 Tasaciones</a>
+    <a href="banco.html">👤 Banco</a>
+    <a href="index.html">📄 Contratos</a>
+    <a href="administracion.html">🧾 Administración</a>
+    <a href="tareas.html">✅ Tareas</a>
+    <a href="configuracion.html">⚙️ Configuración</a>
+</div>
 <script>
-  // Cerrar menú mobile al hacer click en cualquier nav-lnk
-  document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('nav-lnk')) {
-      var n = document.querySelector('.app-hdr-nav');
-      var b = document.getElementById('hbgBtn');
-      if (n) n.classList.remove('open');
-      if (b) b.classList.remove('open');
-    }
-    // Cerrar al hacer click fuera del menú
-    if (e.target.classList.contains('app-hdr-nav')) {
-      e.target.classList.remove('open');
-      var b = document.getElementById('hbgBtn');
-      if (b) b.classList.remove('open');
-    }
-  });
+  function openMobMenu() {
+    document.getElementById('gs-mob-menu').classList.add('open');
+    document.getElementById('hbgBtn').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeMobMenu() {
+    document.getElementById('gs-mob-menu').classList.remove('open');
+    document.getElementById('hbgBtn').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  document.getElementById('hbgBtn').onclick = function() {
+    if (document.getElementById('gs-mob-menu').classList.contains('open')) closeMobMenu();
+    else openMobMenu();
+  };
 </script>
 <div class="tc" id="tc"></div>
 
@@ -227,7 +252,7 @@ tbody tr.alerta-naranja td{background:rgba(245,124,0,.08);border-left:3px solid 
       <button onclick="(function(){var fs=parseInt(localStorage.getItem('app_fs'))||15;fs=Math.min(20,fs+1);localStorage.setItem('app_fs',fs);document.documentElement.style.fontSize=fs+'px';})()" title="Agrandar">A+</button>
     </div>
   </nav>
-  <button class="hbg-btn" id="hbgBtn" onclick="(function(){var n=document.querySelector('.app-hdr-nav'),b=document.getElementById('hbgBtn');n.classList.toggle('open');b.classList.toggle('open');})()" aria-label="Menú">
+  <button class="hbg-btn" id="hbgBtn" onclick="openMobMenu()" aria-label="Menú">
     <span></span><span></span><span></span>
   </button>
 </header>

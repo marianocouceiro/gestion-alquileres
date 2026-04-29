@@ -329,24 +329,20 @@ async function completar(id) {
   const t = tareas.find(x => x.id === id);
   if (!t) return;
   t.completada = true;
-  try {
-    await SupabaseDB.upsertTarea(t);
-    toast('Tarea completada ✔', 'ok');
-  } catch(e) { toast('Error al guardar', 'err'); }
-  renderStats();
-  renderList();
+  const r = await SupabaseDB.upsertTarea(t);
+  if (r && r.success === false) { t.completada = false; toast('Error: ' + (r.error||''), 'err'); }
+  else toast('Tarea completada ✔', 'ok');
+  renderStats(); renderList();
 }
 
 async function reabrir(id) {
   const t = tareas.find(x => x.id === id);
   if (!t) return;
   t.completada = false;
-  try {
-    await SupabaseDB.upsertTarea(t);
-    toast('Tarea reabierta', 'info');
-  } catch(e) { toast('Error al guardar', 'err'); }
-  renderStats();
-  renderList();
+  const r = await SupabaseDB.upsertTarea(t);
+  if (r && r.success === false) { t.completada = true; toast('Error: ' + (r.error||''), 'err'); }
+  else toast('Tarea reabierta', 'info');
+  renderStats(); renderList();
 }
 
 /* ── Eliminar ── */
@@ -398,7 +394,14 @@ async function saveTarea() {
     createdAt: existing ? existing.createdAt : new Date().toISOString(),
   };
   try {
-    await SupabaseDB.upsertTarea(tarea);
+    const result = await SupabaseDB.upsertTarea(tarea);
+    if (!result || result.success === false) {
+      const errMsg = result?.error || 'Error desconocido';
+      console.error('[Tareas] upsert falló:', errMsg);
+      toast('Error al guardar: ' + errMsg, 'err');
+      renderStats(); renderList();
+      return;
+    }
     if (existing) {
       Object.assign(existing, tarea);
     } else {
@@ -407,8 +410,8 @@ async function saveTarea() {
     toast(existing ? 'Tarea actualizada' : 'Tarea creada ✔', 'ok');
     closeModal();
   } catch(e) {
-    console.error(e);
-    toast('Error al guardar tarea', 'err');
+    console.error('[Tareas] excepción:', e);
+    toast('Error al guardar: ' + e.message, 'err');
   }
   renderStats();
   renderList();

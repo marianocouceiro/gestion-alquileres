@@ -82,11 +82,11 @@
   /* ══ MOBILE RESPONSIVE (≤768px) — no toca desktop ══ */
   @media (max-width: 768px) {
 
-    /* Header hamburguesa */
-    .app-hdr { padding: .5rem .9rem; }
-    .app-hdr-nav { display: none; }
-    .nav-font { display: none; }
-    .hbg-btn { display: flex; flex-direction: column; justify-content: center;
+    /* Header hamburguesa — aplica tanto a .app-hdr como a .gs-hdr (shared.js) */
+    .app-hdr, .gs-hdr { padding: .5rem .9rem !important; }
+    .app-hdr-nav, .gs-nav { display: none !important; }
+    .nav-font, .gs-font-ctrl { display: none !important; }
+    .hbg-btn { margin-left: auto; display: flex; flex-direction: column; justify-content: center;
       gap: 5px; width: 36px; height: 36px; background: rgba(245,124,0,.1);
       border: 1px solid rgba(245,124,0,.3); border-radius: 8px;
       cursor: pointer; padding: 7px; flex-shrink: 0; }

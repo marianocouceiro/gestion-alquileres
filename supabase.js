@@ -229,7 +229,7 @@ const SupabaseDB = (function () {
 
   function fromApp(c) {
     return {
-      id: c.id, address: c.address, tenant: c.tenant,
+      id: c.id, org_id: getOrgId(), address: c.address, tenant: c.tenant,
       tenant_phone: c.tenantPhone || null,
       owner: c.owner, owner_phone: c.ownerPhone || null,
       start_date:        nullDate(c.startDate),
@@ -375,12 +375,27 @@ const SupabaseDB = (function () {
   // ── TAREAS ───────────────────────────────────────────────────
   async function getTareas() {
     const r = await query('tareas', { filters: 'order=created_at.desc' });
-    return r.success ? (r.data || []).map(row => row.data || { id: row.id }) : [];
+    if (!r.success) return [];
+    return (r.data || []).map(row => ({
+      id:            row.id,
+      texto:         row.texto         || '',
+      observaciones: row.observaciones || '',
+      prioridad:     row.prioridad     || 'media',
+      fecha:         row.fecha         || null,
+      completada:    row.completada    || false,
+      createdAt:     row.created_at    || '',
+    }));
   }
   async function upsertTarea(t) {
     return await upsert('tareas', {
-      id: t.id, prioridad: t.prioridad || 'media', completada: t.completada || false,
-      data: t, updated_at: new Date().toISOString(), org_id: getOrgId()
+      id:            t.id,
+      org_id:        getOrgId(),
+      texto:         t.texto         || '',
+      observaciones: t.observaciones || null,
+      prioridad:     t.prioridad     || 'media',
+      fecha:         t.fecha         || null,
+      completada:    t.completada    === true,
+      updated_at:    new Date().toISOString(),
     });
   }
   async function deleteTarea(id) { return await del('tareas', id); }

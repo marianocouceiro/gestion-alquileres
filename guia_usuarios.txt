@@ -1,0 +1,180 @@
+═══════════════════════════════════════════════════════════════
+   GESTALQUILER — GUÍA DE USO PARA USUARIOS
+═══════════════════════════════════════════════════════════════
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CÓMO ENTRAR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Desde cualquier navegador, entrá a:
+https://gestion-alquileres-jet.vercel.app
+
+Iniciá sesión con el email y contraseña que te dieron.
+La app funciona en computadora, tablet y celular.
+
+Si olvidaste tu contraseña, avisale al administrador
+para que te la restablezca.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DASHBOARD — PANTALLA PRINCIPAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Al entrar ves un resumen con:
+· Contratos próximos a vencer (alerta en rojo o naranja)
+· Contratos con actualización pendiente este mes
+· Resumen de visitas agendadas
+· Tasaciones con seguimiento pendiente
+
+Desde acá podés acceder a todos los módulos usando
+el menú del encabezado.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CONTRATOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CARGAR UN CONTRATO NUEVO
+1. Click en "Nuevo contrato" (botón naranja)
+2. Completá los datos: inquilino, propietario, propiedad,
+   fecha de inicio, duración, monto inicial
+3. Elegí el tipo de actualización: ICL, IPC o % fijo
+4. Elegí la frecuencia: trimestral, cuatrimestral,
+   semestral o anual
+5. Click "Guardar"
+
+REGISTRAR UNA ACTUALIZACIÓN
+Cuando llega la fecha de actualización, el contrato
+aparece destacado en naranja.
+1. Click en el contrato
+2. En el panel de detalle, click "Actualizar"
+3. La app calcula el nuevo monto automáticamente
+   usando los índices del BCRA/INDEC
+4. Confirmá y el contrato queda actualizado
+
+GENERAR MENSAJE WHATSAPP
+1. Click en el contrato
+2. Click en "WhatsApp Inquilino" o "WhatsApp Propietario"
+3. Se abre WhatsApp con el mensaje ya redactado
+
+PRÓRROGA
+1. Click en el contrato → "Prorrogar"
+2. Elegís la nueva duración y condiciones
+3. Confirmás — el contrato se extiende automáticamente
+
+RENOVAR CONTRATO
+1. Click en el contrato → "Renovar"
+2. Completás los nuevos términos
+3. El contrato anterior queda cerrado y se crea uno nuevo
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ADMINISTRACIÓN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Acá ves todos los pagos del mes por contrato.
+
+REGISTRAR UN PAGO
+1. Buscá el contrato en la lista
+2. Click en el ícono de pago del mes correspondiente
+3. Ingresá el monto cobrado y la fecha
+4. El estado cambia a pagado (verde)
+
+HONORARIOS
+Cuando registrás el cobro de honorarios, aparece
+un badge naranja en la fila del contrato.
+
+MORA
+Si un pago no se registra antes del día 10, la fila
+aparece en rojo como alerta de mora.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+VISITAS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+AGENDAR UNA VISITA
+1. Click en el día y horario en el calendario
+2. Seleccioná la propiedad a visitar
+3. Completá los datos del visitante (nombre, teléfono)
+4. Asigná un vendedor
+5. Guardá — se envía notificación WhatsApp automáticamente
+
+VISTA DÍA / SEMANA
+Podés cambiar entre vista de día y semana con los
+botones de la parte superior del calendario.
+
+MARCAR VISITA REALIZADA
+Click en la visita → "Realizada" o "No se presentó"
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TASACIONES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+REGISTRAR UNA TASACIÓN
+1. Click en "Nueva tasación"
+2. Completá dirección, tipo de propiedad y valor tasado
+3. Asigná un vendedor responsable
+4. Guardá
+
+La app te avisa automáticamente a los 7 y 15 días
+para hacer seguimiento con el propietario.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PROPIEDADES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Registrá propiedades disponibles para venta o alquiler.
+Podés cargar tipo, ambientes, zona, precio y estado.
+Las propiedades en alquiler se vinculan automáticamente
+con los contratos activos.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BANCO DE COMPRADORES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Guardá los datos de clientes que están buscando
+comprar o alquilar.
+
+CARGAR UN COMPRADOR
+1. Click en "Nuevo comprador"
+2. Completá nombre, teléfono, tipo de propiedad buscada,
+   zonas de interés, presupuesto y ambientes
+3. Asigná un vendedor
+4. Guardá
+
+MATCHING AUTOMÁTICO
+La app genera links directos a Argenprop y MercadoLibre
+con los filtros del comprador para agilizar la búsqueda.
+
+Los compradores inactivos por más de 120 días
+aparecen marcados para seguimiento.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PREGUNTAS FRECUENTES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+¿Los datos se guardan automáticamente?
+Sí. Cada cambio se guarda en tiempo real en la base
+de datos. No hace falta hacer click en "Guardar" general.
+
+¿Puedo usar la app desde el celular?
+Sí. Entrás al mismo enlace desde el navegador del
+celular. No hace falta descargar ninguna app.
+
+¿Qué pasa si se corta internet mientras trabajo?
+La app muestra un aviso. Los datos que ya cargaste
+están guardados. Al volver la conexión, podés continuar.
+
+¿Puedo ver lo que cargaron otros usuarios?
+Sí. Todos los usuarios de la misma inmobiliaria
+ven y comparten los mismos datos.
+
+¿Olvidé mi contraseña, qué hago?
+Avisale al administrador para que te la restablezca.
+No podés recuperarla por tu cuenta.
+

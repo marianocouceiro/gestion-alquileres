@@ -1153,7 +1153,24 @@
             restoreFocusAdm(focusState);
             return;
         }
-        filtered.forEach(c => body.appendChild(buildRow(c, records[c.address] || defaultRecord(c))));
+        filtered.forEach(c => {
+            const existing = records[c.address];
+            let rec;
+            if (!existing) {
+                rec = defaultRecord(c);
+            } else {
+                rec = { ...existing };
+                // Si el usuario NO editó el monto manualmente, actualizar desde el contrato
+                if (!existing._manualAlquiler) {
+                    rec.montoAlquiler = getMontoBase(c);
+                }
+                // Si el usuario NO editó la dif. depósito manualmente, recalcularla
+                if (!existing._manualDifDeposito) {
+                    rec.difDeposito = calcDefaultDifDeposito(c) || '';
+                }
+            }
+            body.appendChild(buildRow(c, rec));
+        });
         updateSummary();
         restoreFocusAdm(focusState);  // restaurar foco después de reconstruir DOM
     }
@@ -1468,7 +1485,10 @@
 
         contracts.forEach(c => {
             const rec = records[c.address];
-            const {alq, honorarios} = calcRow(rec || defaultRecord(c));
+            const rec2 = rec ? { ...rec } : defaultRecord(c);
+                if (rec && !rec._manualAlquiler)    rec2.montoAlquiler = getMontoBase(c);
+                if (rec && !rec._manualDifDeposito) rec2.difDeposito   = calcDefaultDifDeposito(c) || '';
+                const {alq, honorarios} = calcRow(rec2);
             sumAlq   += alq;
             sumInmob += honorarios;
             if (rec && rec.estado==='RETIRADO') retirados++;

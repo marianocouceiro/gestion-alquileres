@@ -250,13 +250,17 @@ window.changeFontSize = GestShared.changeFontSize.bind(GestShared);
    vendedores) a localStorage para que todos los usuarios y todas las máquinas
    compartan la misma lista. La promesa queda expuesta como window._gsReady
    para que las páginas puedan awaitear antes de poblar selects si lo necesitan. */
-window._gsReady = (async () => {
-  try {
-    // Esperar a que SupabaseDB esté disponible (lo define supabase.js, cargado antes)
-    if (typeof SupabaseDB === 'undefined') return;
-    await GestShared.syncConfigFromSupabase();
-    GestShared.applyBranding();
-    // Notificar a las páginas que ya podemos usar vendedores/config actualizados
-    window.dispatchEvent(new CustomEvent('gs:config-synced'));
-  } catch(e) { console.warn('[GestShared] auto-sync:', e); }
-})();
+window._gsReady = new Promise(function(resolve) {
+  document.addEventListener('DOMContentLoaded', async function() {
+    try {
+      if (typeof SupabaseDB !== 'undefined') {
+        await GestShared.syncConfigFromSupabase();
+        GestShared.applyBranding();
+      }
+    } catch(e) { console.warn('[GestShared] auto-sync:', e); }
+    finally {
+      window.dispatchEvent(new CustomEvent('gs:config-synced'));
+      resolve();
+    }
+  });
+});

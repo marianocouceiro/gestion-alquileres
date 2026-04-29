@@ -262,9 +262,61 @@
     .nav-font button:hover{color:#f57c00;background:rgba(245,124,0,.1)}
     .wa-phone-link{color:#378ADD;text-decoration:none;cursor:pointer}
     .wa-phone-link:hover{text-decoration:underline;color:#25d366}
+
+  /* ══ MOBILE RESPONSIVE (≤768px) — no toca desktop ══ */
+  @media (max-width: 768px) {
+    .app-hdr { padding: .5rem .9rem; }
+    .app-hdr-nav { display: none; flex-direction: column; position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0; z-index: 999;
+      background: rgba(13,13,13,.97); padding: 4.5rem 1.2rem 1.5rem;
+      gap: .5rem; overflow-y: auto; }
+    .app-hdr-nav.open { display: flex; }
+    .nav-lnk { font-size: .88rem; padding: .65rem 1rem; }
+    .nav-font { display: none; }
+    .hbg-btn { display: flex; flex-direction: column; justify-content: center;
+      gap: 5px; width: 36px; height: 36px; background: rgba(245,124,0,.1);
+      border: 1px solid rgba(245,124,0,.3); border-radius: 8px;
+      cursor: pointer; padding: 7px; flex-shrink: 0; }
+    .hbg-btn span { display: block; height: 2px; background: #f57c00;
+      border-radius: 2px; transition: all .2s; }
+    .hbg-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hbg-btn.open span:nth-child(2) { opacity: 0; }
+    .hbg-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+    /* Table */
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { font-size: .78rem; }
+    td, th { padding: .4rem .5rem; }
+    /* Hide less important columns */
+    table th:nth-child(4), table td:nth-child(4),  /* P.Aut/Ambientes */
+    table th:nth-child(5), table td:nth-child(5),  /* Hon. Vend */
+    table th:nth-child(6), table td:nth-child(6),  /* Hon. Comp */
+    table th:nth-child(8), table td:nth-child(8)   /* Checklist */
+    { display: none; }
+    /* Modals fullscreen */
+    .modal-overlay { align-items: flex-end; padding: 0; }
+    .modal { max-width: 100%; width: 100%; border-radius: 16px 16px 0 0;
+      max-height: 90vh; }
+    /* Filters/toolbar */
+    .toolbar { padding: .6rem .9rem; flex-wrap: wrap; gap: .4rem; }
+    .search-input { width: 100%; max-width: 100%; }
+  }
+  @media (min-width: 769px) { .hbg-btn { display: none; } }
   </style>
 </head>
 <body>
+<script>
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('nav-lnk')) {
+      var n=document.querySelector('.app-hdr-nav'), b=document.getElementById('hbgBtn');
+      if(n) n.classList.remove('open'); if(b) b.classList.remove('open');
+    }
+    if (e.target.classList.contains('app-hdr-nav')) {
+      e.target.classList.remove('open');
+      var b=document.getElementById('hbgBtn'); if(b) b.classList.remove('open');
+    }
+  });
+</script>
+
 <div id="lb">🔄 Cargando…</div>
 <div class="toast-c" id="tc"></div>
 
@@ -291,6 +343,9 @@
       <button onclick="(function(){var fs=parseInt(localStorage.getItem('app_fs'))||15;fs=Math.min(20,fs+1);localStorage.setItem('app_fs',fs);document.documentElement.style.fontSize=fs+'px';})()" title="Agrandar">A+</button>
     </div>
   </nav>
+  <button class="hbg-btn" id="hbgBtn" onclick="(function(){var n=document.querySelector('.app-hdr-nav'),b=document.getElementById('hbgBtn');n.classList.toggle('open');b.classList.toggle('open');})()" aria-label="Menú">
+    <span></span><span></span><span></span>
+  </button>
 </header>
 
 <!-- Tabs -->

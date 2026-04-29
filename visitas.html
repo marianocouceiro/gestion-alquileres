@@ -1104,7 +1104,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Vendedores modal
     $('#btnVendedores').onclick       = ()=>{ renderVendedoresList(); $('#modalVendedores').classList.add('open'); };
     $('#btnCloseVendedores').onclick  = ()=>$('#modalVendedores').classList.remove('open');
-    $('#btnCloseVendedores2').onclick = ()=>$('#modalVendedores').classList.remove('open');
+    if($('#btnCloseVendedores2')) $('#btnCloseVendedores2').onclick = ()=>$('#modalVendedores').classList.remove('open');
     $('#modalVendedores').onclick     = e=>{ if(e.target===$('#modalVendedores')) $('#modalVendedores').classList.remove('open'); };
     $('#btnAgregarVendedor').onclick  = ()=>{
         const nombre = $('#nuevoVendedor').value.trim();

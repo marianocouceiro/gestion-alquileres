@@ -101,6 +101,76 @@ main{max-width:1400px;margin:0 auto;padding:1.5rem;position:relative;z-index:1}
     .nav-font button:hover{color:#f57c00;background:rgba(245,124,0,.1)}
     .wa-phone-link{color:#378ADD;text-decoration:none;cursor:pointer}
     .wa-phone-link:hover{text-decoration:underline;color:#25d366}
+
+  /* ══ Mobile overlay — siempre oculto por defecto ══ */
+  #gs-mob-menu { display: none; }
+
+  /* ══ MOBILE RESPONSIVE (≤768px) — no toca desktop ══ */
+  @media (max-width: 768px) {
+
+    /* Header hamburguesa */
+    .app-hdr { padding: .5rem .9rem; }
+    .app-hdr-nav { display: none; }
+    .nav-font { display: none; }
+    .hbg-btn { display: flex; flex-direction: column; justify-content: center;
+      gap: 5px; width: 36px; height: 36px; background: rgba(245,124,0,.1);
+      border: 1px solid rgba(245,124,0,.3); border-radius: 8px;
+      cursor: pointer; padding: 7px; flex-shrink: 0; }
+    .hbg-btn span { display: block; height: 2px; background: #f57c00;
+      border-radius: 2px; transition: all .2s; }
+    .hbg-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hbg-btn.open span:nth-child(2) { opacity: 0; }
+    .hbg-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* Fullscreen menu overlay */
+    #gs-mob-menu { position: fixed; inset: 0; z-index: 9999;
+      background: rgba(13,13,13,.98); flex-direction: column;
+      padding: 1.2rem; overflow-y: auto; }
+    #gs-mob-menu.open { display: flex; }
+    #gs-mob-menu-top { display: flex; align-items: center;
+      justify-content: space-between; margin-bottom: 1.5rem; padding-bottom: 1rem;
+      border-bottom: 1px solid rgba(255,255,255,.08); }
+    #gs-mob-menu-top .mob-brand { font-size: .9rem; font-weight: 700; color: #fff; }
+    #gs-mob-menu-top .mob-close { background: rgba(239,68,68,.1);
+      border: 1px solid rgba(239,68,68,.3); color: #ef4444; border-radius: 8px;
+      padding: .4rem .8rem; font-size: .9rem; font-weight: 700;
+      cursor: pointer; font-family: inherit; }
+    #gs-mob-menu a { display: flex; align-items: center; gap: .75rem;
+      padding: .85rem 1rem; border-radius: 10px; font-size: .95rem; font-weight: 600;
+      color: rgba(245,124,0,.9); background: rgba(245,124,0,.08);
+      border: 1px solid rgba(245,124,0,.15); text-decoration: none;
+      margin-bottom: .4rem; }
+    #gs-mob-menu a.mob-active { background: rgba(245,124,0,.2);
+      color: #ff9800; border-color: rgba(245,124,0,.5); }
+
+    /* Contenido general */
+    body { padding: 0; }
+
+    /* Stats grid: 2 columnas en mobile */
+    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: .5rem; }
+    .stat-card { padding: .65rem .75rem; }
+    .stat-value { font-size: 1.4rem; }
+    .stat-label { font-size: .68rem; }
+
+    /* List grid: 1 columna en mobile */
+    .list-grid { grid-template-columns: 1fr; gap: .6rem; }
+    .list-card { padding: .75rem .9rem; }
+
+    /* Tareas */
+    #listTareas > div { font-size: .8rem; }
+
+    /* Charts: 1 columna en mobile */
+    .charts-grid { grid-template-columns: 1fr; gap: .6rem; }
+    .chart-card { padding: .75rem .9rem; min-height: 220px; }
+    .chart-wrap { height: 170px; }
+
+    /* Section titles */
+    .section-title { margin: 1rem 0 .5rem; font-size: .68rem; }
+
+    /* Refresh button */
+    #btnRefresh { padding: .3rem .65rem; font-size: .75rem; }
+  }
+  @media (min-width: 769px) { .hbg-btn { display: none; } }
   </style>
 </head>
 <body>
@@ -132,6 +202,9 @@ main{max-width:1400px;margin:0 auto;padding:1.5rem;position:relative;z-index:1}
       <button onclick="(function(){var fs=parseInt(localStorage.getItem('app_fs'))||15;fs=Math.min(20,fs+1);localStorage.setItem('app_fs',fs);document.documentElement.style.fontSize=fs+'px';})()" title="Agrandar">A+</button>
     </div>
   </nav>
+  <button class="hbg-btn" id="hbgBtn" aria-label="Menú">
+    <span></span><span></span><span></span>
+  </button>
 </header>
 
 <main>
@@ -541,6 +614,44 @@ document.addEventListener('DOMContentLoaded',()=>{
         if (cached) await renderAdmChart(cached, yr, mo);
     }, 60000);
 });
+</script>
+
+<div id="gs-mob-menu">
+  <div id="gs-mob-menu-top">
+    <span class="mob-brand">🏠 Cristian Sanchez Propiedades</span>
+    <button class="mob-close" onclick="closeMobMenu()">✕ Cerrar</button>
+  </div>
+  <a href="dashboard.html" class="mob-active">🏠 Dashboard</a>
+  <a href="ventas.html">🏘️ Propiedades</a>
+  <a href="visitas.html">📅 Visitas</a>
+  <a href="tasaciones.html">📋 Tasaciones</a>
+  <a href="banco.html">👤 Banco</a>
+  <a href="index.html">📄 Contratos</a>
+  <a href="administracion.html">🧾 Administración</a>
+  <a href="tareas.html">✅ Tareas</a>
+  <a href="configuracion.html">⚙️ Configuración</a>
+</div>
+<script>
+  (function() {
+    function openMobMenu() {
+      document.getElementById('gs-mob-menu').classList.add('open');
+      var b = document.getElementById('hbgBtn');
+      if (b) b.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeMobMenu() {
+      document.getElementById('gs-mob-menu').classList.remove('open');
+      var b = document.getElementById('hbgBtn');
+      if (b) b.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    window.closeMobMenu = closeMobMenu;
+    var hbg = document.getElementById('hbgBtn');
+    if (hbg) hbg.onclick = function() {
+      document.getElementById('gs-mob-menu').classList.contains('open')
+        ? closeMobMenu() : openMobMenu();
+    };
+  })();
 </script>
 </body>
 </html>

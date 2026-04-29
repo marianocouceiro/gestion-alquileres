@@ -155,6 +155,13 @@
   /* ══ MOBILE RESPONSIVE (≤768px) — no toca desktop ══ */
   @media (max-width: 768px) {
 
+    /* Forzar vista día en mobile — CSS puro, sin depender del JS */
+    #tab-semana { display: none !important; }
+    #tab-dia    { display: block !important; }
+    .tab[data-tab="semana"] { display: none !important; }
+    .tab[data-tab="dia"]    { color: var(--acc) !important;
+      border-bottom: 2px solid var(--acc) !important; }
+
     /* Header hamburguesa */
     .app-hdr { padding: .5rem .9rem; }
     .app-hdr-nav { display: none; }
@@ -1257,25 +1264,34 @@ async function renderHistorial() {
     didSwipe = false;
   }, { passive: true });
 
-  /* ── Init: esperar a que carguen los datos y luego actuar ── */
+  /* ── Init mobile ── */
   function initMobile() {
     if (!isMobile()) return;
-    // Cambiar a vista día
-    if (typeof switchTab === 'function') switchTab('dia');
+    // Forzar tab dia activo (por si acaso)
+    document.querySelectorAll('.tab').forEach(function(t) {
+      t.classList.toggle('active', t.dataset.tab === 'dia');
+    });
+    // Renderizar día actual
     if (typeof renderDay === 'function') renderDay();
     buildDots();
-    // Cada vez que renderDay corre, rebuildar los dots
+    // Wrapper para rebuildar dots cada vez que cambia el día
     var _orig = window.renderDay;
-    if (typeof _orig === 'function') {
+    if (typeof _orig === 'function' && !_orig._wrapped) {
       window.renderDay = function() { _orig(); buildDots(); };
+      window.renderDay._wrapped = true;
     }
   }
 
-  // Hook: esperar a que loadVisitas termine (que es async)
-  // El original llama renderDay() y renderWeek() dentro de DOMContentLoaded
-  // Corremos initMobile después de que todo esté listo
   document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(initMobile, 600); // después de que los datos carguen
+    // Intentar varias veces hasta que los datos carguen
+    var attempts = 0;
+    var timer = setInterval(function() {
+      attempts++;
+      var list = document.getElementById('visitList');
+      var loaded = list && !list.querySelector('.empty-msg[style*="display:none"]');
+      initMobile();
+      if (attempts >= 8) clearInterval(timer); // máx 4 segundos
+    }, 500);
   });
 
 })();

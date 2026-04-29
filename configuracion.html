@@ -75,6 +75,84 @@
     .bk-pend{background:rgba(255,255,255,.05);color:#717171;border:1px solid rgba(255,255,255,.1)}
     .bk-err {background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.3)}
     .bk-detail{font-size:.74rem;color:#717171;flex:1}
+
+  /* ══ Mobile overlay — siempre oculto por defecto ══ */
+  #gs-mob-menu { display: none; }
+
+  /* ══ MOBILE RESPONSIVE (≤768px) — no toca desktop ══ */
+  @media (max-width: 768px) {
+
+    /* Header hamburguesa */
+    .app-hdr { padding: .5rem .9rem; }
+    .app-hdr-nav { display: none; }
+    .nav-font { display: none; }
+    .hbg-btn { display: flex; flex-direction: column; justify-content: center;
+      gap: 5px; width: 36px; height: 36px; background: rgba(245,124,0,.1);
+      border: 1px solid rgba(245,124,0,.3); border-radius: 8px;
+      cursor: pointer; padding: 7px; flex-shrink: 0; }
+    .hbg-btn span { display: block; height: 2px; background: #f57c00;
+      border-radius: 2px; transition: all .2s; }
+    .hbg-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hbg-btn.open span:nth-child(2) { opacity: 0; }
+    .hbg-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* Fullscreen menu overlay */
+    #gs-mob-menu { position: fixed; inset: 0; z-index: 9999;
+      background: rgba(13,13,13,.98); flex-direction: column;
+      padding: 1.2rem; overflow-y: auto; }
+    #gs-mob-menu.open { display: flex; }
+    #gs-mob-menu-top { display: flex; align-items: center;
+      justify-content: space-between; margin-bottom: 1.5rem; padding-bottom: 1rem;
+      border-bottom: 1px solid rgba(255,255,255,.08); }
+    #gs-mob-menu-top .mob-brand { font-size: .9rem; font-weight: 700; color: #fff; }
+    #gs-mob-menu-top .mob-close { background: rgba(239,68,68,.1);
+      border: 1px solid rgba(239,68,68,.3); color: #ef4444; border-radius: 8px;
+      padding: .4rem .8rem; font-size: .9rem; font-weight: 700;
+      cursor: pointer; font-family: inherit; }
+    #gs-mob-menu a { display: flex; align-items: center; gap: .75rem;
+      padding: .85rem 1rem; border-radius: 10px; font-size: .95rem; font-weight: 600;
+      color: rgba(245,124,0,.9); background: rgba(245,124,0,.08);
+      border: 1px solid rgba(245,124,0,.15); text-decoration: none;
+      margin-bottom: .4rem; }
+    #gs-mob-menu a.mob-active { background: rgba(245,124,0,.2);
+      color: #ff9800; border-color: rgba(245,124,0,.5); }
+
+    /* Página wrap */
+    .page-wrap, .wrap { padding: .9rem; }
+    .page-title { font-size: 1.1rem; margin-bottom: .8rem; }
+
+    /* Tabs: scroll horizontal */
+    .tabs-nav { overflow-x: auto; -webkit-overflow-scrolling: touch;
+      flex-wrap: nowrap; gap: 0; }
+    .tab-btn { white-space: nowrap; padding: .5rem .9rem; font-size: .8rem; }
+
+    /* Config cards */
+    .cfg-card { padding: .85rem .9rem; margin-bottom: .75rem; }
+
+    /* Form rows: columna única */
+    .cfg-row, .cfg-form-row,
+    div[style*="display:grid"],
+    .form-grid { grid-template-columns: 1fr !important; }
+
+    /* Indices table: scroll horizontal */
+    .indices-table-wrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { font-size: .78rem; }
+    td, th { padding: .35rem .45rem; }
+
+    /* Apariencia: preview compacto */
+    .preview-hdr { flex-wrap: wrap; gap: .5rem; }
+
+    /* Modales */
+    .overlay { align-items: flex-end; padding: 0; }
+    .modal { max-width: 100%; width: 100%;
+      border-radius: 16px 16px 0 0; max-height: 92vh; }
+    .modal-body { padding: .9rem 1rem; }
+    .modal-footer { padding: .75rem 1rem; }
+
+    /* Buttons */
+    .btn { padding: .45rem .85rem; font-size: .8rem; }
+  }
+  @media (min-width: 769px) { .hbg-btn { display: none; } }
   </style>
 </head>
 <body>
@@ -830,6 +908,36 @@ document.addEventListener('DOMContentLoaded', async () => {
   const badgeTimer = setTimeout(() => setSrv('warn', '⚠ Respuesta lenta…'), 8000);
 
   try { GestShared.initHeader('configuracion'); } catch(e) {}
+  // Mobile hamburger — inject after header is rendered
+  (function() {
+    var hdr = document.querySelector('.gs-hdr, .app-hdr, header');
+    if (hdr && !document.getElementById('hbgBtn')) {
+      var btn = document.createElement('button');
+      btn.className = 'hbg-btn'; btn.id = 'hbgBtn'; btn.setAttribute('aria-label','Menú');
+      btn.innerHTML = '<span></span><span></span><span></span>';
+      hdr.appendChild(btn);
+    }
+    function openMobMenu() {
+      document.getElementById('gs-mob-menu').classList.add('open');
+      var b = document.getElementById('hbgBtn');
+      if (b) b.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeMobMenu() {
+      document.getElementById('gs-mob-menu').classList.remove('open');
+      var b = document.getElementById('hbgBtn');
+      if (b) b.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    window.closeMobMenu = closeMobMenu;
+    setTimeout(function() {
+      var hbg = document.getElementById('hbgBtn');
+      if (hbg) hbg.onclick = function() {
+        document.getElementById('gs-mob-menu').classList.contains('open')
+          ? closeMobMenu() : openMobMenu();
+      };
+    }, 100);
+  })();
   try { updFP(); } catch(e) {}
 
   // Render indices table immediately with hardcoded data
@@ -1141,6 +1249,44 @@ document.addEventListener('DOMContentLoaded', () => {
   if (window._gsReady) window._gsReady.then(initApariencia);
   else initApariencia();
 });
+</script>
+
+<div id="gs-mob-menu">
+  <div id="gs-mob-menu-top">
+    <span class="mob-brand">⚙️ Cristian Sanchez Propiedades</span>
+    <button class="mob-close" onclick="closeMobMenu()">✕ Cerrar</button>
+  </div>
+  <a href="dashboard.html">🏠 Dashboard</a>
+  <a href="ventas.html">🏘️ Propiedades</a>
+  <a href="visitas.html">📅 Visitas</a>
+  <a href="tasaciones.html">📋 Tasaciones</a>
+  <a href="banco.html">👤 Banco</a>
+  <a href="index.html">📄 Contratos</a>
+  <a href="administracion.html">🧾 Administración</a>
+  <a href="tareas.html">✅ Tareas</a>
+  <a href="configuracion.html" class="mob-active">⚙️ Configuración</a>
+</div>
+<script>
+  (function() {
+    function openMobMenu() {
+      document.getElementById('gs-mob-menu').classList.add('open');
+      var b = document.getElementById('hbgBtn');
+      if (b) b.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeMobMenu() {
+      document.getElementById('gs-mob-menu').classList.remove('open');
+      var b = document.getElementById('hbgBtn');
+      if (b) b.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    window.closeMobMenu = closeMobMenu;
+    var hbg = document.getElementById('hbgBtn');
+    if (hbg) hbg.onclick = function() {
+      document.getElementById('gs-mob-menu').classList.contains('open')
+        ? closeMobMenu() : openMobMenu();
+    };
+  })();
 </script>
 </body>
 </html>

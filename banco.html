@@ -180,6 +180,9 @@
       <button onclick="(function(){var fs=parseInt(localStorage.getItem('app_fs'))||15;fs=Math.min(20,fs+1);localStorage.setItem('app_fs',fs);document.documentElement.style.fontSize=fs+'px';})()" title="Agrandar">A+</button>
     </div>
   </nav>
+  <button class="hbg-btn" id="hbgBtn" aria-label="Menú">
+    <span></span><span></span><span></span>
+  </button>
 </header>
 
 <div class="banco-wrap">
@@ -614,6 +617,44 @@ function openModalWABanco(msg,tel,nombre){document.getElementById('waBancoTitle'
 </script>
 <script>
 (function(){var fs=parseInt(localStorage.getItem('app_fs'))||15;document.documentElement.style.fontSize=fs+'px';})();
+</script>
+
+<div id="gs-mob-menu">
+  <div id="gs-mob-menu-top">
+    <span class="mob-brand">👤 Cristian Sanchez Propiedades</span>
+    <button class="mob-close" onclick="closeMobMenu()">✕ Cerrar</button>
+  </div>
+  <a href="dashboard.html">🏠 Dashboard</a>
+  <a href="ventas.html">🏘️ Propiedades</a>
+  <a href="visitas.html">📅 Visitas</a>
+  <a href="tasaciones.html">📋 Tasaciones</a>
+  <a href="banco.html" class="mob-active">👤 Banco</a>
+  <a href="index.html">📄 Contratos</a>
+  <a href="administracion.html">🧾 Administración</a>
+  <a href="tareas.html">✅ Tareas</a>
+  <a href="configuracion.html">⚙️ Configuración</a>
+</div>
+<script>
+  (function() {
+    function openMobMenu() {
+      document.getElementById('gs-mob-menu').classList.add('open');
+      var b = document.getElementById('hbgBtn');
+      if (b) b.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeMobMenu() {
+      document.getElementById('gs-mob-menu').classList.remove('open');
+      var b = document.getElementById('hbgBtn');
+      if (b) b.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    window.closeMobMenu = closeMobMenu;
+    var hbg = document.getElementById('hbgBtn');
+    if (hbg) hbg.onclick = function() {
+      document.getElementById('gs-mob-menu').classList.contains('open')
+        ? closeMobMenu() : openMobMenu();
+    };
+  })();
 </script>
 </body>
 </html>

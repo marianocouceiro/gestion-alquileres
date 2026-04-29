@@ -168,7 +168,7 @@ const GestShared = (function () {
     { key:'banco',          href:'banco.html',           icon:'👤', label:'Banco' },
     { key:'contratos',      href:'index.html',           icon:'📄', label:'Contratos' },
     { key:'administracion', href:'administracion.html',  icon:'🧾', label:'Administración' },
-    { key:'tareas',         href:'tareas.html',           icon:'★',  label:'Tareas' },
+    { key:'tareas',         href:'tareas.html',           icon:'✅', label:'Tareas' },
     { key:'configuracion',  href:'configuracion.html',   icon:'⚙️', label:'Configuración' },
   ];
 
@@ -250,17 +250,13 @@ window.changeFontSize = GestShared.changeFontSize.bind(GestShared);
    vendedores) a localStorage para que todos los usuarios y todas las máquinas
    compartan la misma lista. La promesa queda expuesta como window._gsReady
    para que las páginas puedan awaitear antes de poblar selects si lo necesitan. */
-window._gsReady = new Promise(function(resolve) {
-  document.addEventListener('DOMContentLoaded', async function() {
-    try {
-      if (typeof SupabaseDB !== 'undefined') {
-        await GestShared.syncConfigFromSupabase();
-        GestShared.applyBranding();
-      }
-    } catch(e) { console.warn('[GestShared] auto-sync:', e); }
-    finally {
-      window.dispatchEvent(new CustomEvent('gs:config-synced'));
-      resolve();
-    }
-  });
-});
+window._gsReady = (async () => {
+  try {
+    // Esperar a que SupabaseDB esté disponible (lo define supabase.js, cargado antes)
+    if (typeof SupabaseDB === 'undefined') return;
+    await GestShared.syncConfigFromSupabase();
+    GestShared.applyBranding();
+    // Notificar a las páginas que ya podemos usar vendedores/config actualizados
+    window.dispatchEvent(new CustomEvent('gs:config-synced'));
+  } catch(e) { console.warn('[GestShared] auto-sync:', e); }
+})();

@@ -64,15 +64,6 @@ const SupabaseDB = (function () {
     }, extra || {});
   }
 
-  function getOrgId() {
-    try {
-      const s = JSON.parse(localStorage.getItem('ga_session') || '{}');
-      if (!s.access_token) return null;
-      const p = JSON.parse(atob(s.access_token.split('.')[1]));
-      return p.app_metadata?.org_id || null;
-    } catch { return null; }
-  }
-
   // Verifica sesión — redirige a login si no hay (llamar desde initHeader)
   function requireAuth() {
     try {
@@ -259,7 +250,6 @@ const SupabaseDB = (function () {
       acuerdo_indice: c.acuerdoIndice || null,
       acuerdo_nota:   c.acuerdoNota   || null,
       updated_at: new Date().toISOString(),
-      org_id:     getOrgId(),
     };
   }
 
@@ -372,6 +362,19 @@ const SupabaseDB = (function () {
   }
 
   // ── COMPRADORES ──────────────────────────────────────────────
+  // ── TAREAS ───────────────────────────────────────────────────
+  async function getTareas() {
+    const r = await query('tareas', { filters: 'order=created_at.desc' });
+    return r.success ? (r.data || []).map(row => row.data || { id: row.id }) : [];
+  }
+  async function upsertTarea(t) {
+    return await upsert('tareas', {
+      id: t.id, prioridad: t.prioridad || 'media', completada: t.completada || false,
+      data: t, updated_at: new Date().toISOString(), org_id: getOrgId()
+    });
+  }
+  async function deleteTarea(id) { return await del('tareas', id); }
+
   async function getCompradores() {
     const r = await query('compradores', { filters: 'order=nombre.asc' });
     return r.success ? (r.data || []).map(row => row.data || { id: row.id }) : [];
@@ -444,12 +447,6 @@ const SupabaseDB = (function () {
     return { success: r.ok };
   }
 
-
-  async function getTareas(soloActivas=false){const filters=soloActivas?'completada=eq.false&order=fecha.asc,prioridad.asc':'order=completada.asc,fecha.asc';const r=await query('tareas',{filters});return r.success?(r.data||[]):[];}
-  async function upsertTarea(t){return await upsert('tareas',{id:t.id,fecha:t.fecha||null,tarea:t.tarea||'',observaciones:t.observaciones||'',prioridad:t.prioridad||'media',completada:t.completada??false,updated_at:new Date().toISOString(),org_id:getOrgId()});}
-  async function deleteTarea(id){return await del('tareas',id);}
-  async function getTareasPendientes(){return await getTareas(true);}
-
   async function ping() {
     try {
       const r = await fetch(`${BASE}/rest/v1/config?limit=1`, {
@@ -468,8 +465,8 @@ const SupabaseDB = (function () {
     getPropiedades, upsertPropiedad, deletePropiedad, getVentasYear, deleteVenta,
     getCompradores, upsertComprador, deleteComprador,
     getVendedores, saveVendedores,
+    getTareas, upsertTarea, deleteTarea,
     getConfig, saveConfig,
-    getTareas, upsertTarea, deleteTarea, getTareasPendientes,
     ping
   };
 

@@ -124,6 +124,7 @@ main{max-width:1400px;margin:0 auto;padding:1.5rem;position:relative;z-index:1}
     <a href="banco.html" class="nav-lnk">👤 Banco</a>
     <a href="index.html" class="nav-lnk">📄 Contratos</a>
     <a href="administracion.html" class="nav-lnk">🧾 Administración</a>
+    <a href="tareas.html"         class="nav-lnk">✅ Tareas</a>
     <a href="configuracion.html" class="nav-lnk">⚙️ Configuración</a>
     <div class="nav-font">
       <button onclick="(function(){var fs=parseInt(localStorage.getItem('app_fs'))||15;fs=Math.max(11,fs-1);localStorage.setItem('app_fs',fs);document.documentElement.style.fontSize=fs+'px';})()" title="Reducir">A-</button>
@@ -189,15 +190,15 @@ main{max-width:1400px;margin:0 auto;padding:1.5rem;position:relative;z-index:1}
 
   </div>
 
-  <div id="dashTareasWrap" style="margin-top:.6rem;margin-bottom:.2rem">
-    <div class="list-card" style="grid-column:1/-1;width:100%">
-      <div style="display:flex;align-items:center;justify-content:space-between"><div class="list-card-title">★ Tareas pendientes</div><a href="tareas.html" style="font-size:.72rem;color:var(--acc);text-decoration:none">Ver todas →</a></div>
-      <div class="list-body">
-        <table id="dashTareasTable" style="width:100%;border-collapse:collapse;font-size:.78rem;display:none"><thead><tr style="border-bottom:1px solid var(--border)"><th style="text-align:left;color:var(--muted);font-size:.68rem;font-weight:500;padding:.3rem .5rem;text-transform:uppercase;letter-spacing:.4px;width:90px">Fecha</th><th style="text-align:left;color:var(--muted);font-size:.68rem;font-weight:500;padding:.3rem .5rem;text-transform:uppercase;letter-spacing:.4px">Tarea</th><th style="text-align:left;color:var(--muted);font-size:.68rem;font-weight:500;padding:.3rem .5rem;text-transform:uppercase;letter-spacing:.4px">Observaciones</th><th style="text-align:left;color:var(--muted);font-size:.68rem;font-weight:500;padding:.3rem .5rem;text-transform:uppercase;letter-spacing:.4px;width:70px">Prioridad</th></tr></thead><tbody id="dashTareasBody"></tbody></table>
-        <div id="dashTareasEmpty" class="empty-list">Sin tareas pendientes</div>
-      </div>
-    </div>
+  <!-- Tareas pendientes -->
+  <div class="section-title" style="display:flex;align-items:center;justify-content:space-between">
+    <span>✅ Tareas pendientes</span>
+    <a href="tareas.html" style="font-size:.75rem;color:var(--acc,#f57c00);text-decoration:none;font-weight:600;opacity:.85">Ver todas →</a>
   </div>
+  <div id="listTareas" style="margin-bottom:1.2rem">
+    <div class="empty-list">Sin tareas pendientes</div>
+  </div>
+
 
   <!-- Gráficos -->
   <div class="section-title">📈 Gráficos</div>
@@ -387,7 +388,7 @@ async function loadAll() {
         SupabaseDB.getTasaciones(),
         SupabaseDB.getCompradores(),
         SupabaseDB.getVisitas(),
-        SupabaseDB.getTareasPendientes(),
+        SupabaseDB.getTareas(),
     ]);
 
     /* ── Contratos ── */
@@ -469,6 +470,33 @@ async function loadAll() {
         badgeCls:'badge-ok'
     })), 'Sin matches activos');
 
+
+    /* ── Tareas pendientes (top 5) ── */
+    const tareasAll = (tareasRaw || []);
+    const tareasPend = tareasAll
+        .filter(t => !t.completada)
+        .sort((a,b) => { const o={alta:0,media:1,baja:2}; return (o[a.prioridad]||1)-(o[b.prioridad]||1); })
+        .slice(0, 5);
+    const prioColor = { alta:'#ef4444', media:'#f59e0b', baja:'#10b981' };
+    const prioLabel = { alta:'Alta', media:'Media', baja:'Baja' };
+    const listTareasEl = $('listTareas');
+    if (listTareasEl) {
+        if (!tareasPend.length) {
+            listTareasEl.innerHTML = '<div class="empty-list">Sin tareas pendientes</div>';
+        } else {
+            listTareasEl.innerHTML = tareasPend.map(t => {
+                const col = prioColor[t.prioridad] || '#f59e0b';
+                const lbl = prioLabel[t.prioridad] || 'Media';
+                return `<div style="display:flex;align-items:center;gap:.6rem;padding:.5rem .8rem;border-radius:8px;background:var(--bg2,#151515);border:1px solid var(--border,rgba(255,255,255,.08));margin-bottom:.4rem">
+                    <span style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0"></span>
+                    <span style="flex:1;font-size:.82rem;color:var(--txt,#f5f5f5)">${t.texto || '—'}</span>
+                    <span style="font-size:.68rem;color:${col};font-weight:600;padding:.15rem .45rem;border-radius:4px;background:${col}22">${lbl}</span>
+                    ${t.fecha ? `<span style="font-size:.68rem;color:var(--muted,#717171)">${t.fecha}</span>` : ''}
+                </div>`;
+            }).join('');
+        }
+    }
+
     /* ── Gráfico admin (cobrados vs pendientes mes actual) ── */
     $('loadingMsg').textContent='Calculando honorarios…';
     const fmtAdm = n => new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(n);
@@ -489,7 +517,6 @@ async function loadAll() {
         }, 0);
     });
     chartHon=buildBarChart('chartHonorarios',last6months.map(m=>m.label),honVals,'#f57c00',chartHon);
-    renderDashTareas(tareasRaw);
 
     } catch(e) {
         console.error('[Dashboard] error:', e);
@@ -514,7 +541,6 @@ document.addEventListener('DOMContentLoaded',()=>{
         if (cached) await renderAdmChart(cached, yr, mo);
     }, 60000);
 });
-  function renderDashTareas(tareas){const pendientes=(tareas||[]).filter(t=>!t.completada);const tbody=document.getElementById('dashTareasBody');const table=document.getElementById('dashTareasTable');const empty=document.getElementById('dashTareasEmpty');if(!pendientes.length){if(table)table.style.display='none';if(empty)empty.style.display='block';return;}const orden={alta:0,media:1,baja:2};pendientes.sort((a,b)=>{if(a.prioridad!==b.prioridad)return(orden[a.prioridad]||1)-(orden[b.prioridad]||1);return(a.fecha||'9999')<(b.fecha||'9999')?-1:1;});const colors={alta:'#faeeda;color:#854f0b',media:'#e6f1fb;color:#185fa5',baja:'#eaf3de;color:#3b6d11'};if(tbody)tbody.innerHTML=pendientes.slice(0,5).map(t=>{const fecha=t.fecha?new Date(t.fecha+'T12:00:00').toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'}):'\u2014';const vencida=t.fecha&&new Date(t.fecha)<new Date().setHours(0,0,0,0);const col=colors[t.prioridad]||colors.media;return `<tr style="border-bottom:.5px solid var(--border)"><td style="padding:.4rem .5rem;color:${vencida?'var(--danger)":'var(--muted)'}">${fecha}</td><td style="padding:.4rem .5rem;color:var(--txt)">${t.tarea||''}</td><td style="padding:.4rem .5rem;color:var(--muted);font-style:italic">${t.observaciones||'\u2014'}</td><td style="padding:.4rem .5rem"><span style="font-size:.68rem;font-weight:600;padding:2px 7px;border-radius:20px;background:${col}">${t.prioridad.charAt(0).toUpperCase()+t.prioridad.slice(1)}</span></td></tr>`;}).join('');if(table)table.style.display='table';if(empty)empty.style.display='none';}
 </script>
 </body>
 </html>

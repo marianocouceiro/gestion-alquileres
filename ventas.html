@@ -263,6 +263,8 @@
     .wa-phone-link{color:#378ADD;text-decoration:none;cursor:pointer}
     .wa-phone-link:hover{text-decoration:underline;color:#25d366}
 
+  /* ══ MOBILE RESPONSIVE — overlay siempre oculto por defecto ══ */
+  #gs-mob-menu { display: none; }
   /* ══ MOBILE RESPONSIVE (≤768px) — no toca desktop ══ */
   @media (max-width: 768px) {
     .app-hdr { padding: .5rem .9rem; }
@@ -277,9 +279,9 @@
     .hbg-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
     .hbg-btn.open span:nth-child(2) { opacity: 0; }
     .hbg-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
-    #gs-mob-menu { display: none; position: fixed; inset: 0; z-index: 9999;
+    #gs-mob-menu { position: fixed; inset: 0; z-index: 9999;
       background: rgba(13,13,13,.98); flex-direction: column;
-      padding: 1.2rem; overflow-y: auto; }
+      padding: 1.2rem; overflow-y: auto; display: none; }
     #gs-mob-menu.open { display: flex; }
     #gs-mob-menu-top { display: flex; align-items: center;
       justify-content: space-between; margin-bottom: 1.5rem; padding-bottom: 1rem;

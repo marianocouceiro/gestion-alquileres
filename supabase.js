@@ -166,6 +166,16 @@ const SupabaseDB = (function () {
     } catch { return false; }
   }
 
+  // Helper: lee el org_id del JWT guardado en sesión
+  function getOrgId() {
+    try {
+      const s = JSON.parse(localStorage.getItem('ga_session') || '{}');
+      if (!s.access_token) return null;
+      const payload = JSON.parse(atob(s.access_token.split('.')[1]));
+      return payload.app_metadata?.org_id || null;
+    } catch { return null; }
+  }
+
   async function upsert(table, body) {
     const r = await fetch(`${BASE}/rest/v1/${table}`, {
       method:  'POST',

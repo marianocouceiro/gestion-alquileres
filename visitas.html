@@ -148,6 +148,98 @@
     .nav-font button:hover{color:#f57c00;background:rgba(245,124,0,.1)}
     .wa-phone-link{color:#378ADD;text-decoration:none;cursor:pointer}
     .wa-phone-link:hover{text-decoration:underline;color:#25d366}
+
+  /* ══ Mobile overlay — siempre oculto por defecto ══ */
+  #gs-mob-menu { display: none; }
+
+  /* ══ MOBILE RESPONSIVE (≤768px) — no toca desktop ══ */
+  @media (max-width: 768px) {
+
+    /* Header hamburguesa */
+    .app-hdr { padding: .5rem .9rem; }
+    .app-hdr-nav { display: none; }
+    .nav-font { display: none; }
+    .hbg-btn { display: flex; flex-direction: column; justify-content: center;
+      gap: 5px; width: 36px; height: 36px; background: rgba(245,124,0,.1);
+      border: 1px solid rgba(245,124,0,.3); border-radius: 8px;
+      cursor: pointer; padding: 7px; flex-shrink: 0; }
+    .hbg-btn span { display: block; height: 2px; background: #f57c00;
+      border-radius: 2px; transition: all .2s; }
+    .hbg-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hbg-btn.open span:nth-child(2) { opacity: 0; }
+    .hbg-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* Fullscreen menu overlay */
+    #gs-mob-menu { position: fixed; inset: 0; z-index: 9999;
+      background: rgba(13,13,13,.98); flex-direction: column;
+      padding: 1.2rem; overflow-y: auto; }
+    #gs-mob-menu.open { display: flex; }
+    #gs-mob-menu-top { display: flex; align-items: center;
+      justify-content: space-between; margin-bottom: 1.5rem; padding-bottom: 1rem;
+      border-bottom: 1px solid rgba(255,255,255,.08); }
+    #gs-mob-menu-top .mob-brand { font-size: .9rem; font-weight: 700; color: #fff; }
+    #gs-mob-menu-top .mob-close { background: rgba(239,68,68,.1);
+      border: 1px solid rgba(239,68,68,.3); color: #ef4444; border-radius: 8px;
+      padding: .4rem .8rem; font-size: .9rem; font-weight: 700;
+      cursor: pointer; font-family: inherit; }
+    #gs-mob-menu a { display: flex; align-items: center; gap: .75rem;
+      padding: .85rem 1rem; border-radius: 10px; font-size: .95rem; font-weight: 600;
+      color: rgba(245,124,0,.9); background: rgba(245,124,0,.08);
+      border: 1px solid rgba(245,124,0,.15); text-decoration: none;
+      margin-bottom: .4rem; }
+    #gs-mob-menu a.mob-active { background: rgba(245,124,0,.2);
+      color: #ff9800; border-color: rgba(245,124,0,.5); }
+
+    /* Tabs: ocultar "Vista semana" en mobile */
+    .tabs { min-width: unset; padding: 0 .9rem; overflow-x: auto; }
+    .tab[data-tab="semana"] { display: none; }
+
+    /* Day view: pantalla completa tipo agenda */
+    .date-nav { padding: .5rem .9rem; gap: .5rem; }
+    .date-nav h2 { font-size: .88rem; }
+    #tab-dia .visits-list { padding: 0 .9rem .9rem; }
+
+    /* Visit cards: más compactas y táctiles */
+    .visit-card { padding: .65rem .85rem; gap: .6rem; border-radius: 10px; }
+
+    /* Swipe hint strip */
+    #mob-swipe-hint { display: flex; align-items: center; justify-content: center;
+      gap: .5rem; padding: .4rem .9rem;
+      background: rgba(245,124,0,.06); border-bottom: 1px solid rgba(245,124,0,.1); }
+    #mob-swipe-hint span { font-size: .72rem; color: rgba(245,124,0,.7); font-weight: 600; }
+
+    /* Day dot navigator */
+    #mob-day-dots { display: flex; align-items: center; justify-content: center;
+      gap: .35rem; padding: .5rem .9rem; flex-wrap: wrap; }
+    .mob-dot { width: 8px; height: 8px; border-radius: 50%;
+      background: rgba(255,255,255,.15); border: none; cursor: pointer;
+      padding: 0; transition: all .15s; flex-shrink: 0; }
+    .mob-dot.today-dot { background: rgba(245,124,0,.5); width: 10px; height: 10px; }
+    .mob-dot.active-dot { background: #f57c00; width: 12px; height: 12px; }
+
+    /* Historial: scroll horizontal */
+    #tab-historial { overflow-x: auto; }
+
+    /* Semana: ocultar completamente en mobile */
+    #tab-semana { display: none !important; }
+
+    /* Summary bar */
+    .sum-bar { flex-wrap: wrap; }
+    .sum-item { padding: .4rem .75rem; }
+
+    /* Modal fullscreen */
+    .overlay { align-items: flex-end; padding: 0; }
+    .modal { max-width: 100%; width: 100%; border-radius: 16px 16px 0 0;
+      max-height: 92vh; }
+    .modal-body { padding: .9rem 1rem; }
+    .modal-footer { padding: .75rem 1rem; }
+    .form-grid { grid-template-columns: 1fr; }
+  }
+  @media (min-width: 769px) {
+    .hbg-btn { display: none; }
+    #mob-swipe-hint { display: none; }
+    #mob-day-dots { display: none; }
+  }
   </style>
 </head>
 <body>
@@ -177,6 +269,9 @@
       <button onclick="(function(){var fs=parseInt(localStorage.getItem('app_fs'))||15;fs=Math.min(20,fs+1);localStorage.setItem('app_fs',fs);document.documentElement.style.fontSize=fs+'px';})()" title="Agrandar">A+</button>
     </div>
   </nav>
+  <button class="hbg-btn" id="hbgBtn" aria-label="Menú">
+    <span></span><span></span><span></span>
+  </button>
 </header>
 
 <!-- Summary -->
@@ -190,6 +285,27 @@
 </div>
 
 <!-- Tabs -->
+<div id="gs-mob-menu">
+  <div id="gs-mob-menu-top">
+    <span class="mob-brand">📅 Cristian Sanchez Propiedades</span>
+    <button class="mob-close" onclick="closeMobMenu()">✕ Cerrar</button>
+  </div>
+  <a href="dashboard.html">🏠 Dashboard</a>
+  <a href="ventas.html">🏘️ Propiedades</a>
+  <a href="visitas.html" class="mob-active">📅 Visitas</a>
+  <a href="tasaciones.html">📋 Tasaciones</a>
+  <a href="banco.html">👤 Banco</a>
+  <a href="index.html">📄 Contratos</a>
+  <a href="administracion.html">🧾 Administración</a>
+  <a href="tareas.html">✅ Tareas</a>
+  <a href="configuracion.html">⚙️ Configuración</a>
+</div>
+
+<div id="mob-swipe-hint">
+  <span>← deslizá para cambiar de día →</span>
+</div>
+<div id="mob-day-dots"></div>
+
 <div class="tabs">
     <button class="tab" data-tab="dia">Vista día</button>
     <button class="tab active" data-tab="semana">Vista semana</button>
@@ -1062,6 +1178,130 @@ async function renderHistorial() {
         </tr>`;
     }).join('');
 }
+
+/* ══════════════════════════════════════════════════════════
+   MOBILE JS — swipe, dots, hamburguesa, vista día por defecto
+   Solo se activa en pantallas ≤ 768px
+   ══════════════════════════════════════════════════════════ */
+(function() {
+  function isMobile() { return window.innerWidth <= 768; }
+
+  /* ── Hamburguesa ── */
+  function openMobMenu() {
+    document.getElementById('gs-mob-menu').classList.add('open');
+    var b = document.getElementById('hbgBtn');
+    if (b) b.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeMobMenu() {
+    document.getElementById('gs-mob-menu').classList.remove('open');
+    var b = document.getElementById('hbgBtn');
+    if (b) b.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  window.closeMobMenu = closeMobMenu;
+  var hbg = document.getElementById('hbgBtn');
+  if (hbg) hbg.onclick = function() {
+    document.getElementById('gs-mob-menu').classList.contains('open') ? closeMobMenu() : openMobMenu();
+  };
+
+  /* ── En mobile: arrancar en vista día (hoy) ── */
+  if (isMobile()) {
+    // Esperar a que el DOM esté listo y cambiar a vista día
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(function() {
+        if (typeof switchTab === 'function') switchTab('dia');
+        if (typeof renderDay  === 'function') renderDay();
+      }, 100);
+    });
+  }
+
+  /* ── Dots de navegación semanal ── */
+  function buildDots() {
+    if (!isMobile()) return;
+    var container = document.getElementById('mob-day-dots');
+    if (!container) return;
+    var today = new Date(); today.setHours(0,0,0,0);
+    // Mostrar 7 días: ayer, hoy, y 5 días siguientes
+    var days = [];
+    for (var i = -1; i <= 5; i++) {
+      var d = new Date(today); d.setDate(today.getDate() + i);
+      days.push(d);
+    }
+    container.innerHTML = days.map(function(d, idx) {
+      var isToday = d.getTime() === today.getTime();
+      var isCurrent = (typeof currentDay !== 'undefined') &&
+                      d.getTime() === currentDay.getTime();
+      var label = d.getDate() + '/' + (d.getMonth()+1);
+      var cls = 'mob-dot' + (isToday ? ' today-dot' : '') + (isCurrent ? ' active-dot' : '');
+      return '<button class="' + cls + '" title="' + label + '" data-ts="' + d.getTime() + '"></button>';
+    }).join('');
+    // Click en dot
+    container.querySelectorAll('.mob-dot').forEach(function(btn) {
+      btn.onclick = function() {
+        var ts = parseInt(this.dataset.ts);
+        if (typeof currentDay !== 'undefined') {
+          currentDay = new Date(ts); currentDay.setHours(0,0,0,0);
+        }
+        if (typeof renderDay === 'function') renderDay();
+        buildDots();
+        if (typeof switchTab === 'function') switchTab('dia');
+      };
+    });
+  }
+
+  // Reconstruir dots cuando cambia el día
+  var origRenderDay = null;
+  document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+      if (typeof renderDay === 'function') {
+        origRenderDay = renderDay;
+        window.renderDay = function() {
+          origRenderDay();
+          buildDots();
+        };
+      }
+      buildDots();
+    }, 300);
+  });
+
+  /* ── Swipe táctil para cambiar de día ── */
+  var touchStartX = 0, touchStartY = 0, isSwiping = false;
+  var content = document.querySelector('.content') || document.body;
+
+  content.addEventListener('touchstart', function(e) {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    isSwiping = false;
+  }, { passive: true });
+
+  content.addEventListener('touchmove', function(e) {
+    if (!isMobile()) return;
+    var dx = e.touches[0].clientX - touchStartX;
+    var dy = e.touches[0].clientY - touchStartY;
+    // Solo swipe horizontal (más dx que dy)
+    if (Math.abs(dx) > Math.abs(dy) + 10) isSwiping = true;
+  }, { passive: true });
+
+  content.addEventListener('touchend', function(e) {
+    if (!isMobile() || !isSwiping) return;
+    var dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) < 50) return; // umbral mínimo 50px
+    // Solo actuar en vista día
+    var tabDia = document.getElementById('tab-dia');
+    if (!tabDia || !tabDia.classList.contains('active')) return;
+    if (dx < 0) {
+      // Swipe izquierda → día siguiente
+      if (typeof currentDay !== 'undefined') currentDay.setDate(currentDay.getDate() + 1);
+    } else {
+      // Swipe derecha → día anterior
+      if (typeof currentDay !== 'undefined') currentDay.setDate(currentDay.getDate() - 1);
+    }
+    if (typeof renderDay === 'function') renderDay();
+    isSwiping = false;
+  }, { passive: true });
+
+})();
 </script>
 
 </body>

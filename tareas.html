@@ -164,10 +164,12 @@
     /* Header de página */
     .page-title { font-size: 1.15rem; }
 
-    /* Stats bar: scroll horizontal */
+    /* Stats: fila 1 (Total/Pendientes/Completadas) y fila 2 (prioridades) */
     .stats-bar { flex-wrap: nowrap; overflow-x: auto;
-      -webkit-overflow-scrolling: touch; padding-bottom: .3rem; gap: .5rem; }
-    .stat-chip { white-space: nowrap; flex-shrink: 0; }
+      -webkit-overflow-scrolling: touch; padding-bottom: .2rem; gap: .5rem; }
+    .stats-bar-prio { margin-top: .4rem; }
+    .stat-chip { white-space: nowrap; flex-shrink: 0; flex: 1; justify-content: center;
+      display: flex; align-items: center; gap: .3rem; }
 
     /* Filtros: scroll horizontal */
     .filters { flex-wrap: nowrap; overflow-x: auto;
@@ -235,7 +237,11 @@
     <div class="stat-chip">Total<span id="stTotal">—</span></div>
     <div class="stat-chip">Pendientes<span id="stPend" style="color:#f59e0b">—</span></div>
     <div class="stat-chip">Completadas<span id="stComp" style="color:#10b981">—</span></div>
+  </div>
+  <div class="stats-bar stats-bar-prio" id="statsBarPrio">
     <div class="stat-chip" style="border-color:rgba(239,68,68,.3)">🔴 Alta<span id="stAlta" style="color:#ef4444">—</span></div>
+    <div class="stat-chip" style="border-color:rgba(245,158,11,.3)">🟡 Media<span id="stMedia" style="color:#f59e0b">—</span></div>
+    <div class="stat-chip" style="border-color:rgba(16,185,129,.3)">🟢 Baja<span id="stBaja" style="color:#10b981">—</span></div>
   </div>
 
   <!-- Filters -->
@@ -331,6 +337,9 @@ function renderStats() {
   $('stPend').textContent  = tareas.filter(t => !t.completada).length;
   $('stComp').textContent  = tareas.filter(t => t.completada).length;
   $('stAlta').textContent  = tareas.filter(t => !t.completada && t.prioridad === 'alta').length;
+  var mEl = $('stMedia'), bEl = $('stBaja');
+  if (mEl) mEl.textContent = tareas.filter(t => !t.completada && t.prioridad === 'media').length;
+  if (bEl) bEl.textContent = tareas.filter(t => !t.completada && t.prioridad === 'baja').length;
 }
 
 /* ── Filtrar ── */

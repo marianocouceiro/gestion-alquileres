@@ -201,13 +201,59 @@
     .tabs { min-width: unset; padding: 0 .9rem; overflow-x: auto; }
     .tab[data-tab="semana"] { display: none; }
 
-    /* Day view: pantalla completa tipo agenda */
-    .date-nav { padding: .5rem .9rem; gap: .5rem; }
-    .date-nav h2 { font-size: .88rem; }
-    #tab-dia .visits-list { padding: 0 .9rem .9rem; }
+    /* Day nav: ← día → en una fila, Hoy centrado abajo */
+    .date-nav { padding: .6rem .9rem .4rem; flex-wrap: wrap; gap: .4rem; align-items: center; }
+    .date-nav h2 { font-size: .85rem; flex: 1; text-align: center; min-width: 0; }
+    #btnHoy { display: block; width: 100%; text-align: center;
+      margin-top: .1rem; font-size: .82rem; padding: .3rem 0; }
+    #btnDayPrev, #btnDayNext { flex-shrink: 0; }
+    #tab-dia .visits-list { padding: 0 .75rem .9rem; }
 
-    /* Visit cards: más compactas y táctiles */
-    .visit-card { padding: .65rem .85rem; gap: .6rem; border-radius: 10px; }
+    /* Visit cards: rediseño mobile */
+    .visit-card { padding: 0; gap: 0; border-radius: 12px;
+      flex-direction: column; overflow: hidden; }
+
+    /* Mobile card inner layout */
+    .mob-card-top { display: flex; align-items: center;
+      gap: 10px; padding: .65rem .85rem .5rem; }
+    .mob-card-hora { font-size: 1.1rem; font-weight: 500;
+      color: #f57c00; min-width: 46px; flex-shrink: 0; }
+    .mob-card-body { flex: 1; min-width: 0; }
+    .mob-card-addr { font-size: .87rem; font-weight: 500;
+      color: var(--txt); line-height: 1.35; word-break: break-word; }
+    .mob-card-client { font-size: .75rem; color: var(--muted); margin-top: 2px; }
+    .mob-card-badge { font-size: .7rem; font-weight: 600; padding: 2px 7px;
+      border-radius: 5px; white-space: nowrap; flex-shrink: 0; align-self: flex-start; }
+    .mob-card-foot { display: flex; align-items: center;
+      justify-content: space-between; padding: .4rem .85rem .55rem;
+      border-top: 1px solid rgba(255,255,255,.07); margin-top: 2px; }
+    .mob-card-vend { font-size: .72rem; color: var(--muted); }
+    .mob-card-btns { display: flex; gap: 5px; }
+    .mob-card-btns button { font-size: .75rem; padding: 3px 10px;
+      border-radius: 6px; border: none; cursor: pointer; font-family: inherit; font-weight: 600; }
+    .btn-mob-edit { background: rgba(245,124,0,.12);
+      border: 1px solid rgba(245,124,0,.25) !important; color: #f57c00; }
+    .btn-mob-wa   { background: rgba(37,211,102,.1);
+      border: 1px solid rgba(37,211,102,.2) !important; color: #25d366; }
+    .btn-mob-del  { background: rgba(239,68,68,.1);
+      border: 1px solid rgba(239,68,68,.2) !important; color: #ef4444; }
+    /* Estado badge colors */
+    .mob-est-por_visitar { background:rgba(16,185,129,.15);color:#10b981; }
+    .mob-est-realizada   { background:rgba(107,114,128,.18);color:#9ca3af; }
+    .mob-est-en_espera   { background:rgba(245,158,11,.15);color:#f59e0b; }
+    .mob-est-cancelada   { background:rgba(239,68,68,.13);color:#ef4444; }
+    .mob-est-reservo     { background:rgba(168,85,247,.18);color:#c084fc; }
+    /* Estado border-left */
+    .est-por_visitar.visit-card { border-left: 3px solid #10b981; }
+    .est-realizada.visit-card   { border-left: 3px solid #4b5563; opacity: .75; }
+    .est-cancelada.visit-card   { border-left: 3px solid #ef4444; opacity: .55; }
+    .est-en_espera.visit-card   { border-left: 3px solid #f59e0b; }
+    .est-reservo.visit-card     { border-left: 3px solid #a855f7; }
+    /* Hide desktop card internals on mobile, show mobile ones */
+    .visit-card .visit-time,
+    .visit-card .visit-info,
+    .visit-card .visit-actions { display: none; }
+    .mob-card-top, .mob-card-foot { display: flex; }
 
     /* Swipe hint strip */
     #mob-swipe-hint { display: flex; align-items: center; justify-content: center;
@@ -691,12 +737,34 @@ async function renderDay() {
         let cardClass = `visit-card est-${estado}`;
         if (isProxima) cardClass += ' proxima';
         card.className = cardClass;
-        card.innerHTML = `
-        <div class="visit-time">
-            <div class="hora">${v.hora}</div>
-        </div>
+        card.innerHTML = '';
+        const ESTADO_LABELS_MOB = {por_visitar:'Por visitar',realizada:'Realizada',en_espera:'En espera',cancelada:'Cancelada',reservo:'Reservó'};
+        if (window.innerWidth <= 768) {
+          const waTel = v.celular ? v.celular.replace(/\D/g,'') : '';
+          const waBtn = waTel ? `<button class="btn-mob-wa" onclick="window.open('https://wa.me/549${waTel}','_blank')">WA</button>` : '';
+          const coleagaSpan = v.esColega ? ' <span style="font-size:.65rem;color:var(--info)">[Colega]</span>' : '';
+          card.innerHTML = `
+            <div class="mob-card-top">
+              <span class="mob-card-hora">${v.hora}</span>
+              <div class="mob-card-body">
+                <div class="mob-card-addr">${v.propiedad||'— Sin propiedad —'}${coleagaSpan}</div>
+                <div class="mob-card-client">${v.cliente||'Sin cliente'}${v.celular?' · '+v.celular:''}</div>
+              </div>
+              <span class="mob-card-badge mob-est-${estado}">${ESTADO_LABELS_MOB[estado]||estado}</span>
+            </div>
+            <div class="mob-card-foot">
+              <span class="mob-card-vend">${v.vendedor?'Vend: '+v.vendedor:''}</span>
+              <div class="mob-card-btns">
+                <button class="btn-mob-edit" onclick="editVisita('${v.id}')">Editar</button>
+                ${waBtn}
+                <button class="btn-mob-del" onclick="borrarVisita('${v.id}')">✕</button>
+              </div>
+            </div>`;
+        } else {
+          card.innerHTML = `
+        <div class="visit-time"><div class="hora">${v.hora}</div></div>
         <div class="visit-info">
-            <div class="visit-addr">${v.propiedad||'— Sin propiedad —'}${v.esColega?` <span style="font-size:.62rem;background:rgba(79,142,247,.15);color:var(--info);border-radius:6px;padding:1px 6px;font-weight:600">Colega</span>`:''}</div>
+            <div class="visit-addr">${v.propiedad||'— Sin propiedad —'}${v.esColega?`<span style="font-size:.62rem;background:rgba(79,142,247,.15);color:var(--info);border-radius:6px;padding:1px 6px;font-weight:600">Colega</span>`:''}</div>
             <div class="visit-client">${v.cliente||'Sin cliente'}${v.celular?' · '+v.celular:''}</div>
             ${v.esColega&&(v.coleagaEmpresa||v.coleagaNombre)?`<div style="font-size:.68rem;color:var(--info);margin-top:2px">🤝 ${[v.coleagaEmpresa,v.coleagaNombre].filter(Boolean).join(' · ')}${v.coleagaCelular?' · '+v.coleagaCelular:''}</div>`:''}
             <div class="visit-meta">
@@ -718,7 +786,8 @@ async function renderDay() {
                 <button class="btn-danger" style="font-size:.68rem;padding:2px 8px" onclick="borrarVisita('${v.id}')">✕</button>
             </div>
         </div>`;
-        list.appendChild(card);
+        }
+                list.appendChild(card);
     }
 }
 

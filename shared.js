@@ -286,20 +286,40 @@ window.changeFontSize = GestShared.changeFontSize.bind(GestShared);
    vendedores) a localStorage para que todos los usuarios y todas las máquinas
    compartan la misma lista. La promesa queda expuesta como window._gsReady
    para que las páginas puedan awaitear antes de poblar selects si lo necesitan. */
-window._gsReady = (async () => {
-  try {
-    if (typeof SupabaseDB === 'undefined') return;
-    await GestShared.syncConfigFromSupabase();
-    // Aplicar branding inmediatamente (CSS vars)
-    GestShared.applyBranding();
-    // Aplicar también después del DOM para actualizar el header hardcodeado
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => GestShared.applyBranding());
-    } else {
-      // DOM ya listo, aplicar con pequeño delay para que initHeader() haya corrido
-      setTimeout(() => GestShared.applyBranding(), 50);
-      setTimeout(() => GestShared.applyBranding(), 400);
-    }
-    window.dispatchEvent(new CustomEvent('gs:config-synced'));
-  } catch(e) { console.warn('[GestShared] auto-sync:', e); }
+// Esperar a que supabase.js esté disponible, luego sincronizar branding
+(function waitForSupabase() {
+  if (typeof SupabaseDB !== 'undefined') {
+    // SupabaseDB ya disponible — sincronizar y aplicar
+    window._gsReady = (async () => {
+      try {
+        await GestShared.syncConfigFromSupabase();
+        GestShared.applyBranding();
+        window.dispatchEvent(new CustomEvent('gs:config-synced'));
+      } catch(e) { console.warn('[GestShared] auto-sync:', e); }
+    })();
+  } else {
+    // Todavía no cargó supabase.js — reintentar en el siguiente tick
+    setTimeout(waitForSupabase, 20);
+  }
 })();
+
+// Fallback: aplicar branding desde localStorage (sin esperar Supabase) para respuesta inmediata
+document.addEventListener('DOMContentLoaded', function() {
+  GestShared.applyBranding();
+  // Luego cuando _gsReady resuelve, aplicar de nuevo con datos de Supabase
+  if (window._gsReady && typeof window._gsReady.then === 'function') {
+    window._gsReady.then(() => {
+      setTimeout(() => GestShared.applyBranding(), 100);
+    }).catch(() => {});
+  } else {
+    // _gsReady aún no existe — esperar a que se cree
+    var tries = 0;
+    var iv = setInterval(function() {
+      tries++;
+      if (window._gsReady && typeof window._gsReady.then === 'function') {
+        clearInterval(iv);
+        window._gsReady.then(() => setTimeout(() => GestShared.applyBranding(), 100)).catch(() => {});
+      } else if (tries > 50) clearInterval(iv);
+    }, 100);
+  }
+});

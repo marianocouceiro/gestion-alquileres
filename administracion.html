@@ -400,11 +400,12 @@
 
     /* En mobile: ocultar tabla, mostrar cards */
     .table-wrap { display: none !important; }
-    #mob-admin-wrap { display: block !important; }
+    #mob-admin-wrap { display: block !important; padding: 0 .9rem 2rem; }
 
     /* Cards container */
     .adm-card { background: var(--bg2); border: 1px solid var(--border);
-      border-radius: 12px; overflow: hidden; margin-bottom: .75rem; }
+      border-radius: 12px; overflow: hidden; margin-bottom: .75rem;
+      max-width: 100%; box-sizing: border-box; }
     .adm-card-hdr { padding: .7rem .9rem .5rem; }
     .adm-card-addr { font-size: .88rem; font-weight: 600; color: var(--txt); }
     .adm-card-sub  { font-size: .72rem; color: var(--text-muted); margin-top: 2px; }
@@ -1323,9 +1324,17 @@
 
         const card = document.createElement('div');
         card.dataset.address = c.address;
-        const bColor = rec.estado === 'RETIRADO' ? '#6b7280' : rec.estado === 'MORA' ? '#f59e0b' : rec.estado ? '#10b981' : 'transparent';
-        card.className = 'adm-card';
-        card.style.borderLeft = `3px solid ${bColor}`;
+        // Colores según estado real (RETIRADO / AVISADO / ESPERAR / vacío)
+        const ESTADO_COLORS = {
+            'RETIRADO': { border:'#6b7280', bg:'var(--retirado-bg)', opacity:'.75' },
+            'AVISADO':  { border:'#fcd34d', bg:'var(--avisado-bg)',  opacity:'1'   },
+            'ESPERAR':  { border:'#fdba74', bg:'var(--esperar-bg)',  opacity:'1'   },
+        };
+        const eStyle = ESTADO_COLORS[rec.estado] || { border:'rgba(255,255,255,.08)', bg:'transparent', opacity:'1' };
+        card.className = 'adm-card estado-' + (rec.estado || 'neutral');
+        card.style.borderLeft  = '3px solid ' + eStyle.border;
+        card.style.background  = eStyle.bg;
+        card.style.opacity     = eStyle.opacity;
 
         card.innerHTML = `
           <div class="adm-card-hdr">
@@ -1566,8 +1575,22 @@
             get('.f-paraDueno').innerHTML = buildParaDuenoHtml(calcRow(rec));
             get('.f-honorarios').textContent = fmtCur(honorarios);
             const cls = rowClass(rec.estado);
-            tr.className = cls;
-            if (tr2) tr2.className = cls;
+            // Desktop rows
+            if (tr.tagName === 'TR' || tr2) {
+                tr.className = cls;
+                if (tr2) tr2.className = cls;
+            } else {
+                // Mobile card: actualizar color de fondo y borde
+                const ESTADO_COLORS = {
+                    'RETIRADO': { border:'#6b7280', bg:'var(--retirado-bg)', opacity:'.75' },
+                    'AVISADO':  { border:'#fcd34d', bg:'var(--avisado-bg)',  opacity:'1'   },
+                    'ESPERAR':  { border:'#fdba74', bg:'var(--esperar-bg)',  opacity:'1'   },
+                };
+                const eS = ESTADO_COLORS[rec.estado] || { border:'rgba(255,255,255,.08)', bg:'transparent', opacity:'1' };
+                tr.style.borderLeft = '3px solid ' + eS.border;
+                tr.style.background  = eS.bg;
+                tr.style.opacity     = eS.opacity;
+            }
             updateSummary();
         }
 

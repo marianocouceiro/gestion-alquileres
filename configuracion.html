@@ -97,10 +97,13 @@
     .hbg-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
     /* Fullscreen menu overlay */
-    #gs-mob-menu { position: fixed; inset: 0; z-index: 9999;
-      background: rgba(13,13,13,.98); flex-direction: column;
-      padding: 1.2rem; overflow-y: auto; }
-    #gs-mob-menu.open { display: flex; }
+    #gs-mob-menu { display: none; position: fixed;
+      top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+      width: 100% !important; height: 100% !important; min-height: 100vh;
+      z-index: 9999; background: rgba(13,13,13,.98);
+      flex-direction: column; padding: 1.2rem;
+      overflow-y: auto; overflow-x: hidden; box-sizing: border-box; }
+    #gs-mob-menu.open { display: flex !important; }
     #gs-mob-menu-top { display: flex; align-items: center;
       justify-content: space-between; margin-bottom: 1.5rem; padding-bottom: 1rem;
       border-bottom: 1px solid rgba(255,255,255,.08); }
@@ -922,6 +925,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       var b = document.getElementById('hbgBtn');
       if (b) b.classList.add('open');
       document.body.style.overflow = 'hidden';
+      // Mostrar email del usuario
+      var emailEl = document.getElementById('mob-user-email');
+      if (emailEl) {
+        try {
+          var s = JSON.parse(localStorage.getItem('ga_session')||'{}');
+          emailEl.textContent = s.user_email || (typeof SupabaseDB!=='undefined' && SupabaseDB.getUserEmail()) || '';
+        } catch(e) {}
+      }
     }
     function closeMobMenu() {
       document.getElementById('gs-mob-menu').classList.remove('open');
@@ -1265,9 +1276,10 @@ document.addEventListener('DOMContentLoaded', () => {
   <a href="administracion.html">🧾 Administración</a>
   <a href="tareas.html">✅ Tareas</a>
   <a href="configuracion.html" class="mob-active">⚙️ Configuración</a>
-  <div style="margin-top:auto;padding-top:1.5rem;border-top:1px solid rgba(255,255,255,.08)">
+  <div style="margin-top:1.5rem;padding-top:1.2rem;border-top:1px solid rgba(255,255,255,.08)">
+    <div id="mob-user-email" style="font-size:.75rem;color:#717171;margin-bottom:.75rem;padding:.5rem .75rem;background:rgba(255,255,255,.04);border-radius:8px;word-break:break-all"></div>
     <button onclick="typeof SupabaseDB!=='undefined'&&SupabaseDB.logout()" style="width:100%;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#ef4444;border-radius:10px;padding:.75rem 1rem;font-size:.9rem;font-weight:600;cursor:pointer;font-family:inherit;text-align:left">
-      Cerrar sesión
+      🚪 Cerrar sesión
     </button>
   </div>
 </div>

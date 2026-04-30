@@ -1031,8 +1031,11 @@ async function saveVisitaModal() {
     $('#modalVisita').classList.remove('open');
     renderDay(); renderWeek(); updateSummary();
     toast('Visita guardada','ok');
-    // Sincronizar visitante al banco de compradores (sin bloquear UI)
-    syncVisitanteToBanco(v).catch(()=>{});
+    // Sincronizar visitante al banco de compradores SOLO si es visita venta o alquiler
+    const tiposSincronizar = ['visita venta', 'visita alquiler', 'Visita venta', 'Visita alquiler', 'VISITA VENTA', 'VISITA ALQUILER'];
+    if (v.tipo && tiposSincronizar.some(t => v.tipo.toLowerCase() === t.toLowerCase())) {
+        syncVisitanteToBanco(v).catch(()=>{});
+    }
 }
 
 /* ═══ WA Recordatorio ═══ */

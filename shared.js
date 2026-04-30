@@ -208,28 +208,35 @@ const GestShared = (function () {
     r.style.setProperty('--gradient-primary', `linear-gradient(135deg, ${color} 0%, ${color}cc 100%)`);
     r.style.setProperty('--gradient-header',  `linear-gradient(135deg, #0d0d0d 0%, #0d0d0d 50%, #0d0d0d 100%)`);
 
-    // Actualizar nombre, subtítulo y logo en el header ya renderizado
+    // Actualizar nombre, subtítulo y logo en el header
     const bName = cfg.brandName     || 'Cristian Sanchez Propiedades';
     const bSub  = cfg.brandSubtitle || 'Administración de Alquileres';
-    const nameEl = document.querySelector('.gs-logo-name, .app-hdr-name');
-    const subEl  = document.querySelector('.gs-logo-sub,  .app-hdr-sub');
-    const icoEl  = document.querySelector('.gs-logo-ico,  .app-hdr-ico');
-    if (nameEl) nameEl.textContent = bName;
-    if (subEl)  subEl.textContent  = bSub;
-    if (icoEl && cfg.brandLogo) {
-      icoEl.innerHTML = `<img src="${cfg.brandLogo}" alt="${bName}" style="width:100%;height:100%;object-fit:contain;border-radius:7px">`;
+
+    // Actualizar todos los posibles selectores de nombre/subtítulo/logo
+    document.querySelectorAll('.gs-logo-name, .app-hdr-name').forEach(el => { el.textContent = bName; });
+    document.querySelectorAll('.gs-logo-sub, .app-hdr-sub').forEach(el  => { el.textContent = bSub; });
+    if (cfg.brandLogo) {
+      document.querySelectorAll('.gs-logo-ico, .app-hdr-ico').forEach(el => {
+        el.innerHTML = `<img src="${cfg.brandLogo}" alt="${bName}" style="width:100%;height:100%;object-fit:contain;border-radius:7px">`;
+      });
     }
+
     // Actualizar nav buttons con el color nuevo
     document.querySelectorAll('.gs-nav-btn, .nav-lnk').forEach(el => {
-      el.style.color = `rgba(${rgb}, 0.85)`;
+      el.style.color      = `rgba(${rgb}, 0.85)`;
       el.style.background = `rgba(${rgb}, 0.10)`;
       el.style.borderColor = `rgba(${rgb}, 0.22)`;
     });
-    // Botón activo
     document.querySelectorAll('.gs-nav-active, .nav-lnk.active').forEach(el => {
-      el.style.color = color;
-      el.style.background = `rgba(${rgb}, 0.25)`;
+      el.style.color       = color;
+      el.style.background  = `rgba(${rgb}, 0.25)`;
       el.style.borderColor = `rgba(${rgb}, 0.6)`;
+    });
+    // Hamburguesa y botones con accent color
+    document.querySelectorAll('.hbg-btn span').forEach(el => { el.style.background = color; });
+    document.querySelectorAll('.hbg-btn').forEach(el => {
+      el.style.background   = `rgba(${rgb}, 0.10)`;
+      el.style.borderColor  = `rgba(${rgb}, 0.30)`;
     });
   }
 
@@ -281,11 +288,18 @@ window.changeFontSize = GestShared.changeFontSize.bind(GestShared);
    para que las páginas puedan awaitear antes de poblar selects si lo necesitan. */
 window._gsReady = (async () => {
   try {
-    // Esperar a que SupabaseDB esté disponible (lo define supabase.js, cargado antes)
     if (typeof SupabaseDB === 'undefined') return;
     await GestShared.syncConfigFromSupabase();
+    // Aplicar branding inmediatamente (CSS vars)
     GestShared.applyBranding();
-    // Notificar a las páginas que ya podemos usar vendedores/config actualizados
+    // Aplicar también después del DOM para actualizar el header hardcodeado
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => GestShared.applyBranding());
+    } else {
+      // DOM ya listo, aplicar con pequeño delay para que initHeader() haya corrido
+      setTimeout(() => GestShared.applyBranding(), 50);
+      setTimeout(() => GestShared.applyBranding(), 400);
+    }
     window.dispatchEvent(new CustomEvent('gs:config-synced'));
   } catch(e) { console.warn('[GestShared] auto-sync:', e); }
 })();

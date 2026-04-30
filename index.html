@@ -24,6 +24,7 @@
   #gs-mob-menu { display: none; }
   #mob-contracts-wrap { display: none; }
   #mob-adv-toggle { display: none; }
+  #mob-advanced-section { display: block; }
 
   /* ══ Mobile cards — contratos ══ */
   @media (max-width: 768px) {
@@ -155,7 +156,7 @@
   /* Sección avanzada */
   #mob-adv-toggle { display: flex !important; }
   #mob-advanced-section { display: none !important; }
-  #mob-advanced-section.open { display: block !important; grid-column: 1 / -1 !important; }
+  #mob-advanced-section.open { display: block !important; }
   } /* end @media max-width:768px */
   @media (min-width: 769px) { .hbg-btn { display: none; } }
     </style>
@@ -320,7 +321,7 @@
                       <span style="font-size:.82rem;color:var(--text-muted,#717171)">Datos avanzados (acuerdo, servicios, alias MP…)</span>
                       <span id="mob-adv-arrow" style="color:var(--text-muted,#717171);font-size:.9rem">▾</span>
                     </div>
-                    <div id="mob-advanced-section" style="grid-column:1/-1;display:none">
+                    <div id="mob-advanced-section" style="grid-column:1/-1">
                     <div class="form-group full-width" style="background:var(--bg-secondary,#f8f9fb);border-radius:10px;padding:0.85rem 1rem">
                         <div style="font-weight:600;font-size:0.85rem;color:var(--text-primary,#1a1a2e);margin-bottom:0.6rem">📋 Monto acordado (nuevo valor pactado)</div>
                         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.5rem">

@@ -282,7 +282,10 @@
     .mob-dot.active-dot { background: #f57c00; width: 12px; height: 12px; }
 
     /* Historial: scroll horizontal */
-    #tab-historial { overflow-x: auto; }
+    /* Historial: visible y con scroll horizontal */
+    #tab-historial { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+    #tab-historial table { font-size: .78rem; min-width: 480px; }
+    #tab-historial td, #tab-historial th { padding: .35rem .5rem; }
 
     /* Ocultar botón Nueva Visita original en mobile (está en el hint bar) */
     #btnNueva { display: none; }
@@ -1368,6 +1371,9 @@ async function renderHistorial() {
     // Forzar tab dia activo (por si acaso)
     document.querySelectorAll('.tab').forEach(function(t) {
       t.classList.toggle('active', t.dataset.tab === 'dia');
+    });
+    document.querySelectorAll('.tab-panel').forEach(function(p) {
+      p.classList.toggle('active', p.id === 'tab-dia');
     });
     // Renderizar día actual
     if (typeof renderDay === 'function') renderDay();

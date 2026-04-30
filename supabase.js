@@ -378,7 +378,7 @@ const SupabaseDB = (function () {
     if (!r.success) return [];
     return (r.data || []).map(row => ({
       id:            row.id,
-      texto:         row.texto         || '',
+      texto:         row.tarea        || '',
       observaciones: row.observaciones || '',
       prioridad:     row.prioridad     || 'media',
       fecha:         row.fecha         || null,
@@ -390,7 +390,7 @@ const SupabaseDB = (function () {
     return await upsert('tareas', {
       id:            t.id,
       org_id:        getOrgId(),
-      texto:         t.texto         || '',
+      tarea:         t.texto         || '',
       observaciones: t.observaciones || null,
       prioridad:     t.prioridad     || 'media',
       fecha:         t.fecha         || null,

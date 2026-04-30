@@ -901,6 +901,20 @@ async function cambiarEstado(id, nuevoEstado) {
 
     // Si pasa a "Reservó" (y antes no lo era), disparar inicio de proceso de venta
     if (nuevoEstado === 'reservo' && estadoAnterior !== 'reservo') {
+
+        // Marcar en banco de compradores como "Quiere reservar"
+        try {
+            const compradorId = 'vis_' + v.id;
+            const compradores = await SupabaseDB.getCompradores();
+            const comp = compradores.find(c => c.id === compradorId);
+            if (comp) {
+                comp.estado  = 'quiere_reservar';
+                comp.obs     = (comp.obs ? comp.obs + ' ' : '') +
+                               `[Reservó ${v.propiedad || ''} el ${v.fecha || new Date().toISOString().slice(0,10)}]`;
+                await SupabaseDB.upsertComprador(comp);
+            }
+        } catch(e) { console.warn('No se pudo actualizar banco compradores:', e); }
+
         const payload = {
             propiedad: v.propiedad || '',
             cliente:   v.cliente || '',

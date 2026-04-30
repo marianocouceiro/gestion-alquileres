@@ -729,7 +729,10 @@ async function syncVisitanteToBanco(v) {
         estado:     'activo',
         obs,
         fechaAlta:  new Date().toISOString().slice(0, 10),
-        origenVisita: v.propiedad || ''
+        origenVisita: v.propiedad || '',
+        // Solo asignar la propiedad visitada como interés — evita matchear con todas las propiedades
+        // cuando rubro/zona/precio están vacíos
+        propiedadesInteres: v.propiedad ? [v.propiedad] : []
     };
 
     try {

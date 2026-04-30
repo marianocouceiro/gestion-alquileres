@@ -1714,8 +1714,9 @@
             });
         }
 
-        // WhatsApp button
-        get('[data-act="wa"]').onclick = () => {
+        // WhatsApp button (solo desktop — mobile usa sus propios handlers en buildCard)
+        const waBtn = get('[data-act="wa"]');
+        if (waBtn) waBtn.onclick = () => {
             const msg = genAdminMsg(c, rec);
             $('#msgText').textContent = msg;
             $('#msgModal').style.display = 'flex';
@@ -1727,7 +1728,8 @@
         };
 
         // Print button
-        get('[data-act="print"]').onclick = () => printRecibo(c, rec);
+        const printBtn = get('[data-act="print"]');
+        if (printBtn) printBtn.onclick = () => printRecibo(c, rec);
     }
 
     /* ══ Summary ══ */

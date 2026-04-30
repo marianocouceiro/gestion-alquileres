@@ -1772,8 +1772,8 @@
             sumInmob += honorarios;
             if (rec && rec.estado==='RETIRADO') retirados++;
             if (pastDay10 && (!rec || !rec.fechaPago)) sinPago++;
-            // Honorarios pendientes: tiene honorarios, el dueño debería pagar, y aún no confirmó
-            if (honorarios > 0 && rec && !rec.honRecibido) honPendientes++;
+            // Honorarios pendientes: tiene honorarios y aún no confirmó (rec puede no existir aún)
+            if (honorarios > 0 && (!rec || !rec.honRecibido)) honPendientes++;
         });
 
         $('#sumAlq').textContent       = fmtCur(sumAlq);

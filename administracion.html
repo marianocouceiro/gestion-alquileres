@@ -975,20 +975,20 @@
             if (honorarios > 0 && !c.honorariosPorDueno) {
                 depositoHtml = `
                 <div style="margin-bottom:4px">
-                    <div style="font-size:7.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#111;margin-bottom:1px">Depositar a la inmobiliaria</div>
+                    <div style="font-size:7.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#111;margin-bottom:1px">Pagar a la inmobiliaria</div>
                     <div style="font-size:10pt;font-weight:700;color:#111">${fmtCur(honorarios)}</div>
                     <div style="font-size:8pt;color:#111">${aliasInmob}</div>
                 </div>
                 <div style="border-top:1px solid #ddd;margin:3px 0"></div>
                 <div>
-                    <div style="font-size:7.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#111;margin-bottom:1px">Depositar al propietario</div>
+                    <div style="font-size:7.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#111;margin-bottom:1px">Pagar al propietario</div>
                     <div style="font-size:10pt;font-weight:700;color:#111">${fmtCur(paraDueno)}</div>
                     ${ownerAlias ? `<div style="font-size:8pt;color:#111">${ownerAlias}</div>` : ''}
                 </div>`;
             } else {
                 depositoHtml = `
                 <div>
-                    <div style="font-size:7.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#111;margin-bottom:1px">Depositar al propietario</div>
+                    <div style="font-size:7.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#111;margin-bottom:1px">Pagar al propietario</div>
                     <div style="font-size:10pt;font-weight:700;color:#111">${fmtCur(total)}</div>
                     ${ownerAlias ? `<div style="font-size:8pt;color:#111">${ownerAlias}</div>` : ''}
                 </div>`;
@@ -1215,14 +1215,14 @@
 
         if (honorarios > 0 && !c.honorariosPorDueno) {
             // Inmobiliaria cobra su parte
-            msg += `${B}Depositar a la inmobiliaria: ${fmtCur(honorarios)} (${adminFee}% sobre ${fmtCur(base)})${B}\n`;
+            msg += `${B}Pagar a la inmobiliaria: ${fmtCur(honorarios)} (${adminFee}% sobre ${fmtCur(base)})${B}\n`;
             msg += `   Alias Inmobiliaria: ${aliasInmob}\n\n`;
-            msg += `${B}Depositar al propietario: ${fmtCur(paraDueno)}${B}\n`;
+            msg += `${B}Pagar al propietario: ${fmtCur(paraDueno)}${B}\n`;
             if (ownerAliases.length) msg += `   Alias dueno: ${ownerAliases.join(' / ')}\n`;
         } else {
             // Sin honorarios separados o los paga el dueño
             const totalDueno = c.honorariosPorDueno ? totalInquilino : paraDueno;
-            msg += `${B}Depositar al propietario: ${fmtCur(totalDueno)}${B}\n`;
+            msg += `${B}Pagar al propietario: ${fmtCur(totalDueno)}${B}\n`;
             if (ownerAliases.length) msg += `   Alias dueno: ${ownerAliases.join(' / ')}\n`;
         }
 

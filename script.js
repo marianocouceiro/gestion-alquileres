@@ -1049,14 +1049,14 @@ function genMsg(c, ui, prevAmount = null, isAPIAmount = true) {
     msg += `\n`;
 
     if (honorarios > 0 && !c.honorariosPorDueno) {
-        msg += `*Depositar a la inmobiliaria:* ${formatCurrency(honorarios)} (${c.adminFee}% sobre ${formatCurrency(baseHonorarios)})\n`;
+        msg += `*Pagar a la inmobiliaria:* ${formatCurrency(honorarios)} (${c.adminFee}% sobre ${formatCurrency(baseHonorarios)})\n`;
         msg += `Alias Inmobiliaria: ${aliasInmob}\n`;
         msg += `\n`;
-        msg += `*Depositar al propietario:* ${formatCurrency(alDueno)}\n`;
+        msg += `*Pagar al propietario:* ${formatCurrency(alDueno)}\n`;
         if (ownerAliases.length) msg += `Alias: ${ownerAliases.join(' / ')}\n`;
     } else {
         const totalDueno = c.honorariosPorDueno ? totalInquilino : alDueno;
-        msg += `*Depositar al propietario:* ${formatCurrency(totalDueno)}\n`;
+        msg += `*Pagar al propietario:* ${formatCurrency(totalDueno)}\n`;
         if (ownerAliases.length) msg += `Alias: ${ownerAliases.join(' / ')}\n`;
     }
 

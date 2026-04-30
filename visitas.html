@@ -159,6 +159,12 @@
   /* ══ MOBILE RESPONSIVE (≤768px) — no toca desktop ══ */
   @media (max-width: 768px) {
 
+    /* Eliminar scroll horizontal definitivamente */
+    html { overflow-x: hidden !important; max-width: 100vw !important; }
+    body { overflow-x: hidden !important; max-width: 100vw !important; }
+    .hdr, .summary, .tabs { min-width: 0 !important; width: 100% !important; box-sizing: border-box; }
+    .sum-item { min-width: 0 !important; }
+
     /* Forzar vista día en mobile — CSS puro, sin depender del JS */
     #tab-semana { display: none !important; }
     #tab-dia    { display: block !important; }
@@ -181,9 +187,13 @@
     .hbg-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
     /* Fullscreen menu overlay */
-    #gs-mob-menu { display: none; position: fixed; inset: 0; z-index: 9999;
-      background: rgba(13,13,13,.98); flex-direction: column;
-      padding: 1.2rem; overflow-y: auto; }
+    #gs-mob-menu { display: none; position: fixed;
+      top: 0 !important; left: 0 !important;
+      right: 0 !important; bottom: 0 !important;
+      width: 100% !important; height: 100% !important;
+      z-index: 9999; background: rgba(13,13,13,.98);
+      flex-direction: column; padding: 1.2rem;
+      overflow-y: auto; overflow-x: hidden; box-sizing: border-box; }
     #gs-mob-menu.open { display: flex !important; }
     #gs-mob-menu-top { display: flex; align-items: center;
       justify-content: space-between; margin-bottom: 1.5rem; padding-bottom: 1rem;
@@ -277,9 +287,15 @@
     /* Ocultar botón Nueva Visita original en mobile (está en el hint bar) */
     #btnNueva { display: none; }
 
-    /* Summary bar */
-    .sum-bar { flex-wrap: wrap; }
-    .sum-item { padding: .4rem .75rem; }
+    /* Summary bar: 3 items en fila completa */
+    .summary { padding: 0 !important; position: relative !important; top: auto !important; }
+    .sum-item { flex: 1; min-width: 0 !important; padding: .5rem .5rem !important;
+      font-size: .78rem; border-right: 1px solid rgba(255,255,255,.08); }
+    .sum-item:last-of-type { border-right: none; }
+    .sum-lbl { font-size: .62rem !important; }
+    .sum-val  { font-size: .95rem !important; }
+    /* Ocultar botón Nueva Visita del summary (está en el hint bar) */
+    .summary > div[style*="margin-left:auto"] { display: none !important; }
 
     /* Modal fullscreen */
     .overlay { align-items: flex-end; padding: 0; }

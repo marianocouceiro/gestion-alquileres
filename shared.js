@@ -52,7 +52,8 @@ const GestShared = (function () {
       const KEYS = ['diasFinContrato','diasActualizacion','diasAlertaTasacion1',
                     'diasAlertaTasacion2','moraRateDefault','adminFeeDefault',
                     'aliasInmo','vendedores','vendedoresIdx','diasExpiracionComprador',
-                    'aniosRetencionVisitas'];
+                    'aniosRetencionVisitas',
+                    'brandName','brandSubtitle','brandColor','brandLogo'];
       KEYS.forEach(k => { if (cfg[k] !== undefined) toSave[k] = cfg[k]; });
       SupabaseDB.saveConfig(toSave).catch(e => console.warn('[GestShared] saveConfig Supabase:', e));
     }
@@ -76,6 +77,11 @@ const GestShared = (function () {
         try { remote.vendedores = JSON.parse(remote.vendedores); } catch { remote.vendedores = []; }
       }
 
+      // No sobreescribir brand keys con vacíos de Supabase si localStorage ya los tiene
+      const BRAND_KEYS = ['brandName','brandSubtitle','brandColor','brandLogo'];
+      BRAND_KEYS.forEach(k => {
+        if (!remote[k] && cfg[k]) delete remote[k]; // no pisar con vacío
+      });
       Object.assign(cfg, remote);
       // Guardar solo en localStorage (no volver a escribir en Supabase)
       try { localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg)); } catch {}

@@ -739,7 +739,7 @@ async function renderDay() {
         card.className = cardClass;
         card.innerHTML = '';
         const ESTADO_LABELS_MOB = {por_visitar:'Por visitar',realizada:'Realizada',en_espera:'En espera',cancelada:'Cancelada',reservo:'Reservó'};
-        if (window.innerWidth <= 768) {
+        if (document.body.classList.contains('is-mobile')) {
           const waTel = v.celular ? v.celular.replace(/\D/g,'') : '';
           const waBtn = waTel ? `<button class="btn-mob-wa" onclick="window.open('https://wa.me/549${waTel}','_blank')">WA</button>` : '';
           const coleagaSpan = v.esColega ? ' <span style="font-size:.65rem;color:var(--info)">[Colega]</span>' : '';
@@ -1258,6 +1258,9 @@ async function renderHistorial() {
 (function() {
   function isMobile() { return window.innerWidth <= 768; }
 
+  // Marcar inmediatamente si es mobile (antes de que renderDay corra)
+  if (isMobile()) document.body.classList.add('is-mobile');
+
   /* ── Hamburguesa ── */
   function openMobMenu() {
     var m = document.getElementById('gs-mob-menu');
@@ -1336,6 +1339,8 @@ async function renderHistorial() {
   /* ── Init mobile ── */
   function initMobile() {
     if (!isMobile()) return;
+    // Marcar body para que renderDay use layout mobile
+    document.body.classList.add('is-mobile');
     // Forzar tab dia activo (por si acaso)
     document.querySelectorAll('.tab').forEach(function(t) {
       t.classList.toggle('active', t.dataset.tab === 'dia');

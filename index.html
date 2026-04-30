@@ -63,9 +63,13 @@
 
     /* Search */
     .search-input { width: 100% !important; min-width: 0 !important; }
+    #searchContainer, div[style*="display:flex"][style*="padding"] { 
+      flex-wrap: wrap !important; padding: .6rem .9rem !important; gap: .4rem !important; }
 
-    /* Filter bar: scroll horizontal */
-    .filter-bar { flex-direction: column; gap: .5rem; padding: .6rem .9rem; }
+    /* Filter bar: quitar sticky y corregir layout */
+    .filter-bar { position: relative !important; top: auto !important;
+      flex-direction: column; gap: .5rem; padding: .6rem .9rem !important; 
+      justify-content: flex-start !important; }
     .filter-group { flex-wrap: nowrap; overflow-x: auto;
       -webkit-overflow-scrolling: touch; gap: .35rem; padding-bottom: .2rem; }
     .filter-btn, .filter-select { white-space: nowrap; flex-shrink: 0;
@@ -506,6 +510,62 @@
         </div>
     </div>
 </div>
+
+<div id="gs-mob-menu">
+  <div id="gs-mob-menu-top">
+    <span class="mob-brand">📄 Cristian Sanchez Propiedades</span>
+    <button class="mob-close" onclick="closeMobMenu()">✕ Cerrar</button>
+  </div>
+  <a href="dashboard.html">🏠 Dashboard</a>
+  <a href="ventas.html">🏘️ Propiedades</a>
+  <a href="visitas.html">📅 Visitas</a>
+  <a href="tasaciones.html">📋 Tasaciones</a>
+  <a href="banco.html">👤 Banco</a>
+  <a href="index.html" class="mob-active">📄 Contratos</a>
+  <a href="administracion.html">🧾 Administración</a>
+  <a href="tareas.html">✅ Tareas</a>
+  <a href="configuracion.html">⚙️ Configuración</a>
+  <div style="margin-top:1.5rem;padding-top:1.2rem;border-top:1px solid rgba(255,255,255,.08)">
+    <div id="mob-user-email" style="font-size:.75rem;color:#717171;margin-bottom:.75rem;padding:.5rem .75rem;background:rgba(255,255,255,.04);border-radius:8px;word-break:break-all"></div>
+    <button onclick="typeof SupabaseDB!=='undefined'&&SupabaseDB.logout()" style="width:100%;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#ef4444;border-radius:10px;padding:.75rem 1rem;font-size:.9rem;font-weight:600;cursor:pointer;font-family:inherit;text-align:left">🚪 Cerrar sesión</button>
+  </div>
+</div>
+<script>
+  (function() {
+    function openMobMenu() {
+      document.getElementById('gs-mob-menu').classList.add('open');
+      var b = document.getElementById('hbgBtn'); if (b) b.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      var el = document.getElementById('mob-user-email');
+      if (el) { try { var s=JSON.parse(localStorage.getItem('ga_session')||'{}'); el.textContent=s.user_email||''; } catch(e){} }
+    }
+    function closeMobMenu() {
+      document.getElementById('gs-mob-menu').classList.remove('open');
+      var b = document.getElementById('hbgBtn'); if (b) b.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    window.closeMobMenu = closeMobMenu;
+    function injectHbg() {
+      var hdr = document.querySelector('.gs-hdr, .app-hdr, header');
+      if (hdr && !document.getElementById('hbgBtn')) {
+        var btn = document.createElement('button');
+        btn.className = 'hbg-btn'; btn.id = 'hbgBtn'; btn.setAttribute('aria-label','Menú');
+        btn.innerHTML = '<span></span><span></span><span></span>';
+        btn.onclick = function() {
+          document.getElementById('gs-mob-menu').classList.contains('open') ? closeMobMenu() : openMobMenu();
+        };
+        hdr.appendChild(btn);
+        return true;
+      }
+      return false;
+    }
+    var attempts = 0;
+    var hbgTimer = setInterval(function() {
+      attempts++;
+      if (injectHbg() || attempts > 30) clearInterval(hbgTimer);
+    }, 100);
+  })();
+</script>
 </body>
 
 </html>

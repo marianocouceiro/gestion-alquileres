@@ -167,9 +167,11 @@
 
     /* Forzar vista día en mobile — CSS puro, sin depender del JS */
     #tab-semana { display: none !important; }
-    #tab-dia    { display: block !important; }
     .tab[data-tab="semana"] { display: none !important; }
-    .tab[data-tab="dia"]    { color: var(--acc) !important;
+    /* Mostrar solo el panel activo */
+    .tab-panel { display: none !important; }
+    .tab-panel.active { display: block !important; }
+    .tab[data-tab="dia"].active { color: var(--acc) !important;
       border-bottom: 2px solid var(--acc) !important; }
 
     /* Header hamburguesa */

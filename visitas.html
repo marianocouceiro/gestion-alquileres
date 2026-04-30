@@ -149,6 +149,10 @@
     .wa-phone-link{color:#378ADD;text-decoration:none;cursor:pointer}
     .wa-phone-link:hover{text-decoration:underline;color:#25d366}
 
+  /* ══ Desktop: mostrar card desktop, ocultar mobile ══ */
+  .mob-card-wrap { display: none; }
+  .desk-card-wrap { display: contents; }
+
   /* ══ Mobile overlay — siempre oculto por defecto ══ */
   #gs-mob-menu { display: none; }
 
@@ -213,7 +217,12 @@
     .visit-card { padding: 0; gap: 0; border-radius: 12px;
       flex-direction: column; overflow: hidden; }
 
-    /* Mobile card inner layout */
+    /* Mobile card — CSS puro sin JS detection */
+    .mob-card-wrap { display: block; }
+    .desk-card-wrap { display: none; }
+    /* visit-card en mobile: columna */
+    .visit-card { flex-direction: column; gap: 0; padding: 0;
+      border-radius: 12px; overflow: hidden; }
     .mob-card-top { display: flex; align-items: center;
       gap: 10px; padding: .65rem .85rem .5rem; }
     .mob-card-hora { font-size: 1.1rem; font-weight: 500;
@@ -226,7 +235,7 @@
       border-radius: 5px; white-space: nowrap; flex-shrink: 0; align-self: flex-start; }
     .mob-card-foot { display: flex; align-items: center;
       justify-content: space-between; padding: .4rem .85rem .55rem;
-      border-top: 1px solid rgba(255,255,255,.07); margin-top: 2px; }
+      border-top: 1px solid rgba(255,255,255,.07); }
     .mob-card-vend { font-size: .72rem; color: var(--muted); }
     .mob-card-btns { display: flex; gap: 5px; }
     .mob-card-btns button { font-size: .75rem; padding: 3px 10px;
@@ -237,23 +246,16 @@
       border: 1px solid rgba(37,211,102,.2) !important; color: #25d366; }
     .btn-mob-del  { background: rgba(239,68,68,.1);
       border: 1px solid rgba(239,68,68,.2) !important; color: #ef4444; }
-    /* Estado badge colors */
     .mob-est-por_visitar { background:rgba(16,185,129,.15);color:#10b981; }
     .mob-est-realizada   { background:rgba(107,114,128,.18);color:#9ca3af; }
     .mob-est-en_espera   { background:rgba(245,158,11,.15);color:#f59e0b; }
     .mob-est-cancelada   { background:rgba(239,68,68,.13);color:#ef4444; }
     .mob-est-reservo     { background:rgba(168,85,247,.18);color:#c084fc; }
-    /* Estado border-left */
     .est-por_visitar.visit-card { border-left: 3px solid #10b981; }
     .est-realizada.visit-card   { border-left: 3px solid #4b5563; opacity: .75; }
     .est-cancelada.visit-card   { border-left: 3px solid #ef4444; opacity: .55; }
     .est-en_espera.visit-card   { border-left: 3px solid #f59e0b; }
     .est-reservo.visit-card     { border-left: 3px solid #a855f7; }
-    /* Hide desktop card internals on mobile, show mobile ones */
-    .visit-card .visit-time,
-    .visit-card .visit-info,
-    .visit-card .visit-actions { display: none; }
-    .mob-card-top, .mob-card-foot { display: flex; }
 
     /* Swipe hint strip */
     #mob-swipe-hint { display: flex; align-items: center; justify-content: center;
@@ -272,6 +274,11 @@
 
     /* Historial: scroll horizontal */
     #tab-historial { overflow-x: auto; }
+
+    /* Nueva Visita button */
+    #btnNuevaVisita { margin-left: 0; width: 100%; }
+    .top-bar, .page-header, [style*="justify-content:space-between"] {
+      flex-wrap: wrap; gap: .5rem; }
 
     /* Summary bar */
     .sum-bar { flex-wrap: wrap; }
@@ -349,6 +356,9 @@
   <a href="administracion.html">🧾 Administración</a>
   <a href="tareas.html">✅ Tareas</a>
   <a href="configuracion.html">⚙️ Configuración</a>
+  <div style="margin-top:auto;padding-top:1.5rem;border-top:1px solid rgba(255,255,255,.08)">
+    <button onclick="typeof SupabaseDB!=='undefined'&&SupabaseDB.logout()" style="width:100%;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#ef4444;border-radius:10px;padding:.75rem 1rem;font-size:.9rem;font-weight:600;cursor:pointer;font-family:inherit;text-align:left">Cerrar sesión</button>
+  </div>
 </div>
 
 <div id="mob-swipe-hint">
@@ -739,11 +749,11 @@ async function renderDay() {
         card.className = cardClass;
         card.innerHTML = '';
         const ESTADO_LABELS_MOB = {por_visitar:'Por visitar',realizada:'Realizada',en_espera:'En espera',cancelada:'Cancelada',reservo:'Reservó'};
-        if (document.body.classList.contains('is-mobile')) {
-          const waTel = v.celular ? v.celular.replace(/\D/g,'') : '';
-          const waBtn = waTel ? `<button class="btn-mob-wa" onclick="window.open('https://wa.me/549${waTel}','_blank')">WA</button>` : '';
-          const coleagaSpan = v.esColega ? ' <span style="font-size:.65rem;color:var(--info)">[Colega]</span>' : '';
-          card.innerHTML = `
+        const waTel = v.celular ? v.celular.replace(/\D/g,'') : '';
+        const waBtn = waTel ? `<button class="btn-mob-wa" onclick="window.open('https://wa.me/549${waTel}','_blank')">WA</button>` : '';
+        const coleagaSpan = v.esColega ? ' <span style="font-size:.65rem;color:var(--info)">[Colega]</span>' : '';
+        card.innerHTML = `
+          <div class="mob-card-wrap">
             <div class="mob-card-top">
               <span class="mob-card-hora">${v.hora}</span>
               <div class="mob-card-body">
@@ -759,34 +769,34 @@ async function renderDay() {
                 ${waBtn}
                 <button class="btn-mob-del" onclick="borrarVisita('${v.id}')">✕</button>
               </div>
-            </div>`;
-        } else {
-          card.innerHTML = `
-        <div class="visit-time"><div class="hora">${v.hora}</div></div>
-        <div class="visit-info">
-            <div class="visit-addr">${v.propiedad||'— Sin propiedad —'}${v.esColega?`<span style="font-size:.62rem;background:rgba(79,142,247,.15);color:var(--info);border-radius:6px;padding:1px 6px;font-weight:600">Colega</span>`:''}</div>
-            <div class="visit-client">${v.cliente||'Sin cliente'}${v.celular?' · '+v.celular:''}</div>
-            ${v.esColega&&(v.coleagaEmpresa||v.coleagaNombre)?`<div style="font-size:.68rem;color:var(--info);margin-top:2px">🤝 ${[v.coleagaEmpresa,v.coleagaNombre].filter(Boolean).join(' · ')}${v.coleagaCelular?' · '+v.coleagaCelular:''}</div>`:''}
-            <div class="visit-meta">
+            </div>
+          </div>
+          <div class="desk-card-wrap">
+            <div class="visit-time"><div class="hora">${v.hora}</div></div>
+            <div class="visit-info">
+              <div class="visit-addr">${v.propiedad||'— Sin propiedad —'}${v.esColega?`<span style="font-size:.62rem;background:rgba(79,142,247,.15);color:var(--info);border-radius:6px;padding:1px 6px;font-weight:600">Colega</span>`:''}</div>
+              <div class="visit-client">${v.cliente||'Sin cliente'}${v.celular?' · '+v.celular:''}</div>
+              ${v.esColega&&(v.coleagaEmpresa||v.coleagaNombre)?`<div style="font-size:.68rem;color:var(--info);margin-top:2px">🤝 ${[v.coleagaEmpresa,v.coleagaNombre].filter(Boolean).join(' · ')}${v.coleagaCelular?' · '+v.coleagaCelular:''}</div>`:''}
+              <div class="visit-meta">
                 ${v.tipo?`<span class="badge badge-tipo">${v.tipo}</span>`:''}
                 ${v.vendedor?`<span class="badge">${v.vendedor}</span>`:''}
                 ${v.obs?`<span class="badge" title="${v.obs}">📝</span>`:''}
+              </div>
             </div>
-        </div>
-        <div class="visit-actions">
-            <div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap;align-items:center">
+            <div class="visit-actions">
+              <div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap;align-items:center">
                 <select style="font-size:.68rem;padding:2px 6px;border-radius:6px;border:1px solid var(--border2);background:var(--bg3);color:var(--txt);cursor:pointer;font-family:inherit" onchange="cambiarEstado('${v.id}', this.value)">
-                    <option value="por_visitar" ${estado==='por_visitar'?'selected':''}>Por visitar</option>
-                    <option value="realizada"   ${estado==='realizada'?'selected':''}>Realizada</option>
-                    <option value="en_espera"   ${estado==='en_espera'?'selected':''}>En espera</option>
-                    <option value="cancelada"   ${estado==='cancelada'?'selected':''}>Cancelada</option>
-                    <option value="reservo"     ${estado==='reservo'?'selected':''}>Reservó</option>
+                  <option value="por_visitar" ${estado==='por_visitar'?'selected':''}>Por visitar</option>
+                  <option value="realizada"   ${estado==='realizada'?'selected':''}>Realizada</option>
+                  <option value="en_espera"   ${estado==='en_espera'?'selected':''}>En espera</option>
+                  <option value="cancelada"   ${estado==='cancelada'?'selected':''}>Cancelada</option>
+                  <option value="reservo"     ${estado==='reservo'?'selected':''}>Reservó</option>
                 </select>
                 <button class="btn-sm" style="font-size:.68rem;padding:2px 8px" onclick="editVisita('${v.id}')">✏️</button>
                 <button class="btn-danger" style="font-size:.68rem;padding:2px 8px" onclick="borrarVisita('${v.id}')">✕</button>
+              </div>
             </div>
-        </div>`;
-        }
+          </div>`;
                 list.appendChild(card);
     }
 }

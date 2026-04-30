@@ -779,7 +779,7 @@ async function renderDay() {
             <div class="mob-card-top">
               <span class="mob-card-hora">${v.hora}</span>
               <div class="mob-card-body">
-                <div class="mob-card-addr">${v.propiedad||'— Sin propiedad —'}${coleagaSpan}</div>
+                <div class="mob-card-addr">${v.propiedad||'— Sin propiedad —'}${coleagaSpan}${v.tipo?` <span style="font-size:.65rem;background:rgba(245,124,0,.15);color:#f57c00;padding:1px 5px;border-radius:4px">${v.tipo}</span>`:''}</div>
                 <div class="mob-card-client">${v.cliente||'Sin cliente'}${v.celular?' · '+v.celular:''}</div>
               </div>
               <span class="mob-card-badge mob-est-${estado}">${ESTADO_LABELS_MOB[estado]||estado}</span>

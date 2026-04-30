@@ -440,38 +440,37 @@ function matchear(comp){
         return interesManual.includes(p.address);
     });
 
-    // 2. Propiedades que matchean por criterios
+    // 2. Propiedades que matchean por criterios — orden estricto y excluyente
     const auto=propiedades.filter(p=>{
-        // Solo propiedades activas en venta (no alquiler, no ya vendidas, no en proceso cerrado)
+        // Solo propiedades activas en venta (no alquiler, no ya vendidas, no reservadas, no en proceso cerrado)
         if(p.tipo==='alquiler'||p.contratoCreado)return false;
+        if(p.estado==='Reservada'||p.reservadaPor)return false;
         if(vistas.includes(p.address)||noInt.includes(p.address))return false;
-        if(interesManual.includes(p.address))return false; // no duplicar con las manuales
+        if(interesManual.includes(p.address))return false;
 
-        // 1. CRÉDITO: si el comprador TIENE crédito, solo mostrar propiedades que aceptan crédito
-        //            si el comprador NO tiene crédito, mostrar todas (no filtrar)
-        if(comp.credito && p.cCredito===false) return false;
+        // PASO 1 — CRÉDITO (excluyente): si el comprador tiene crédito,
+        // la propiedad DEBE aceptar crédito. Sin esto, no hay match.
+        if(comp.credito===true && p.cCredito===false) return false;
 
-        // 2. RUBRO: si el comprador eligió rubros, la propiedad debe matchear AL MENOS UNO
+        // PASO 2 — RUBRO (excluyente): si el comprador eligió rubros,
+        // la propiedad DEBE matchear alguno. Sin rubro en común, no hay match.
         if(comp.rubros&&comp.rubros.length>0){
             if(!p.rubro||!comp.rubros.includes(p.rubro)) return false;
         }
 
-        // 3. PRECIO ±15%: solo filtrar si ambos tienen precio definido
+        // PASO 3 — MONTO ±10% (excluyente): solo si ambos tienen precio definido.
+        // Si alguno no tiene precio, se omite este filtro.
         const precio=parseFloat(p.precioAut||p.precioPubl)||0;
         const presup=parseFloat(comp.presupuesto)||0;
         if(presup>0&&precio>0){
-            if(precio<presup*0.85||precio>presup*1.15) return false;
+            if(precio<presup*0.90||precio>presup*1.10) return false;
         }
 
-        // 4. AMBIENTES: la propiedad debe tener >= ambMin (puede tener más, nunca menos)
+        // PASO 4 — AMBIENTES MÍNIMOS (excluyente): la propiedad debe tener
+        // al menos los ambientes mínimos pedidos por el comprador.
         const ambP=p.ambientes!==''&&p.ambientes!=null?parseInt(p.ambientes):null;
         const ambMin=comp.ambMin!==''&&comp.ambMin!=null?parseInt(comp.ambMin):null;
         if(ambP!==null&&ambMin!==null&&ambP<ambMin) return false;
-
-        // 5. BARRIOS: si el comprador eligió zonas, la propiedad debe estar en alguna de ellas
-        if(comp.zonas&&comp.zonas.length>0){
-            if(!p.zona||!comp.zonas.includes(p.zona)) return false;
-        }
 
         return true;
     });
@@ -598,7 +597,28 @@ async function deleteComp(id,nombre){if(!confirm('¿Eliminar a "'+nombre+'"?'))r
 
 async function marcarVista(cid,addr){const c=compradores.find(x=>x.id===cid);if(!c)return;c.vistasProps=c.vistasProps||[];if(c.vistasProps.includes(addr))return;c.vistasProps.push(addr);loading(true,'Guardando…');await SupabaseDB.upsertComprador(c);loading(false);renderMatchBanner();renderCompradores();toast('✓ "'+addr+'" ya la vio');}
 
-async function marcarReservo(cid,addr,pid){const c=compradores.find(x=>x.id===cid);if(!c)return;if(!confirm('¿Confirmar que '+c.nombre+' SE RESERVÓ "'+addr+'"?\n\nSe marcará el comprador como Cerrado.'))return;c.estado='cerrado';c.vistasProps=c.vistasProps||[];if(!c.vistasProps.includes(addr))c.vistasProps.push(addr);loading(true,'Guardando…');await SupabaseDB.upsertComprador(c);loading(false);renderMatchBanner();renderCompradores();toast('✅ Reserva confirmada: "'+addr+'"');}
+async function marcarReservo(cid,addr,pid){
+    const c=compradores.find(x=>x.id===cid);
+    if(!c)return;
+    if(!confirm('¿Confirmar que '+c.nombre+' SE RESERVÓ "'+addr+'"?\n\nOtra persona reservó esta propiedad. Se cerrará al comprador y la propiedad dejará de aparecer en matches.'))return;
+    // Cerrar el comprador
+    c.estado='cerrado';
+    c.vistasProps=c.vistasProps||[];
+    if(!c.vistasProps.includes(addr))c.vistasProps.push(addr);
+    loading(true,'Guardando…');
+    await SupabaseDB.upsertComprador(c);
+    // Marcar la propiedad como reservada (ya no matchea con nadie)
+    const prop=propiedades.find(p=>p.address===addr);
+    if(prop){
+        const pData={...prop, estado:'Reservada', reservadaPor:'otro', reservadaFecha:new Date().toISOString().slice(0,10)};
+        await SupabaseDB.upsertPropiedad(pData);
+        const idx=propiedades.findIndex(p=>p.address===addr);
+        if(idx>=0)propiedades[idx]=pData;
+    }
+    loading(false);
+    renderMatchBanner();renderCompradores();
+    toast('✅ Propiedad "'+addr+'" marcada como reservada. Ya no aparecerá en matches.');
+}
 
 async function marcarNoInteresa(cid,addr){const c=compradores.find(x=>x.id===cid);if(!c)return;c.noInteresaProps=c.noInteresaProps||[];if(c.noInteresaProps.includes(addr))return;c.noInteresaProps.push(addr);loading(true,'Guardando…');await SupabaseDB.upsertComprador(c);loading(false);renderMatchBanner();renderCompradores();toast('✓ No le interesa: "'+addr+'"');}
 

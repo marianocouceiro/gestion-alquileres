@@ -200,8 +200,31 @@ const GestShared = (function () {
     r.style.setProperty('--info',             color);
     r.style.setProperty('--info-soft',        `rgba(${rgb}, 0.10)`);
     r.style.setProperty('--gradient-primary', `linear-gradient(135deg, ${color} 0%, ${color}cc 100%)`);
-    // Tint oscuro para el header (mezcla con negro)
     r.style.setProperty('--gradient-header',  `linear-gradient(135deg, #0d0d0d 0%, #0d0d0d 50%, #0d0d0d 100%)`);
+
+    // Actualizar nombre, subtítulo y logo en el header ya renderizado
+    const bName = cfg.brandName     || 'Cristian Sanchez Propiedades';
+    const bSub  = cfg.brandSubtitle || 'Administración de Alquileres';
+    const nameEl = document.querySelector('.gs-logo-name, .app-hdr-name');
+    const subEl  = document.querySelector('.gs-logo-sub,  .app-hdr-sub');
+    const icoEl  = document.querySelector('.gs-logo-ico,  .app-hdr-ico');
+    if (nameEl) nameEl.textContent = bName;
+    if (subEl)  subEl.textContent  = bSub;
+    if (icoEl && cfg.brandLogo) {
+      icoEl.innerHTML = `<img src="${cfg.brandLogo}" alt="${bName}" style="width:100%;height:100%;object-fit:contain;border-radius:7px">`;
+    }
+    // Actualizar nav buttons con el color nuevo
+    document.querySelectorAll('.gs-nav-btn, .nav-lnk').forEach(el => {
+      el.style.color = `rgba(${rgb}, 0.85)`;
+      el.style.background = `rgba(${rgb}, 0.10)`;
+      el.style.borderColor = `rgba(${rgb}, 0.22)`;
+    });
+    // Botón activo
+    document.querySelectorAll('.gs-nav-active, .nav-lnk.active').forEach(el => {
+      el.style.color = color;
+      el.style.background = `rgba(${rgb}, 0.25)`;
+      el.style.borderColor = `rgba(${rgb}, 0.6)`;
+    });
   }
 
   function initHeader(activePage) {

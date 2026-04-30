@@ -560,11 +560,18 @@ async function loadAll() {
             listTareasEl.innerHTML = tareasPend.map(t => {
                 const col = prioColor[t.prioridad] || '#f59e0b';
                 const lbl = prioLabel[t.prioridad] || 'Media';
-                return `<div style="display:flex;align-items:center;gap:.6rem;padding:.5rem .8rem;border-radius:8px;background:var(--bg2,#151515);border:1px solid var(--border,rgba(255,255,255,.08));margin-bottom:.4rem">
-                    <span style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0"></span>
-                    <span style="flex:1;font-size:.82rem;color:var(--txt,#f5f5f5)">${t.texto || '—'}</span>
-                    <span style="font-size:.68rem;color:${col};font-weight:600;padding:.15rem .45rem;border-radius:4px;background:${col}22">${lbl}</span>
-                    ${t.fecha ? `<span style="font-size:.68rem;color:var(--muted,#717171)">${t.fecha}</span>` : ''}
+                const hoy = new Date(); hoy.setHours(0,0,0,0);
+                const vencida = t.fecha && new Date(t.fecha + 'T00:00:00') < hoy;
+                const fechaFmt = t.fecha ? new Date(t.fecha + 'T00:00:00').toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'}) : '';
+                return `<div style="display:flex;align-items:center;gap:.6rem;padding:.55rem .85rem;border-radius:8px;background:var(--bg2,#151515);border:1px solid var(--border,rgba(255,255,255,.08));margin-bottom:.4rem;border-left:3px solid ${col}">
+                    <div style="flex:1;min-width:0">
+                      <div style="font-size:.85rem;color:var(--txt,#f5f5f5);font-weight:500;margin-bottom:.15rem">${t.texto || '—'}</div>
+                      ${t.observaciones ? `<div style="font-size:.72rem;color:var(--muted,#717171);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.observaciones}</div>` : ''}
+                    </div>
+                    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.2rem;flex-shrink:0">
+                      <span style="font-size:.68rem;color:${col};font-weight:700;padding:.1rem .4rem;border-radius:4px;background:${col}22">${lbl}</span>
+                      ${fechaFmt ? `<span style="font-size:.68rem;color:${vencida?'#ef4444':'var(--muted,#717171)'}${vencida?';font-weight:600':''}">${vencida?'⚠ ':''}${fechaFmt}</span>` : ''}
+                    </div>
                 </div>`;
             }).join('');
         }

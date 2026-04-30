@@ -1048,11 +1048,7 @@ async function saveVisitaModal() {
     $('#modalVisita').classList.remove('open');
     renderDay(); renderWeek(); updateSummary();
     toast('Visita guardada','ok');
-    // Sincronizar al banco de compradores SOLO si es visita venta
-    // (banco de compradores = compradores de propiedades en venta, no inquilinos)
-    if (v.tipo && v.tipo.toLowerCase() === 'visita venta') {
-        syncVisitanteToBanco(v).catch(()=>{});
-    }
+    // Sync a banco de compradores desactivado — se carga manualmente
 }
 
 /* ═══ WA Recordatorio ═══ */

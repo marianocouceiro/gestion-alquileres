@@ -1034,9 +1034,9 @@ async function saveVisitaModal() {
     $('#modalVisita').classList.remove('open');
     renderDay(); renderWeek(); updateSummary();
     toast('Visita guardada','ok');
-    // Sincronizar visitante al banco de compradores SOLO si es visita venta o alquiler
-    const tiposSincronizar = ['visita venta', 'visita alquiler', 'Visita venta', 'Visita alquiler', 'VISITA VENTA', 'VISITA ALQUILER'];
-    if (v.tipo && tiposSincronizar.some(t => v.tipo.toLowerCase() === t.toLowerCase())) {
+    // Sincronizar al banco de compradores SOLO si es visita venta
+    // (banco de compradores = compradores de propiedades en venta, no inquilinos)
+    if (v.tipo && v.tipo.toLowerCase() === 'visita venta') {
         syncVisitanteToBanco(v).catch(()=>{});
     }
 }

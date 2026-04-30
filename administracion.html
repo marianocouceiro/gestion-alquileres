@@ -344,6 +344,7 @@
 
   /* ══ Mobile overlay — siempre oculto por defecto ══ */
   #gs-mob-menu { display: none; }
+  #mob-admin-cards { display: none; }
 
   /* ══ MOBILE RESPONSIVE (≤768px) — no toca desktop ══ */
   @media (max-width: 768px) {
@@ -397,21 +398,53 @@
     .month-nav h2 { font-size: .95rem !important; }
     #adminSearch { width: 100% !important; margin-left: 0 !important; }
 
-    /* Table: scroll horizontal + ocultar cols menos importantes */
-    .table-wrap { margin: 0 !important; overflow-x: auto;
-      -webkit-overflow-scrolling: touch; }
-    table { min-width: 0 !important; font-size: .78rem; }
-    td, th { padding: .35rem .4rem !important; }
-    /* Ocultar: Para el dueño, Inmobiliaria en mobile */
-    table th:nth-child(5), table td:nth-child(5),
-    table th:nth-child(6), table td:nth-child(6)
-    { display: none !important; }
-    /* Más compacto en mobile */
-    table th:nth-child(3) input, table td:nth-child(3) input { width: 72px !important; }
-    table th:nth-child(2) input, table td:nth-child(2) input { width: 88px !important; }
+    /* En mobile: ocultar tabla, mostrar cards */
+    .table-wrap { display: none !important; }
+    #mob-admin-cards { display: block !important; padding: 0 .9rem 2rem; }
 
-    /* Row botón WA: más compacto */
-    .btn-wa-row { width: 28px !important; height: 28px !important; }
+    /* Cards container */
+    .adm-card { background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden; margin-bottom: .75rem; }
+    .adm-card-hdr { padding: .7rem .9rem .5rem; }
+    .adm-card-addr { font-size: .88rem; font-weight: 600; color: var(--txt); }
+    .adm-card-sub  { font-size: .72rem; color: var(--text-muted); margin-top: 2px; }
+    .adm-card-estado { width: 100%; font-size: .82rem; padding: .4rem .6rem;
+      border-radius: 7px; border: 1px solid var(--border2); background: var(--bg3);
+      color: var(--txt); margin-top: .5rem; font-family: inherit; }
+    .adm-card-sect { border-top: 1px solid var(--border); padding: .6rem .9rem; }
+    .adm-card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .45rem .75rem; }
+    .adm-field-lbl { font-size: .65rem; color: var(--text-muted); margin-bottom: 2px;
+      text-transform: uppercase; letter-spacing: .3px; }
+    .adm-field-inp { display: flex; align-items: center; gap: 3px;
+      background: var(--bg3); border: 1px solid var(--border2);
+      border-radius: 6px; padding: 4px 7px; }
+    .adm-field-inp input, .adm-field-inp textarea {
+      border: none; background: transparent; width: 100%;
+      font-size: .8rem; color: var(--txt); outline: none; font-family: inherit; }
+    .adm-field-inp textarea { resize: none; height: 1.8em; }
+    .adm-svc-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 5px; }
+    .adm-svc-item { background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 6px; padding: 5px 7px; }
+    .adm-svc-lbl { display: flex; align-items: center; gap: 4px; margin-bottom: 3px; }
+    .adm-svc-lbl span { font-size: .72rem; color: var(--txt); }
+    .adm-svc-lbl input[type=checkbox] { width: 13px; height: 13px; }
+    .adm-svc-monto { display: flex; align-items: center; gap: 2px; }
+    .adm-svc-monto input { border: none; background: transparent; width: 100%;
+      font-size: .72rem; color: var(--txt); outline: none; font-family: inherit; }
+    .adm-card-totals { background: var(--bg3); border-top: 1px solid var(--border);
+      padding: .5rem .9rem; }
+    .adm-total-row { display: flex; justify-content: space-between;
+      font-size: .78rem; margin-bottom: 2px; }
+    .adm-card-btns { border-top: 1px solid var(--border); padding: .6rem .9rem;
+      display: flex; justify-content: flex-end; gap: .4rem; }
+    .adm-card-btns button { background: rgba(255,255,255,.06);
+      border: 1px solid var(--border2); border-radius: 7px;
+      padding: .35rem .7rem; font-size: .75rem; color: var(--txt);
+      cursor: pointer; font-family: inherit; }
+    /* Estado border color */
+    .adm-card.estado-cobrado { border-left: 3px solid #10b981; }
+    .adm-card.estado-mora    { border-left: 3px solid #f59e0b; }
+    .adm-card.estado-RETIRADO{ border-left: 3px solid #6b7280; opacity: .7; }
 
     /* Modales: desde abajo */
     #msgModal > div, #reciboModal > div { margin: 0 !important;
@@ -500,6 +533,14 @@
 </div>
 
 <!-- Table -->
+<div id="mob-admin-cards" style="display:none">
+  <div id="mob-adm-search" style="display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:7px 10px;margin-bottom:10px">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-muted);flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="search" id="adminSearchMob" placeholder="Buscar dirección o inquilino…"
+      style="border:none;background:transparent;width:100%;font-size:.84rem;color:var(--txt);outline:none;font-family:inherit"
+      oninput="document.getElementById('adminSearch').value=this.value; renderMonth();">
+  </div>
+</div>
 <div class="table-wrap">
     <table>
         <thead>
@@ -1234,6 +1275,9 @@
             restoreFocusAdm(focusState);
             return;
         }
+        const mobCards = document.getElementById('mob-admin-cards');
+        if (mobCards) mobCards.innerHTML = '';
+
         filtered.forEach(c => {
             const existing = records[c.address];
             let rec;
@@ -1241,16 +1285,15 @@
                 rec = defaultRecord(c);
             } else {
                 rec = { ...existing };
-                // Si el usuario NO editó el monto manualmente, actualizar desde el contrato
                 if (!existing._manualAlquiler) {
                     rec.montoAlquiler = getMontoBase(c);
                 }
-                // Si el usuario NO editó la dif. depósito manualmente, recalcularla
                 if (!existing._manualDifDeposito) {
                     rec.difDeposito = calcDefaultDifDeposito(c) || '';
                 }
             }
             body.appendChild(buildRow(c, rec));
+            if (mobCards) mobCards.appendChild(buildCard(c, rec));
         });
         updateSummary();
         restoreFocusAdm(focusState);  // restaurar foco después de reconstruir DOM
@@ -1259,6 +1302,135 @@
     function rowClass(estado) {
         if (!estado) return 'row-neutral';
         return `estado-${estado}`;
+    }
+
+    // ── MOBILE CARD ─────────────────────────────────────────────
+    function buildCard(c, rec) {
+        const {honorarios, paraDueno} = calcRow(rec);
+        const depStyle = c.depositUpdate ? 'border-color:rgba(123,31,162,.4);background:rgba(123,31,162,.06)' : '';
+        const svc = (key, lbl) => `
+            <div class="adm-svc-item">
+              <div class="adm-svc-lbl">
+                <input type="checkbox" class="svc-chk f-chk${key}" ${rec['chk'+key]?'checked':''}>
+                <span>${lbl}</span>
+              </div>
+              <div class="adm-svc-monto">
+                <span style="font-size:.65rem;color:var(--text-muted)">$</span>
+                <input type="number" class="inp f-monto${key}" value="${rec['monto'+key]||''}" min="0" step="1" placeholder="0" onwheel="this.blur()">
+              </div>
+            </div>`;
+
+        const card = document.createElement('div');
+        card.dataset.address = c.address;
+        const bColor = rec.estado === 'RETIRADO' ? '#6b7280' : rec.estado === 'MORA' ? '#f59e0b' : rec.estado ? '#10b981' : 'transparent';
+        card.className = 'adm-card';
+        card.style.borderLeft = `3px solid ${bColor}`;
+
+        card.innerHTML = `
+          <div class="adm-card-hdr">
+            <div class="adm-card-addr">${esc(c.address)}</div>
+            <div class="adm-card-sub">
+              Inq: ${esc(c.tenant||'—')}${c.tenantPhone?' · '+c.tenantPhone:''}<br>
+              Dueño: ${esc(c.owner||'—')}
+            </div>
+            <select class="adm-card-estado f-estado">
+              <option value=""         ${!rec.estado?'selected':''}>— Sin estado —</option>
+              <option value="ESPERAR"  ${rec.estado==='ESPERAR' ?'selected':''}>ESPERAR</option>
+              <option value="AVISADO"  ${rec.estado==='AVISADO' ?'selected':''}>AVISADO</option>
+              <option value="RETIRADO" ${rec.estado==='RETIRADO'?'selected':''}>RETIRADO</option>
+            </select>
+          </div>
+          <div class="adm-card-sect">
+            <div class="adm-card-grid">
+              <div>
+                <div class="adm-field-lbl">Fecha de pago</div>
+                <div class="adm-field-inp" style="padding:3px 7px">
+                  <input type="date" class="f-fechaPago" value="${rec.fechaPago||''}">
+                </div>
+              </div>
+              <div>
+                <div class="adm-field-lbl">Monto alquiler</div>
+                <div class="adm-field-inp">
+                  <span style="font-size:.75rem;color:var(--text-muted)">$</span>
+                  <input type="number" class="inp f-montoAlquiler" value="${rec.montoAlquiler}" min="0" step="1" onwheel="this.blur()">
+                </div>
+              </div>
+              <div>
+                <div class="adm-field-lbl">Descuento</div>
+                <div class="adm-field-inp">
+                  <span style="font-size:.75rem;color:var(--text-muted)">$</span>
+                  <input type="number" class="inp f-descuento" value="${rec.descuento||''}" min="0" step="1" placeholder="0" onwheel="this.blur()">
+                </div>
+              </div>
+              <div>
+                <div class="adm-field-lbl">Mora</div>
+                <div class="adm-field-inp">
+                  <span style="font-size:.75rem;color:var(--text-muted)">$</span>
+                  <input type="number" class="inp f-mora" value="${rec.mora||''}" min="0" step="1" placeholder="0" onwheel="this.blur()">
+                </div>
+              </div>
+              <div>
+                <div class="adm-field-lbl">Dif. depósito</div>
+                <div class="adm-field-inp" style="${depStyle}">
+                  <span style="font-size:.75rem;color:var(--text-muted)">$</span>
+                  <input type="number" class="inp f-difDeposito" value="${rec.difDeposito||''}" min="0" step="1" placeholder="0" onwheel="this.blur()">
+                </div>
+              </div>
+              <div>
+                <div class="adm-field-lbl">Observaciones</div>
+                <div class="adm-field-inp">
+                  <textarea class="inp f-observaciones" placeholder="—">${rec.observaciones||''}</textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="adm-card-sect">
+            <div class="adm-field-lbl" style="margin-bottom:6px">Servicios</div>
+            <div class="adm-svc-grid">
+              ${svc('Luz','Luz')}${svc('Gas','Gas')}${svc('Agua','Agua')}
+              ${svc('Abl','ABL')}${svc('Expensas','Expensas')}${svc('Otros','Otros')}
+            </div>
+          </div>
+          <div class="adm-card-totals">
+            <div class="adm-total-row">
+              <span style="color:var(--text-muted)">Honorarios</span>
+              <span class="f-honorarios" style="font-weight:600">${fmtCur(honorarios)}</span>
+            </div>
+            <div class="adm-total-row">
+              <span style="color:var(--text-muted)">Para el dueño</span>
+              <span class="f-paraDueno">${buildParaDuenoHtml(calcRow(rec))}</span>
+            </div>
+          </div>
+          <div class="adm-card-btns">
+            <button data-act="wa-inq">WA Inquilino</button>
+            <button data-act="wa-due">WA Dueño</button>
+            <button data-act="print">Recibo</button>
+          </div>`;
+
+        attachListeners(card, c, rec, null);
+
+        // WA / recibo buttons
+        card.querySelector('[data-act="wa-inq"]').onclick = () => {
+            const r = records[c.address] || rec;
+            const msg = genAdminMsg(c, r);
+            $('#msgText').textContent = msg;
+            $('#msgModal').style.display = 'flex';
+            $('#btnCopyMsg').onclick = async () => { const ok = await copyText(msg); showToast(ok?'Copiado':'Error al copiar', ok?'success':'error'); };
+            $('#btnSendWA').onclick = () => window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+        };
+        card.querySelector('[data-act="wa-due"]').onclick = () => {
+            const r = records[c.address] || rec;
+            const msg = genAdminMsg(c, r);
+            $('#msgText').textContent = msg;
+            $('#msgModal').style.display = 'flex';
+            $('#btnCopyMsg').onclick = async () => { const ok = await copyText(msg); showToast(ok?'Copiado':'Error al copiar', ok?'success':'error'); };
+            $('#btnSendWA').onclick = () => window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+        };
+        card.querySelector('[data-act="print"]').onclick = () => {
+            printRecibo(c, records[c.address] || rec);
+        };
+
+        return card;
     }
 
     function buildRow(c, rec) {

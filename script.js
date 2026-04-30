@@ -1301,7 +1301,12 @@ async function renderContracts() {
         restoreFocus(focusState);
         return;
     }
-    for (const c of contracts) { body.appendChild(await createRow(c)); }
+    const mobWrap = document.getElementById('mob-contracts-wrap');
+    if (mobWrap) mobWrap.innerHTML = '';
+    for (const c of contracts) {
+        body.appendChild(await createRow(c));
+        if (mobWrap) mobWrap.appendChild(await createCard(c));
+    }
 
     // Restaurar foco después de reconstruir DOM
     restoreFocus(focusState);
@@ -1492,6 +1497,95 @@ async function createRow(c) {
     };
 
     return tr;
+}
+
+async function createCard(c) {
+    const nu = getNextUpdate(c);
+    const exp = isExpired(c);
+    const ed = getEndDate(c);
+    const now = new Date(); now.setHours(0,0,0,0);
+    const daysToEnd = Math.ceil((new Date(ed).setHours(0,0,0,0) - now) / 864e5);
+
+    // Monto actual
+    let ca;
+    if (nu) {
+        try { ca = await calcPeriodAmount(c, nu.periodNumber - 1); } catch { ca = { amount: parseFloat(c.initialAmount) }; }
+        const frozen = getStoredAmount(c, nu.periodNumber - 1);
+        if (frozen) ca = { ...ca, amount: frozen };
+    } else {
+        try { ca = await calcCurrentAmount(c); } catch { ca = { amount: parseFloat(c.initialAmount) }; }
+    }
+
+    // Próximo monto
+    let nextAmtStr = '—';
+    if (nu && !exp) {
+        try { const na = await calcPeriodAmount(c, nu.periodNumber); nextAmtStr = formatCurrency(na.amount); } catch {}
+    }
+
+    // Honorarios
+    const hon = c.adminFee ? formatCurrency(Math.round(ca.amount * parseFloat(c.adminFee) / 100)) : '—';
+
+    // Próx. actualización texto
+    let proxActStr = '—';
+    if (exp) proxActStr = 'Finalizado';
+    else if (nu && nu.daysUntil < 0) proxActStr = `Hace ${Math.abs(nu.daysUntil)}d`;
+    else if (nu && nu.daysUntil === 0) proxActStr = 'Hoy';
+    else if (nu) proxActStr = formatDate(nu.date);
+
+    // Fin contrato
+    const finStr = exp ? 'Finalizado' : daysToEnd <= 60 ? `${formatDate(ed)} (${daysToEnd}d)` : formatDate(ed);
+    const finColor = exp ? '#6b7280' : daysToEnd <= 60 ? '#f59e0b' : '';
+
+    // Estado badge
+    const needsUpdate = nu && nu.daysUntil <= ALERT_DAYS && !exp;
+    const overdue = nu && nu.daysUntil < 0 && !exp;
+    let badgeHtml, borderColor;
+    if (exp) { badgeHtml = '<span style="background:rgba(107,114,128,.15);color:#9ca3af;font-size:.7rem;padding:2px 8px;border-radius:20px">Finalizado</span>'; borderColor = '#6b7280'; }
+    else if (overdue && Math.abs(nu.daysUntil) > 10) { badgeHtml = `<span style="background:rgba(239,68,68,.15);color:#ef4444;font-size:.7rem;padding:2px 8px;border-radius:20px">🔴 Hace ${Math.abs(nu.daysUntil)}d</span>`; borderColor = '#ef4444'; }
+    else if (needsUpdate) { badgeHtml = `<span style="background:rgba(245,158,11,.15);color:#f59e0b;font-size:.7rem;padding:2px 8px;border-radius:20px">⚠️ Actualizar</span>`; borderColor = '#f59e0b'; }
+    else { badgeHtml = '<span style="background:rgba(16,185,129,.15);color:#10b981;font-size:.7rem;padding:2px 8px;border-radius:20px">Al día ✓</span>'; borderColor = '#10b981'; }
+
+    // Update button
+    const updBtnHtml = needsUpdate
+        ? `<button class="ctr-btn-update${overdue && Math.abs(nu.daysUntil)>10?' ctr-btn-update-urgent':''}" data-action="markupdated">⚡ Actualizar</button>`
+        : '';
+
+    const card = document.createElement('div');
+    card.className = 'ctr-card';
+    card.style.borderLeft = `3px solid ${borderColor}`;
+    card.innerHTML = `
+        <div class="ctr-card-hdr">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px">
+            <div style="min-width:0">
+              <div class="ctr-card-addr">${esc(c.address)}</div>
+              <div class="ctr-card-sub">${esc(c.tenant||'')}${c.owner?' · Dueño: '+esc(c.owner):''}</div>
+              <div class="ctr-card-sub" style="margin-top:1px">${c.duration}m · c/${c.updateFrequency}m · ${c.indexType}${c.indexType==='FIJO'?' '+c.fixedPercent+'%':''}</div>
+            </div>
+            <div style="flex-shrink:0">${badgeHtml}</div>
+          </div>
+        </div>
+        <div class="ctr-card-grid">
+          <div class="ctr-grid-cell"><div class="ctr-lbl">Monto actual</div><div class="ctr-val">${formatCurrency(ca.amount)}</div></div>
+          <div class="ctr-grid-cell"><div class="ctr-lbl">Próx. monto</div><div class="ctr-val">${nextAmtStr}</div></div>
+          <div class="ctr-grid-cell"><div class="ctr-lbl">Próx. act.</div><div class="ctr-val" style="${overdue?'color:#ef4444':''}${!overdue&&needsUpdate?'color:#f59e0b':''}">${proxActStr}</div></div>
+          <div class="ctr-grid-cell"><div class="ctr-lbl">Honorarios</div><div class="ctr-val">${hon}</div></div>
+          <div class="ctr-grid-cell" style="grid-column:span 2"><div class="ctr-lbl">Fin contrato</div><div class="ctr-val" style="${finColor?'color:'+finColor:''}">${finStr}</div></div>
+        </div>
+        <div class="ctr-card-btns">
+          <button data-action="edit">Editar</button>
+          <button data-action="detail">Ver</button>
+          <button class="ctr-btn-wa" data-action="wa">WA</button>
+          ${updBtnHtml}
+        </div>`;
+
+    card.querySelector('[data-action="edit"]').onclick   = () => openModal(c.id);
+    card.querySelector('[data-action="detail"]').onclick = () => openDetail(c.id);
+    card.querySelector('[data-action="wa"]').onclick     = () => { if(typeof openWaModal==='function') openWaModal(c.id); else openDetail(c.id); };
+    if (updBtnHtml) card.querySelector('[data-action="markupdated"]').onclick = async () => {
+        await markAsUpdated(c.id);
+        renderContracts();
+    };
+    return card;
 }
 
 /* ══════════════════════════════════════════════════════════════

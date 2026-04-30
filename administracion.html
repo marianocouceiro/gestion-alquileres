@@ -344,7 +344,7 @@
 
   /* ══ Mobile overlay — siempre oculto por defecto ══ */
   #gs-mob-menu { display: none; }
-  #mob-admin-cards { display: none; }
+  #mob-admin-wrap { display: none; }
 
   /* ══ MOBILE RESPONSIVE (≤768px) — no toca desktop ══ */
   @media (max-width: 768px) {
@@ -400,7 +400,7 @@
 
     /* En mobile: ocultar tabla, mostrar cards */
     .table-wrap { display: none !important; }
-    #mob-admin-cards { display: block !important; padding: 0 .9rem 2rem; }
+    #mob-admin-wrap { display: block !important; }
 
     /* Cards container */
     .adm-card { background: var(--bg2); border: 1px solid var(--border);
@@ -533,13 +533,14 @@
 </div>
 
 <!-- Table -->
-<div id="mob-admin-cards" style="display:none">
-  <div id="mob-adm-search" style="display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:7px 10px;margin-bottom:10px">
+<div id="mob-admin-wrap" style="display:none;padding:0 .9rem 2rem">
+  <div style="display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:7px 10px;margin-bottom:10px">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-muted);flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
     <input type="search" id="adminSearchMob" placeholder="Buscar dirección o inquilino…"
       style="border:none;background:transparent;width:100%;font-size:.84rem;color:var(--txt);outline:none;font-family:inherit"
       oninput="document.getElementById('adminSearch').value=this.value; renderMonth();">
   </div>
+  <div id="mob-admin-cards"></div>
 </div>
 <div class="table-wrap">
     <table>

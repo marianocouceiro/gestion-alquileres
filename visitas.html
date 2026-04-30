@@ -259,9 +259,8 @@
 
     /* Swipe hint strip */
     #mob-swipe-hint { display: flex; align-items: center; justify-content: center;
-      gap: .5rem; padding: .4rem .9rem;
-      background: rgba(245,124,0,.06); border-bottom: 1px solid rgba(245,124,0,.1); }
-    #mob-swipe-hint span { font-size: .72rem; color: rgba(245,124,0,.7); font-weight: 600; }
+      padding: .6rem .9rem;
+      background: rgba(13,13,13,.6); border-bottom: 1px solid rgba(245,124,0,.1); }
 
     /* Day dot navigator */
     #mob-day-dots { display: flex; align-items: center; justify-content: center;
@@ -275,10 +274,8 @@
     /* Historial: scroll horizontal */
     #tab-historial { overflow-x: auto; }
 
-    /* Nueva Visita button */
-    #btnNuevaVisita { margin-left: 0; width: 100%; }
-    .top-bar, .page-header, [style*="justify-content:space-between"] {
-      flex-wrap: wrap; gap: .5rem; }
+    /* Ocultar botón Nueva Visita original en mobile (está en el hint bar) */
+    #btnNueva { display: none; }
 
     /* Summary bar */
     .sum-bar { flex-wrap: wrap; }
@@ -362,7 +359,7 @@
 </div>
 
 <div id="mob-swipe-hint">
-  <span>← deslizá para cambiar de día →</span>
+  <button class="btn-prim" onclick="document.getElementById('btnNueva').click()" style="width:100%;padding:.6rem 1rem;font-size:.88rem;border-radius:8px">+ Nueva Visita</button>
 </div>
 <div id="mob-day-dots"></div>
 

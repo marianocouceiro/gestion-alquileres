@@ -1682,6 +1682,50 @@ function openModal(editId = null) {
 
     $('#contractModal').classList.add('active');
     setTimeout(() => $('#address').focus(), 100);
+
+    // Mobile: fix inline styles que rompen el ancho
+    if (window.innerWidth <= 768) {
+        // Resetear todos los grids inline a 1 columna o 2 columnas según el caso
+        const form = $('#contractForm');
+        if (!form) return;
+
+        // Todos los elementos: box-sizing border-box, max-width 100%
+        form.querySelectorAll('input, select, textarea').forEach(el => {
+            el.style.boxSizing = 'border-box';
+            el.style.maxWidth = '100%';
+            el.style.width = '100%';
+        });
+
+        // Grids de inquilino/propietario: 3col → 2col con nombre full
+        form.querySelectorAll('div[style*="grid-template-columns:1fr 1fr 1fr"]').forEach(grid => {
+            grid.style.gridTemplateColumns = '1fr 1fr';
+            const first = grid.querySelector(':scope > div:first-child');
+            if (first) first.style.gridColumn = '1 / -1';
+        });
+
+        // Grids de 3 col sin espacios (acuerdo, servicios)
+        form.querySelectorAll('div[style*="grid-template-columns:1fr 1fr 1fr"]').forEach(grid => {
+            grid.style.gridTemplateColumns = '1fr 1fr';
+        });
+
+        // Contenedores con width fijo → 100%
+        form.querySelectorAll('div[style*="width:130px"], div[style*="width: 130px"]').forEach(el => {
+            el.style.width = '100%';
+        });
+
+        // Bloques full-width: box-sizing
+        form.querySelectorAll('.full-width, .form-group').forEach(el => {
+            el.style.boxSizing = 'border-box';
+            el.style.maxWidth = '100%';
+        });
+
+        // El propio form-grid
+        const grid = form.querySelector('.form-grid');
+        if (grid) {
+            grid.style.gridTemplateColumns = '1fr';
+            grid.style.gap = '.55rem';
+        }
+    }
 }
 
 function closeModal() {

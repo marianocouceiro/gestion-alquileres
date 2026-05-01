@@ -442,6 +442,21 @@ const SupabaseDB = (function () {
     }
     return cfg;
   }
+   // ── Plan y trial de la org ────────────────────────────────
+  async function getOrgPlan() {
+    try {
+      const orgId = getOrgId();
+      if (!orgId) return null;
+      const headers = await getHeadersAsync();
+      const r = await fetch(
+        `${BASE}/rest/v1/organizations?id=eq.${orgId}&select=id,plan,trial_ends_at,active`,
+        { headers: { ...headers, 'Accept': 'application/json' } }
+      );
+      if (!r.ok) return null;
+      const data = await r.json();
+      return data && data.length ? data[0] : null;
+    } catch(e) { return null; }
+  }
   async function saveConfig(cfg) {
     // Obtener org_id del JWT para incluirlo en cada fila (PK es clave+org_id)
     let orgId = null;
@@ -491,7 +506,7 @@ const SupabaseDB = (function () {
     getCompradores, upsertComprador, deleteComprador,
     getVendedores, saveVendedores,
     getTareas, upsertTarea, deleteTarea,
-    getConfig, saveConfig,
+    getConfig, saveConfig, getOrgPlan,
     ping
   };
 

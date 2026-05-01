@@ -262,6 +262,11 @@ async function loadOrgs() {
   try {
     const { orgs } = await callFn({ action: 'list_orgs' });
     renderOrgList(orgs);
+    // Refrescar detalle si hay una org seleccionada
+    if (_selectedOrg) {
+      const fresh = orgs.find(o => o.id === _selectedOrg.id);
+      if (fresh) { _selectedOrg = fresh; loadOrgUsers(fresh); }
+    }
   } catch(e) {
     $('orgList').innerHTML = `<div class="msg msg-err">Error: ${e.message}</div>`;
   }
@@ -495,8 +500,15 @@ async function saveOrgData(org_id) {
   };
   try {
     const r = await callFn({ action: 'update_org_data', org_id, ...data });
-    if (msgEl) msgEl.textContent = r.error ? '✕ ' + r.error : '✓ Guardado';
-    if (msgEl) msgEl.style.color = r.error ? 'var(--danger)' : 'var(--ok)';
+    if (r.error) {
+      if (msgEl) { msgEl.textContent = '✕ ' + r.error; msgEl.style.color = 'var(--danger)'; }
+    } else {
+      // Actualizar _selectedOrg con los nuevos datos
+      Object.assign(_selectedOrg, data);
+      if (msgEl) { msgEl.textContent = '✓ Guardado'; msgEl.style.color = 'var(--ok)'; }
+      // Recargar lista de orgs para reflejar cambios
+      await loadOrgs();
+    }
   } catch(e) {
     if (msgEl) { msgEl.textContent = '✕ ' + e.message; msgEl.style.color = 'var(--danger)'; }
   }

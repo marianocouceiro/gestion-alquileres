@@ -272,16 +272,21 @@ function renderOrgList(orgs) {
     $('orgList').innerHTML = '<div class="empty">No hay inmobiliarias todavía.</div>';
     return;
   }
-  $('orgList').innerHTML = orgs.map(o => `
+  $('orgList').innerHTML = orgs.map(o => {
+    const trialBadge = getTrialBadge(o);
+    return `
     <div class="org-item ${_selectedOrg?.id === o.id ? 'active' : ''}"
          onclick="selectOrg(${JSON.stringify(o).replace(/"/g,'&quot;')})">
       <div style="display:flex;align-items:center;justify-content:space-between">
         <div class="org-name">${o.name}</div>
-        <span class="badge ${o.active ? 'badge-ok' : 'badge-off'}">${o.active ? 'Activa' : 'Suspendida'}</span>
+        <div style="display:flex;gap:.3rem;align-items:center">
+          ${trialBadge}
+          <span class="badge ${o.active ? 'badge-ok' : 'badge-off'}">${o.active ? 'Activa' : 'Suspendida'}</span>
+        </div>
       </div>
       <div class="org-meta">${o.slug || ''} · Creada ${new Date(o.created_at).toLocaleDateString('es-AR')}</div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 function selectOrg(org) {
@@ -293,6 +298,8 @@ function selectOrg(org) {
 }
 
 async function loadOrgUsers(org) {
+  const trialBadge = getTrialBadge(org);
+  const trialDays  = getTrialDaysLeft(org);
   $('orgDetail').innerHTML = `
     <div class="card">
       <div class="section-head">
@@ -300,13 +307,40 @@ async function loadOrgUsers(org) {
           <h2>👥 ${org.name}</h2>
           <div style="font-size:.73rem;color:var(--muted)">${org.id}</div>
         </div>
-        <div style="display:flex;gap:.5rem">
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+          <button class="btn btn-sec" onclick="startTrial('${org.id}')">🕐 Demo 5 días</button>
+          <button class="btn btn-ok"  onclick="activateOrg('${org.id}')">✓ Activar sin límite</button>
           <button class="btn btn-${org.active ? 'danger' : 'sec'}" onclick="toggleOrg('${org.id}',${!org.active})">
             ${org.active ? '⏸ Suspender' : '▶ Activar'}
           </button>
           <button class="btn btn-prim" onclick="openNewUser()">＋ Agregar usuario</button>
         </div>
       </div>
+
+      <!-- Datos de la inmobiliaria -->
+      <div style="background:var(--bg2);border-radius:10px;padding:1rem;margin-bottom:1rem">
+        <div style="font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.75rem">Datos de la inmobiliaria</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.65rem">
+          <div><label style="font-size:.72rem;color:var(--muted)">Contacto</label>
+            <input class="inp" id="fi_contact" value="${org.contact_name||''}" placeholder="Nombre del responsable"></div>
+          <div><label style="font-size:.72rem;color:var(--muted)">Teléfono</label>
+            <input class="inp" id="fi_phone" value="${org.phone||''}" placeholder="11 2345-6789"></div>
+          <div><label style="font-size:.72rem;color:var(--muted)">Email</label>
+            <input class="inp" id="fi_email" value="${org.email||''}" placeholder="inmobiliaria@mail.com"></div>
+          <div><label style="font-size:.72rem;color:var(--muted)">Dirección</label>
+            <input class="inp" id="fi_address" value="${org.address||''}" placeholder="Av. Corrientes 1234"></div>
+        </div>
+        <div style="margin-top:.65rem;display:flex;align-items:center;gap:.75rem">
+          <button class="btn btn-sec" onclick="saveOrgData('${org.id}')">💾 Guardar datos</button>
+          <div id="msgOrgData" style="font-size:.78rem"></div>
+        </div>
+        ${org.trial_ends_at ? `<div style="margin-top:.5rem;font-size:.78rem;color:var(--muted)">
+          Trial: ${trialBadge} · Vence: ${new Date(org.trial_ends_at).toLocaleDateString('es-AR')}
+          ${trialDays !== null ? (trialDays > 0 ? ` (${trialDays} días restantes)` : ' (VENCIDO)') : ''}
+        </div>` : ''}
+      </div>
+
+      <div id="msgUsers"></div>
       <div id="userTableWrap"><div class="loading"><span class="spin">⟳</span> Cargando usuarios…</div></div>
     </div>`;
 
@@ -417,6 +451,59 @@ async function createUser() {
 }
 
 // ── Toggle org ────────────────────────────────────────────────
+// ── Trial helpers ─────────────────────────────────────────────
+function getTrialDaysLeft(org) {
+  if (!org.trial_ends_at) return null;
+  const diff = new Date(org.trial_ends_at) - new Date();
+  return Math.ceil(diff / 864e5);
+}
+
+function getTrialBadge(org) {
+  if (!org.trial_ends_at) return '';
+  const days = getTrialDaysLeft(org);
+  if (days > 0) return `<span class="badge" style="background:rgba(245,158,11,.15);color:#f59e0b">🕐 Demo: ${days}d</span>`;
+  return `<span class="badge badge-off">⛔ Demo vencida</span>`;
+}
+
+async function startTrial(org_id) {
+  if (!confirm('¿Iniciar demo de 5 días para esta inmobiliaria?')) return;
+  const ends = new Date(); ends.setDate(ends.getDate() + 5);
+  loading(true, 'Activando demo…');
+  try {
+    const r = await callFn({ action: 'update_org_data', org_id, trial_ends_at: ends.toISOString(), active: true });
+    if (r.error) { showMsg('msgOrgs', '✕ ' + r.error, 'error'); }
+    else { showMsg('msgOrgs', '✓ Demo activada por 5 días', 'ok'); await loadOrgs(); }
+  } catch(e) { showMsg('msgOrgs', '✕ ' + e.message, 'error'); }
+  finally { loading(false); }
+}
+
+async function activateOrg(org_id) {
+  if (!confirm('¿Activar sin límite de tiempo?')) return;
+  loading(true, 'Activando…');
+  try {
+    const r = await callFn({ action: 'update_org_data', org_id, trial_ends_at: null, active: true });
+    if (r.error) { showMsg('msgOrgs', '✕ ' + r.error, 'error'); }
+    else { showMsg('msgOrgs', '✓ Inmobiliaria activada sin límite', 'ok'); await loadOrgs(); }
+  } catch(e) { showMsg('msgOrgs', '✕ ' + e.message, 'error'); }
+  finally { loading(false); }
+}
+
+async function saveOrgData(org_id) {
+  const data = {
+    contact_name: $('fi_contact')?.value?.trim() || null,
+    phone:        $('fi_phone')?.value?.trim()   || null,
+    email:        $('fi_email')?.value?.trim()   || null,
+    address:      $('fi_address')?.value?.trim() || null,
+  };
+  loading(true, 'Guardando…');
+  try {
+    const r = await callFn({ action: 'update_org_data', org_id, ...data });
+    if (r.error) { showMsg('msgOrgData', '✕ ' + r.error); }
+    else { showMsg('msgOrgData', '✓ Guardado', 'ok'); }
+  } catch(e) { showMsg('msgOrgData', '✕ ' + e.message); }
+  finally { loading(false); }
+}
+
 async function toggleOrg(org_id, active) {
   const label = active ? 'activar' : 'suspender';
   if (!confirm(`¿Querés ${label} esta inmobiliaria?`)) return;

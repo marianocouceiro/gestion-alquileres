@@ -194,6 +194,36 @@ const GestShared = (function () {
     return `${r}, ${g}, ${b}`;
   }
 
+  async function checkTrial() {
+    // Solo verificar si no estamos en login ni superadmin
+    const page = location.pathname.split('/').pop();
+    if (page === 'login.html' || page === 'superadmin.html') return;
+    if (typeof SupabaseDB === 'undefined') return;
+    try {
+      const cfg = await SupabaseDB.getConfig();
+      const trialEndsAt = cfg && cfg.trial_ends_at;
+      if (!trialEndsAt) return; // sin trial = activo sin límite
+      const expired = new Date(trialEndsAt) < new Date();
+      if (expired) {
+        document.body.innerHTML = `
+          <div style="min-height:100vh;background:#0d0d0d;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif">
+            <div style="text-align:center;padding:2rem;max-width:420px">
+              <div style="font-size:3rem;margin-bottom:1rem">⛔</div>
+              <h2 style="color:#f5f5f5;font-size:1.3rem;margin-bottom:.75rem">Período de prueba vencido</h2>
+              <p style="color:#717171;font-size:.9rem;line-height:1.6;margin-bottom:1.5rem">
+                Tu demo de GestAlquiler ha expirado.<br>
+                Contactá a <strong style="color:#f57c00">Cristian Sanchez Propiedades</strong> para continuar usando el sistema.
+              </p>
+              <a href="https://wa.me/5491155144896" target="_blank"
+                style="display:inline-block;background:linear-gradient(135deg,#f57c00,#ff9800);color:#fff;text-decoration:none;padding:.75rem 1.5rem;border-radius:10px;font-weight:600;font-size:.9rem">
+                📱 Contactar por WhatsApp
+              </a>
+            </div>
+          </div>`;
+      }
+    } catch(e) { /* silencioso */ }
+  }
+
   function applyBranding() {
     const cfg   = getConfig();
     const color = cfg.brandColor || '#f57c00';
@@ -269,7 +299,7 @@ const GestShared = (function () {
     getVendedores, saveVendedores, getNextVendedor,
     applyFontSize, changeFontSize,
     esc, waLink, waSpan,
-    applyBranding, initHeader, setIntervalJitter,
+    applyBranding, initHeader, setIntervalJitter, checkTrial,
     // Compatibilidad backward con código que llame a estas (no-ops ahora)
     getToken:       () => '',
     setToken:       () => {},
@@ -295,6 +325,7 @@ window.changeFontSize = GestShared.changeFontSize.bind(GestShared);
         await GestShared.syncConfigFromSupabase();
         GestShared.applyBranding();
         window.dispatchEvent(new CustomEvent('gs:config-synced'));
+        GestShared.checkTrial();
       } catch(e) { console.warn('[GestShared] auto-sync:', e); }
     })();
   } else {

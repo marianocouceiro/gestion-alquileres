@@ -468,40 +468,38 @@ function getTrialBadge(org) {
 async function startTrial(org_id) {
   if (!confirm('¿Iniciar demo de 5 días para esta inmobiliaria?')) return;
   const ends = new Date(); ends.setDate(ends.getDate() + 5);
-  loading(true, 'Activando demo…');
   try {
     const r = await callFn({ action: 'update_org_data', org_id, trial_ends_at: ends.toISOString(), active: true });
     if (r.error) { showMsg('msgOrgs', '✕ ' + r.error, 'error'); }
     else { showMsg('msgOrgs', '✓ Demo activada por 5 días', 'ok'); await loadOrgs(); }
   } catch(e) { showMsg('msgOrgs', '✕ ' + e.message, 'error'); }
-  finally { loading(false); }
 }
 
 async function activateOrg(org_id) {
   if (!confirm('¿Activar sin límite de tiempo?')) return;
-  loading(true, 'Activando…');
   try {
     const r = await callFn({ action: 'update_org_data', org_id, trial_ends_at: null, active: true });
     if (r.error) { showMsg('msgOrgs', '✕ ' + r.error, 'error'); }
     else { showMsg('msgOrgs', '✓ Inmobiliaria activada sin límite', 'ok'); await loadOrgs(); }
   } catch(e) { showMsg('msgOrgs', '✕ ' + e.message, 'error'); }
-  finally { loading(false); }
 }
 
 async function saveOrgData(org_id) {
+  const msgEl = $('msgOrgData');
+  if (msgEl) msgEl.textContent = 'Guardando…';
   const data = {
     contact_name: $('fi_contact')?.value?.trim() || null,
     phone:        $('fi_phone')?.value?.trim()   || null,
     email:        $('fi_email')?.value?.trim()   || null,
     address:      $('fi_address')?.value?.trim() || null,
   };
-  loading(true, 'Guardando…');
   try {
     const r = await callFn({ action: 'update_org_data', org_id, ...data });
-    if (r.error) { showMsg('msgOrgData', '✕ ' + r.error); }
-    else { showMsg('msgOrgData', '✓ Guardado', 'ok'); }
-  } catch(e) { showMsg('msgOrgData', '✕ ' + e.message); }
-  finally { loading(false); }
+    if (msgEl) msgEl.textContent = r.error ? '✕ ' + r.error : '✓ Guardado';
+    if (msgEl) msgEl.style.color = r.error ? 'var(--danger)' : 'var(--ok)';
+  } catch(e) {
+    if (msgEl) { msgEl.textContent = '✕ ' + e.message; msgEl.style.color = 'var(--danger)'; }
+  }
 }
 
 async function toggleOrg(org_id, active) {

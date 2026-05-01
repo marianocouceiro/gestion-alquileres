@@ -337,6 +337,12 @@ function renderUserTable(users) {
             <td><span class="role-badge role-${u.role}">${u.role}</span></td>
             <td>${u.last_sign_in ? new Date(u.last_sign_in).toLocaleDateString('es-AR') : '—'}</td>
             <td>
+              <select class="inp" style="font-size:.72rem;padding:.25rem .5rem;width:auto;margin-right:.3rem"
+                onchange="changeRole('${u.id}','${u.email}',this.value)">
+                <option value="admin"    ${u.role==='admin'    ?'selected':''}>Admin</option>
+                <option value="operador" ${u.role==='operador' ?'selected':''}>Operador</option>
+                <option value="readonly" ${u.role==='readonly' ?'selected':''}>Solo lectura</option>
+              </select>
               <button class="btn btn-sec" style="font-size:.72rem;padding:.3rem .6rem"
                 onclick="openResetPassword('${u.id}','${u.email}')">🔑 Contraseña</button>
               <button class="btn btn-danger" style="font-size:.72rem;padding:.3rem .6rem;margin-left:.3rem"
@@ -451,6 +457,20 @@ async function doResetPassword() {
 }
 
 // ── Eliminar usuario ──────────────────────────────────────────
+async function changeRole(userId, email, newRole) {
+  if (!confirm(`¿Cambiar el rol de ${email} a "${newRole}"?`)) return;
+  loading(true, 'Cambiando rol…');
+  try {
+    const r = await callFn({ action: 'change_role', user_id: userId, role: newRole, org_id: _selectedOrg.id });
+    if (r.error) { showMsg('msgUsers', '✕ ' + r.error, 'error'); }
+    else {
+      showMsg('msgUsers', `✓ Rol de ${email} cambiado a ${newRole}`, 'ok');
+      await loadUsers(_selectedOrg);
+    }
+  } catch(e) { showMsg('msgUsers', '✕ ' + e.message, 'error'); }
+  finally { loading(false); }
+}
+
 async function deleteUser(userId, email) {
   if (!confirm(`¿Eliminar el usuario ${email}? Esta acción no se puede deshacer.`)) return;
   try {

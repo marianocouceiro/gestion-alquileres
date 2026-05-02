@@ -454,7 +454,7 @@
         <div style="display:flex;align-items:center;gap:.65rem">
           <div id="prevLogoWrap" style="width:34px;height:34px;flex-shrink:0;border-radius:9px;overflow:hidden;border:1px solid rgba(245,124,0,.35);padding:2px;background:rgba(245,124,0,.1);display:flex;align-items:center;justify-content:center;font-size:18px">🏘️</div>
           <div>
-            <div id="prevNombre" style="font-size:.88rem;font-weight:700;color:#fff">Cristian Sanchez Propiedades</div>
+            <div id="prevNombre" style="font-size:.88rem;font-weight:700;color:#fff">Mi Inmobiliaria</div>
             <div id="prevSubtitulo" style="font-size:.64rem;color:#717171">Administración de Alquileres</div>
           </div>
           <div style="margin-left:auto;display:flex;gap:.4rem">
@@ -1175,7 +1175,7 @@ async function saveApariencia() {
 function resetApariencia() {
   if (!confirm('¿Restaurar la apariencia original? Se perderán los cambios de marca.')) return;
   const cfg = GestShared.getConfig();
-  cfg.brandName     = 'Cristian Sanchez Propiedades';
+  cfg.brandName     = '';
   cfg.brandSubtitle = 'Administración de Alquileres';
   cfg.brandColor    = '#f57c00';
   cfg.brandLogo     = '';
@@ -1192,7 +1192,7 @@ function loadAparienciaFields() {
   const l = document.getElementById('brLogo');
   const p = document.getElementById('brColorPicker');
   const h = document.getElementById('brColorHex');
-  if (n) n.value = cfg.brandName     || 'Cristian Sanchez Propiedades';
+  if (n) n.value = cfg.brandName     || '';
   if (s) s.value = cfg.brandSubtitle || 'Administración de Alquileres';
   if (l) l.value = cfg.brandLogo     || '';
   const color = cfg.brandColor || '#f57c00';
@@ -1227,7 +1227,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 <div id="gs-mob-menu">
   <div id="gs-mob-menu-top">
-    <span class="mob-brand">⚙️ Cristian Sanchez Propiedades</span>
+    <span class="mob-brand" id="mob-brand-name">⚙️ GestAlquiler</span>
     <button class="mob-close" onclick="closeMobMenu()">✕ Cerrar</button>
   </div>
   <a href="dashboard.html">🏠 Dashboard</a>
@@ -1248,6 +1248,16 @@ document.addEventListener('DOMContentLoaded', () => {
 </div>
 <script>
   (function() {
+    // Aplicar brandName dinámico al menú mobile
+    function setMobBrand() {
+      const cfg = (typeof GestShared !== 'undefined') ? GestShared.getConfig() : {};
+      const name = cfg.brandName || 'GestAlquiler';
+      const el = document.getElementById('mob-brand-name');
+      if (el) el.textContent = '⚙️ ' + name;
+    }
+    setMobBrand();
+    window.addEventListener('gs:config-synced', setMobBrand);
+
     function openMobMenu() {
       document.getElementById('gs-mob-menu').classList.add('open');
       var b = document.getElementById('hbgBtn');

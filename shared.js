@@ -20,19 +20,17 @@ const GestShared = (function () {
     diasAlertaTasacion2:       15,
     moraRateDefault:           2,
     adminFeeDefault:           5,
-    aliasInmo:                 '',   // Cada inmobiliaria configura el suyo
+    aliasInmo:                 '',
     vendedores:                [],
     vendedoresIdx:             0,
     diasExpiracionComprador:   120,
-    aniosRetencionVisitas:     10,   // "nunca" o 1..10
-    // ── Branding ──────────────────────────────────────────
-    brandName:     '',             // Cada inmobiliaria configura el suyo
+    aniosRetencionVisitas:     10,
+    brandName:     '',
     brandSubtitle: 'Administración de Alquileres',
     brandColor:    '#f57c00',
-    brandLogo:     '',             // URL de imagen; vacío = ícono SVG por defecto
+    brandLogo:     '',
   };
 
-  // ── Configuración (sync — lee localStorage) ──────────────
   function getConfig() {
     try {
       return Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem(CONFIG_KEY) || '{}'));
@@ -45,8 +43,6 @@ const GestShared = (function () {
     try {
       localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg));
     } catch(e) { console.warn('[GestShared] saveConfig:', e); }
-
-    // Persistir en Supabase en background (sin bloquear la UI)
     if (typeof SupabaseDB !== 'undefined') {
       const toSave = {};
       const KEYS = ['diasFinContrato','diasActualizacion','diasAlertaTasacion1',
@@ -59,16 +55,12 @@ const GestShared = (function () {
     }
   }
 
-  // ── Sincronizar config desde Supabase → localStorage ─────
-  // Llamar con await en el DOMContentLoaded de cada página
   async function syncConfigFromSupabase() {
     if (typeof SupabaseDB === 'undefined') return;
     try {
       const remote = await SupabaseDB.getConfig();
       if (!remote || !Object.keys(remote).length) return;
       const cfg = getConfig();
-
-      // Normalizar tipos
       ['diasActualizacion','diasFinContrato','diasAlertaTasacion1','diasAlertaTasacion2',
        'moraRateDefault','adminFeeDefault','vendedoresIdx'].forEach(k => {
         if (remote[k] !== undefined) remote[k] = parseFloat(remote[k]) || 0;
@@ -76,30 +68,23 @@ const GestShared = (function () {
       if (typeof remote.vendedores === 'string') {
         try { remote.vendedores = JSON.parse(remote.vendedores); } catch { remote.vendedores = []; }
       }
-
-      // No sobreescribir brand keys con vacíos de Supabase si localStorage ya los tiene
       const BRAND_KEYS = ['brandName','brandSubtitle','brandColor','brandLogo'];
       BRAND_KEYS.forEach(k => {
-        if (!remote[k] && cfg[k]) delete remote[k]; // no pisar con vacío
+        if (!remote[k] && cfg[k]) delete remote[k];
       });
       Object.assign(cfg, remote);
-      // Guardar solo en localStorage (no volver a escribir en Supabase)
       try { localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg)); } catch {}
     } catch(e) {
       console.warn('[GestShared] syncConfigFromSupabase:', e);
     }
   }
 
-  // ── Vendedores ────────────────────────────────────────────
-  function getVendedores() {
-    return getConfig().vendedores || [];
-  }
+  function getVendedores() { return getConfig().vendedores || []; }
 
   function saveVendedores(list) {
     const cfg = getConfig();
     cfg.vendedores = list;
     saveConfig(cfg);
-    // También sincronizar tabla vendedores en Supabase
     if (typeof SupabaseDB !== 'undefined') {
       SupabaseDB.saveVendedores(list).catch(e => console.warn('[GestShared] saveVendedores:', e));
     }
@@ -116,7 +101,6 @@ const GestShared = (function () {
     return v;
   }
 
-  // ── Tipografía ────────────────────────────────────────────
   function applyFontSize() {
     const fs = parseInt(localStorage.getItem(FONT_KEY)) || FONT_DEF;
     document.documentElement.style.fontSize = fs + 'px';
@@ -130,7 +114,6 @@ const GestShared = (function () {
     try { localStorage.setItem(FONT_KEY, fs); } catch {}
   }
 
-  // ── Sanitización XSS ──────────────────────────────────────
   function esc(s) {
     return String(s == null ? '' : s)
       .replace(/&/g,'&amp;').replace(/</g,'&lt;')
@@ -138,7 +121,6 @@ const GestShared = (function () {
       .replace(/'/g,'&#x27;');
   }
 
-  // ── WhatsApp ──────────────────────────────────────────────
   function waLink(phone, text) {
     if (!phone) return text || '';
     const clean = String(phone).replace(/\D/g, '');
@@ -158,12 +140,10 @@ const GestShared = (function () {
     return `<span onclick="event.stopPropagation();window.open('${url}','_blank')" class="wa-phone-link" title="Abrir WhatsApp">📱 ${esc(text||phone)}</span>`;
   }
 
-  // ── Interval con jitter ───────────────────────────────────
   function setIntervalJitter(fn, baseMs) {
     return setInterval(fn, baseMs + Math.random() * 15000);
   }
 
-  // ── Logo SVG ──────────────────────────────────────────────
   const LOGO_SVG = '<svg viewBox="0 0 1532.9 1229.94" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><path fill="#f39200" d="M766.45,39.94L54.91,353.68h229.76c-3.51,0-6.36,3-6.36,6.7v677.09c0,72.57,55.77,131.39,124.57,131.39h788.13c35.1,0,63.56-30.01,63.56-67.04V353.68h223.41L766.45,39.94Z"/><path fill="#fff" d="M786.94,398.11v186.57h-13.66c-10.28-48.68-29.43-86-57.45-111.94-28.03-25.94-59.78-38.9-95.28-38.9-29.66,0-56.87,9.66-81.61,28.98-24.75,19.32-42.86,44.59-54.3,75.82-14.71,39.96-22.06,84.42-22.06,133.39s5.37,92.03,16.11,131.59c10.75,39.57,27.55,69.47,50.44,89.72,22.89,20.25,52.55,30.37,88.97,30.37,29.89,0,57.27-7.4,82.14-22.23,24.88-14.82,51.09-40.35,78.64-76.62v46.45c-26.62,31.5-54.35,54.33-83.19,68.48-28.84,14.15-62.52,21.24-101.06,21.24-50.67,0-95.69-11.51-135.04-34.54-39.35-23.03-69.7-56.11-91.07-99.24-21.37-43.13-32.06-89.06-32.06-137.75,0-51.34,11.85-100.05,35.56-146.09,23.7-46.05,55.69-81.77,95.98-107.19,40.28-25.4,83.07-38.11,128.38-38.11,33.39,0,68.65,8.21,105.79,24.61,21.48,9.53,35.14,14.29,40.98,14.29,7.47,0,13.95-3.11,19.43-9.33,5.48-6.21,9.05-16.07,10.69-29.57h13.66Z"/><path fill="#fff" d="M1163.15,398.11l3.85,179.43h-14.35c-6.78-44.99-23.42-81.18-49.92-108.57-26.51-27.39-55.17-41.08-85.99-41.08-23.82,0-42.68,7.21-56.57,21.63-13.9,14.42-20.85,31.03-20.85,49.82,0,11.92,2.45,22.5,7.36,31.76,6.77,12.44,17.63,24.75,32.58,36.92,10.98,8.73,36.31,24.22,76.01,46.45,55.57,30.96,93.05,60.21,112.44,87.74,19.15,27.52,28.73,59.02,28.73,94.48,0,45-15.47,83.7-46.41,116.12-30.95,32.43-70.23,48.63-117.87,48.63-14.95,0-29.07-1.72-42.39-5.16-13.31-3.45-30.01-9.92-50.09-19.45-11.21-5.3-20.44-7.94-27.68-7.94-6.07,0-12.49,2.64-19.26,7.94-6.77,5.3-12.27,13.36-16.46,24.22h-12.97v-203.26h12.97c10.27,57.17,30.06,100.77,59.37,130.81,29.3,30.04,60.89,45.05,94.75,45.05,26.15,0,46.99-8.07,62.52-24.22,15.53-16.14,23.29-34.93,23.29-56.37,0-12.7-2.97-25-8.93-36.92-5.96-11.91-15.01-23.22-27.15-33.94-12.14-10.72-33.62-24.67-64.45-41.88-43.21-24.07-74.26-44.59-93.18-61.53-18.91-16.94-33.45-35.86-43.61-56.77-10.16-20.9-15.24-43.93-15.24-69.07,0-42.88,13.89-79.4,41.69-109.57,27.78-30.17,62.81-45.26,105.08-45.26,15.41,0,30.36,2.13,44.84,6.36,10.97,3.17,24.34,9.06,40.11,17.66,15.76,8.6,26.79,12.9,33.1,12.9s10.86-2.12,14.36-6.35c3.5-4.23,6.77-14.42,9.81-30.57h10.51Z"/></svg>';
 
   const NAV = [
@@ -185,8 +165,6 @@ const GestShared = (function () {
     document.head.appendChild(s);
   }
 
-  // ── Branding dinámico ─────────────────────────────────────
-  // Convierte hex #rrggbb → "r, g, b" para usar en rgba()
   function hexToRgb(hex) {
     const r = parseInt(hex.slice(1,3),16);
     const g = parseInt(hex.slice(3,5),16);
@@ -201,11 +179,12 @@ const GestShared = (function () {
     try {
       const org = await SupabaseDB.getOrgPlan();
       if (!org) return;
-      // Sin trial_ends_at = cliente activo sin límite
       if (!org.trial_ends_at) return;
       const daysLeft = Math.ceil((new Date(org.trial_ends_at) - new Date()) / 86400000);
       if (daysLeft <= 0) {
-        // Trial vencido — bloquear acceso
+        // Leer número de WhatsApp desde config (configurable en Configuración)
+        const trialCfg = await SupabaseDB.getConfig().catch(() => ({}));
+        const waNum = trialCfg.whatsappContacto || '5491161381046';
         document.body.innerHTML = `
           <div style="min-height:100vh;background:#0d0d0d;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif">
             <div style="text-align:center;padding:2rem;max-width:420px">
@@ -215,7 +194,7 @@ const GestShared = (function () {
                 Tu demo de GestAlquiler ha expirado.<br>
                 Contactanos para continuar usando el sistema.
               </p>
-              <a href="https://wa.me/1161381046" target="_blank"
+              <a href="https://wa.me/${waNum}" target="_blank"
                 style="display:inline-block;background:linear-gradient(135deg,#f57c00,#ff9800);color:#fff;text-decoration:none;padding:.75rem 1.5rem;border-radius:10px;font-weight:600;font-size:.9rem">
                 📱 Contactar por WhatsApp
               </a>
@@ -223,7 +202,6 @@ const GestShared = (function () {
           </div>`;
         return;
       }
-      // Trial activo — mostrar banner si quedan 7 días o menos
       if (daysLeft <= 7) {
         const banner = document.createElement('div');
         banner.style.cssText = 'background:#854F0B;color:#FAEEDA;text-align:center;padding:8px 16px;font-size:13px;font-weight:500;position:relative;z-index:999';
@@ -246,12 +224,8 @@ const GestShared = (function () {
     r.style.setProperty('--info-soft',        `rgba(${rgb}, 0.10)`);
     r.style.setProperty('--gradient-primary', `linear-gradient(135deg, ${color} 0%, ${color}cc 100%)`);
     r.style.setProperty('--gradient-header',  `linear-gradient(135deg, #0d0d0d 0%, #0d0d0d 50%, #0d0d0d 100%)`);
-
-    // Actualizar nombre, subtítulo y logo en el header
     const bName = cfg.brandName     || 'Cristian Sanchez Propiedades';
     const bSub  = cfg.brandSubtitle || 'Administración de Alquileres';
-
-    // Actualizar todos los posibles selectores de nombre/subtítulo/logo
     document.querySelectorAll('.gs-logo-name, .app-hdr-name').forEach(el => { el.textContent = bName; });
     document.querySelectorAll('.gs-logo-sub, .app-hdr-sub').forEach(el  => { el.textContent = bSub; });
     if (cfg.brandLogo) {
@@ -259,8 +233,6 @@ const GestShared = (function () {
         el.innerHTML = `<img src="${cfg.brandLogo}" alt="${bName}" style="width:100%;height:100%;object-fit:contain;border-radius:7px">`;
       });
     }
-
-    // Actualizar nav buttons con el color nuevo
     document.querySelectorAll('.gs-nav-btn, .nav-lnk').forEach(el => {
       el.style.color      = `rgba(${rgb}, 0.85)`;
       el.style.background = `rgba(${rgb}, 0.10)`;
@@ -271,7 +243,6 @@ const GestShared = (function () {
       el.style.background  = `rgba(${rgb}, 0.25)`;
       el.style.borderColor = `rgba(${rgb}, 0.6)`;
     });
-    // Hamburguesa y botones con accent color
     document.querySelectorAll('.hbg-btn span').forEach(el => { el.style.background = color; });
     document.querySelectorAll('.hbg-btn').forEach(el => {
       el.style.background   = `rgba(${rgb}, 0.10)`;
@@ -280,9 +251,8 @@ const GestShared = (function () {
   }
 
   function initHeader(activePage) {
-    // Verificar autenticación en cada página (excepto login)
     if (typeof SupabaseDB !== 'undefined' && typeof SupabaseDB.requireAuth === 'function') {
-      if (!SupabaseDB.requireAuth()) return; // redirige a login.html si no autenticado
+      if (!SupabaseDB.requireAuth()) return;
     }
     _injectCSS(); applyFontSize();
     const navHtml = NAV.map(n => {
@@ -309,7 +279,6 @@ const GestShared = (function () {
     applyFontSize, changeFontSize,
     esc, waLink, waSpan,
     applyBranding, initHeader, setIntervalJitter, checkTrial,
-    // Compatibilidad backward con código que llame a estas (no-ops ahora)
     getToken:       () => '',
     setToken:       () => {},
     getServerUrl:   () => '',
@@ -320,15 +289,8 @@ const GestShared = (function () {
 
 window.changeFontSize = GestShared.changeFontSize.bind(GestShared);
 
-/* ── Auto-sync de configuración desde Supabase al cargar ──
-   Se dispara en cada página que incluya shared.js. Baja la config (incluidos
-   vendedores) a localStorage para que todos los usuarios y todas las máquinas
-   compartan la misma lista. La promesa queda expuesta como window._gsReady
-   para que las páginas puedan awaitear antes de poblar selects si lo necesitan. */
-// Esperar a que supabase.js esté disponible, luego sincronizar branding
 (function waitForSupabase() {
   if (typeof SupabaseDB !== 'undefined') {
-    // SupabaseDB ya disponible — sincronizar y aplicar
     window._gsReady = (async () => {
       try {
         await GestShared.syncConfigFromSupabase();
@@ -338,21 +300,17 @@ window.changeFontSize = GestShared.changeFontSize.bind(GestShared);
       } catch(e) { console.warn('[GestShared] auto-sync:', e); }
     })();
   } else {
-    // Todavía no cargó supabase.js — reintentar en el siguiente tick
     setTimeout(waitForSupabase, 20);
   }
 })();
 
-// Fallback: aplicar branding desde localStorage (sin esperar Supabase) para respuesta inmediata
 document.addEventListener('DOMContentLoaded', function() {
   GestShared.applyBranding();
-  // Luego cuando _gsReady resuelve, aplicar de nuevo con datos de Supabase
   if (window._gsReady && typeof window._gsReady.then === 'function') {
     window._gsReady.then(() => {
       setTimeout(() => GestShared.applyBranding(), 100);
     }).catch(() => {});
   } else {
-    // _gsReady aún no existe — esperar a que se cree
     var tries = 0;
     var iv = setInterval(function() {
       tries++;

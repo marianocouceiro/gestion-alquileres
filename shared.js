@@ -9,6 +9,7 @@
 const GestShared = (function () {
   'use strict';
 
+  const CONFIG_KEY = 'gest_config'; // clave de localStorage para la configuración
   let _waNum = '5491161381046'; // número de soporte, se actualiza desde Edge Function
   const FONT_KEY   = 'app_fs';
   const FONT_DEF   = 15;

@@ -295,11 +295,7 @@
         <label class="lbl">Alias inmobiliaria (default en WA)</label>
         <input class="inp" type="text" id="cfgAlias" placeholder="cristian.912.sapa.mp">
       </div>
-      <div class="fl full">
-        <label class="lbl">WhatsApp de contacto <span style="font-weight:400;color:var(--muted)">(para clientes en período de prueba)</span></label>
-        <input class="inp" type="text" id="cfgWaContacto" placeholder="Ej: 5491161381046" maxlength="20">
-        <span class="hint">Número en formato internacional sin espacios. Ej: 5491161381046</span>
-      </div>
+
       <div class="fl full">
         <label class="lbl">Email de la inmobiliaria <span style="font-weight:400;color:var(--muted)">(para notificaciones automáticas)</span></label>
         <input class="inp" type="email" id="cfgEmailInmo" placeholder="inmobiliaria@email.com">
@@ -628,7 +624,6 @@ function fillFields(cfg) {
   $('cfgMora').value    = cfg.moraRateDefault       ?? 2;
   $('cfgAdmin').value   = cfg.adminFeeDefault       ?? 5;
   $('cfgAlias').value   = cfg.aliasInmo || 'cristian.912.sapa.mp';
-  if($('cfgWaContacto')) $('cfgWaContacto').value = cfg.whatsappContacto || '';
   if($('cfgEmailInmo')) $('cfgEmailInmo').value = cfg.emailInmo || '';
   if($('cfgEjsService'))  $('cfgEjsService').value  = cfg.ejsServiceId  || '';
   if($('cfgEjsTemplate')) $('cfgEjsTemplate').value = cfg.ejsTemplateId || '';
@@ -647,7 +642,6 @@ function readFields() {
   if (p('cfgMora')    !== null) cfg.moraRateDefault      = p('cfgMora');
   if (p('cfgAdmin')   !== null) cfg.adminFeeDefault      = p('cfgAdmin');
   const a = $('cfgAlias').value.trim(); if (a) cfg.aliasInmo = a;
-  const wa = $('cfgWaContacto') ? $('cfgWaContacto').value.trim() : ''; if (wa) cfg.whatsappContacto = wa;
   const em = $('cfgEmailInmo') ? $('cfgEmailInmo').value.trim() : ''; if (em) cfg.emailInmo = em;
   const esId  = $('cfgEjsService')  ? $('cfgEjsService').value.trim()  : ''; if (esId)  cfg.ejsServiceId  = esId;
   const etId  = $('cfgEjsTemplate') ? $('cfgEjsTemplate').value.trim() : ''; if (etId)  cfg.ejsTemplateId = etId;

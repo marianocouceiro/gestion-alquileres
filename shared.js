@@ -182,9 +182,8 @@ const GestShared = (function () {
       if (!org.trial_ends_at) return;
       const daysLeft = Math.ceil((new Date(org.trial_ends_at) - new Date()) / 86400000);
       if (daysLeft <= 0) {
-        // Leer número de WhatsApp desde config (configurable en Configuración)
-        const trialCfg = await SupabaseDB.getConfig().catch(() => ({}));
-        const waNum = trialCfg.whatsappContacto || '5491161381046';
+        // TODO: leer desde superadmin_config cuando esté implementado
+        const waNum = '5491161381046';
         document.body.innerHTML = `
           <div style="min-height:100vh;background:#0d0d0d;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif">
             <div style="text-align:center;padding:2rem;max-width:420px">

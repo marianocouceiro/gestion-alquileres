@@ -9,7 +9,7 @@
 const GestShared = (function () {
   'use strict';
 
-  const CONFIG_KEY = 'gest_config';
+  let _waNum = '5491161381046'; // número de soporte, se actualiza desde Edge Function
   const FONT_KEY   = 'app_fs';
   const FONT_DEF   = 15;
 
@@ -194,7 +194,7 @@ const GestShared = (function () {
             body: JSON.stringify({ action: 'get_superadmin_config' })
           });
           const d = await r.json();
-          if (d.ok && d.wa_num) waNum = d.wa_num;
+          if (d.ok && d.wa_num) { waNum = d.wa_num; _waNum = waNum; }
         } catch(e) { /* usar fallback */ }
         document.body.innerHTML = `
           <div style="min-height:100vh;background:#0d0d0d;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif">
@@ -235,7 +235,7 @@ const GestShared = (function () {
     r.style.setProperty('--info-soft',        `rgba(${rgb}, 0.10)`);
     r.style.setProperty('--gradient-primary', `linear-gradient(135deg, ${color} 0%, ${color}cc 100%)`);
     r.style.setProperty('--gradient-header',  `linear-gradient(135deg, #0d0d0d 0%, #0d0d0d 50%, #0d0d0d 100%)`);
-    const bName = cfg.brandName     || 'Cristian Sanchez Propiedades';
+    const bName = cfg.brandName     || 'GestAlquiler';
     const bSub  = cfg.brandSubtitle || 'Administración de Alquileres';
     document.querySelectorAll('.gs-logo-name, .app-hdr-name').forEach(el => { el.textContent = bName; });
     document.querySelectorAll('.gs-logo-sub, .app-hdr-sub').forEach(el  => { el.textContent = bSub; });
@@ -273,7 +273,7 @@ const GestShared = (function () {
     const userEmail = (typeof SupabaseDB !== 'undefined' && SupabaseDB.getUserEmail) ? SupabaseDB.getUserEmail().split('@')[0] : '';
     const logoutBtn = `<div style="display:flex;align-items:center;gap:.4rem;padding-left:.5rem;border-left:1px solid rgba(255,255,255,.1)">${userEmail ? `<span style="font-size:.68rem;color:#717171">${userEmail}</span>` : ''}<button onclick="typeof SupabaseDB!=='undefined'&&SupabaseDB.logout()" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#ef4444;border-radius:6px;padding:.22rem .55rem;font-size:.68rem;cursor:pointer;font-family:inherit" title="Cerrar sesión">Salir</button></div>`;
     const cfg     = getConfig();
-    const bName    = cfg.brandName     || 'Cristian Sanchez Propiedades';
+    const bName    = cfg.brandName     || 'GestAlquiler';
     const bSub     = cfg.brandSubtitle || 'Administración de Alquileres';
     const logoHtml = cfg.brandLogo
       ? `<img src="${cfg.brandLogo}" alt="${bName}" style="width:100%;height:100%;object-fit:contain;border-radius:7px">`
@@ -284,12 +284,42 @@ const GestShared = (function () {
     hdr.className = 'gs-hdr'; hdr.innerHTML = html;
   }
 
+  // ─── BOTÓN FLOTANTE DE SOPORTE ─────────────────────────────────────────────
+  function initSupportButton() {
+    // No mostrar en login ni en superadmin
+    const page = window.location.pathname;
+    if (page.includes('login') || page.includes('superadmin')) return;
+    // Evitar duplicados
+    if (document.getElementById('gs-support-btn')) return;
+
+    const btn = document.createElement('a');
+    btn.id   = 'gs-support-btn';
+    btn.href = `https://wa.me/${_waNum}?text=${encodeURIComponent('Hola, necesito ayuda con GestAlquiler')}`;
+    btn.target = '_blank';
+    btn.rel    = 'noopener noreferrer';
+    btn.title  = 'Soporte por WhatsApp';
+    btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.132.558 4.13 1.532 5.862L.057 23.486a.5.5 0 0 0 .611.612l5.76-1.51A11.945 11.945 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.907 0-3.693-.5-5.24-1.375l-.378-.217-3.917 1.027 1.003-3.79-.232-.389A9.946 9.946 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg><span>¿Ayuda?</span>`;
+    Object.assign(btn.style, {
+      position: 'fixed', bottom: '20px', right: '20px', zIndex: '9999',
+      display: 'flex', alignItems: 'center', gap: '7px',
+      background: '#25d366', color: '#fff',
+      padding: '10px 16px', borderRadius: '50px',
+      textDecoration: 'none', fontFamily: 'inherit',
+      fontSize: '13px', fontWeight: '600',
+      boxShadow: '0 4px 16px rgba(37,211,102,0.45)',
+      transition: 'transform .18s, box-shadow .18s',
+    });
+    btn.onmouseenter = () => { btn.style.transform = 'translateY(-2px)'; btn.style.boxShadow = '0 6px 22px rgba(37,211,102,0.55)'; };
+    btn.onmouseleave = () => { btn.style.transform = ''; btn.style.boxShadow = '0 4px 16px rgba(37,211,102,0.45)'; };
+    document.body.appendChild(btn);
+  }
+
   return {
     getConfig, saveConfig, syncConfigFromSupabase, DEFAULTS,
     getVendedores, saveVendedores, getNextVendedor,
     applyFontSize, changeFontSize,
     esc, waLink, waSpan,
-    applyBranding, initHeader, setIntervalJitter, checkTrial,
+    applyBranding, initHeader, setIntervalJitter, checkTrial, initSupportButton,
     getToken:       () => '',
     setToken:       () => {},
     getServerUrl:   () => '',
@@ -308,6 +338,7 @@ window.changeFontSize = GestShared.changeFontSize.bind(GestShared);
         GestShared.applyBranding();
         window.dispatchEvent(new CustomEvent('gs:config-synced'));
         GestShared.checkTrial();
+        GestShared.initSupportButton();
       } catch(e) { console.warn('[GestShared] auto-sync:', e); }
     })();
   } else {

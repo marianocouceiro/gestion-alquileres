@@ -1140,18 +1140,18 @@ function printContract(c) {
     </div>
     <div style="margin-bottom:5pt">
         <div class="lbl">Dirección del inmueble</div>
-        <div style="font-size:12pt;font-weight:bold">${escapeHTML(c.address)}</div>
+        <div style="font-size:12pt;font-weight:bold">${c.address}</div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:6pt;margin-bottom:5pt">
         <div>
             <div class="lbl">Locador (propietario)</div>
             <div class="val">${c.owner || '—'}</div>
-            ${c.ownerPhone ? `<div style="font-size:7.5pt;color:#555">${escapeHTML(c.ownerPhone)}</div>` : ''}
+            ${c.ownerPhone ? `<div style="font-size:7.5pt;color:#555">${c.ownerPhone}</div>` : ''}
         </div>
         <div>
             <div class="lbl">Locatario (inquilino)</div>
             <div class="val">${c.tenant || '—'}</div>
-            ${c.tenantPhone ? `<div style="font-size:7.5pt;color:#555">${escapeHTML(c.tenantPhone)}</div>` : ''}
+            ${c.tenantPhone ? `<div style="font-size:7.5pt;color:#555">${c.tenantPhone}</div>` : ''}
         </div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:5pt;margin-bottom:5pt;border-top:0.5pt solid #ccc;border-bottom:0.5pt solid #ccc;padding:4pt 0">
@@ -1362,8 +1362,8 @@ async function createRow(c) {
         ? `${esc(c.tenant)}<br><span style="font-size:0.75em">${(typeof GestShared!=='undefined'?GestShared.waSpan(c.tenantPhone):'📱 '+esc(c.tenantPhone))}</span>`
         : esc(c.tenant);
     const ownerHtml = c.ownerPhone
-        ? `${esc(c.owner)}<br><span style="font-size:0.75em">${GestShared.waSpan(c.ownerPhone)}</span>`
-        : esc(c.owner);
+        ? `${c.owner}<br><span style="font-size:0.75em">${GestShared.waSpan(c.ownerPhone)}</span>`
+        : c.owner;
 
     // ── Estado de actualización ──
     const needsUpdate = nu && nu.daysUntil <= ALERT_DAYS && !isExpired(c);
@@ -1434,7 +1434,7 @@ async function createRow(c) {
 
     tr.innerHTML = `
         <td class="td-address">
-            <span class="address-text" title="${esc(c.address)}">${esc(c.address)}</span>
+            <span class="address-text" title="${c.address}">${c.address}</span>
             <span class="address-detail">${c.duration}m · c/${c.updateFrequency}m · ${c.indexType}${c.indexType === 'FIJO' ? ' ' + c.fixedPercent + '%' : ''}${prorrogasInfo}</span>
         </td>
         <td class="td-person">${tenantHtml}</td>
@@ -1620,7 +1620,9 @@ function openModal(editId = null) {
     $('#nroLuz').value = ''; $('#nroGas').value = '';
     $('#pagaAbl').checked = false; $('#pagaAysa').checked = false;
     $('#pagaLuz').checked = false; $('#pagaGas').checked = false; $('#pagaExpensas').checked = false;
-    $('#moraRate').value = '2';
+    const _cfg = (typeof GestShared!=='undefined') ? GestShared.getConfig() : {};
+    $('#moraRate').value = _cfg.moraRateDefault != null ? _cfg.moraRateDefault : '2';
+    $('#adminFee').value = _cfg.adminFeeDefault != null ? _cfg.adminFeeDefault : '';
     $('#acuerdoMonto').value = ''; $('#acuerdoFecha').value = ''; $('#acuerdoIndice').value = '';
 
     if (editId) {
@@ -1873,9 +1875,9 @@ async function openDetail(id) {
     const msg = genMsg(c, ui, ca.amount);
 
     db.innerHTML = `<div class="detail-grid">
-        <div class="detail-item full-width"><div class="detail-label">Dirección</div><div class="detail-value">${esc(c.address)}</div></div>
-        <div class="detail-item"><div class="detail-label">Inquilino</div><div class="detail-value">${esc(c.tenant)}${c.tenantPhone ? `<br><span style="font-size:0.82rem;color:#4f8ef7">📱 ${esc(c.tenantPhone)}</span>` : ''}</div></div>
-        <div class="detail-item"><div class="detail-label">Propietario</div><div class="detail-value">${esc(c.owner)}${c.ownerPhone?`<br>${(typeof GestShared!=='undefined'?GestShared.waSpan(c.ownerPhone,c.ownerPhone):'📱 '+c.ownerPhone)}`:''}${c.tenantPhone?`<br><span style="font-size:.75em;color:var(--text-muted,#888)">Inquilino:</span> ${(typeof GestShared!=='undefined'?GestShared.waSpan(c.tenantPhone,c.tenantPhone):'📱 '+c.tenantPhone)}`:''}</div></div>
+        <div class="detail-item full-width"><div class="detail-label">Dirección</div><div class="detail-value">${c.address}</div></div>
+        <div class="detail-item"><div class="detail-label">Inquilino</div><div class="detail-value">${c.tenant}${c.tenantPhone ? `<br><span style="font-size:0.82rem;color:#4f8ef7">📱 ${c.tenantPhone}</span>` : ''}</div></div>
+        <div class="detail-item"><div class="detail-label">Propietario</div><div class="detail-value">${c.owner}${c.ownerPhone?`<br>${(typeof GestShared!=='undefined'?GestShared.waSpan(c.ownerPhone,c.ownerPhone):'📱 '+c.ownerPhone)}`:''}${c.tenantPhone?`<br><span style="font-size:.75em;color:var(--text-muted,#888)">Inquilino:</span> ${(typeof GestShared!=='undefined'?GestShared.waSpan(c.tenantPhone,c.tenantPhone):'📱 '+c.tenantPhone)}`:''}</div></div>
         <div class="detail-item"><div class="detail-label">Inicio</div><div class="detail-value">${formatDate(c.startDate)}</div></div>
         <div class="detail-item"><div class="detail-label">Fin</div><div class="detail-value">${formatDate(ed)}${exp ? ' (Finalizado)' : ''}</div></div>
         <div class="detail-item"><div class="detail-label">Monto Inicial</div><div class="detail-value">${formatCurrency(c.initialAmount)}</div></div>
@@ -1887,7 +1889,7 @@ async function openDetail(id) {
         ${nu ? `<div class="detail-item"><div class="detail-label">Próxima Actualización</div><div class="detail-value">${formatDateLong(nu.date)} (${nu.daysUntil < 0 ? 'hace ' + Math.abs(nu.daysUntil) + ' días' : nu.daysUntil === 0 ? 'hoy' : 'en ' + nu.daysUntil + ' días'})</div></div>
         <div class="detail-item"><div class="detail-label">Monto Próximo Período</div><div class="detail-value large">${na ? formatCurrency(na.amount) : '—'}</div></div>` : ''}
         ${depositSection}
-        ${c.notes ? `<div class="detail-item full-width"><div class="detail-label">Notas</div><div class="detail-value" style="font-weight:400;font-size:0.85rem;color:var(--text-secondary)">${escapeHTML(c.notes)}</div></div>` : ''}
+        ${c.notes ? `<div class="detail-item full-width"><div class="detail-label">Notas</div><div class="detail-value" style="font-weight:400;font-size:0.85rem;color:var(--text-secondary)">${c.notes}</div></div>` : ''}
     </div>
     <div class="whatsapp-section"><h3>💬 Texto para WhatsApp</h3>
         <div class="whatsapp-card">
@@ -2204,13 +2206,13 @@ function openRenovarModal(contractId) {
     m.innerHTML = `
         <div style="background:#1c1c1c;border:1px solid rgba(255,255,255,.1);border-radius:16px;width:100%;max-width:540px;max-height:92vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.6)">
             <div style="padding:1rem 1.5rem;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#0d0d0d,#1a1206);border-radius:16px 16px 0 0;position:sticky;top:0;z-index:10">
-                <h2 style="font-size:.95rem;font-weight:700;color:#fff">♻️ Renovar contrato — ${esc(c.address)}</h2>
+                <h2 style="font-size:.95rem;font-weight:700;color:#fff">♻️ Renovar contrato — ${c.address}</h2>
                 <button onclick="document.getElementById('renovarModal').remove()" style="background:none;border:none;color:#717171;font-size:1.4rem;cursor:pointer;line-height:1">&times;</button>
             </div>
             <div style="padding:1.25rem 1.5rem">
 
                 <div style="font-size:.82rem;color:#b0b0b0;margin-bottom:1rem">
-                    Contrato actual: <strong style="color:#fff">${esc(c.tenant)}</strong> desde ${esc(c.startDate)} — ${c.duration} meses
+                    Contrato actual: <strong style="color:#fff">${c.tenant}</strong> desde ${c.startDate} — ${c.duration} meses
                 </div>
 
                 <!-- Tipo de renovación -->

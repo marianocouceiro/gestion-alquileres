@@ -47,7 +47,7 @@ const GestShared = (function () {
       const toSave = {};
       const KEYS = ['diasFinContrato','diasActualizacion','diasAlertaTasacion1',
                     'diasAlertaTasacion2','moraRateDefault','adminFeeDefault',
-                    'aliasInmo','vendedores','vendedoresIdx','diasExpiracionComprador',
+                    'aliasInmo','emailInmo','vendedores','vendedoresIdx','diasExpiracionComprador',
                     'aniosRetencionVisitas',
                     'brandName','brandSubtitle','brandColor','brandLogo'];
       KEYS.forEach(k => { if (cfg[k] !== undefined) toSave[k] = cfg[k]; });

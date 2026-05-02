@@ -215,7 +215,7 @@ const GestShared = (function () {
                 Tu demo de GestAlquiler ha expirado.<br>
                 Contactanos para continuar usando el sistema.
               </p>
-              <a href="https://wa.me/5491155144896" target="_blank"
+              <a href="https://wa.me/1161381046" target="_blank"
                 style="display:inline-block;background:linear-gradient(135deg,#f57c00,#ff9800);color:#fff;text-decoration:none;padding:.75rem 1.5rem;border-radius:10px;font-weight:600;font-size:.9rem">
                 📱 Contactar por WhatsApp
               </a>

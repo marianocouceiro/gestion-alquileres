@@ -43,13 +43,11 @@
     .msg{font-size:.75rem;margin-top:.5rem;padding:.4rem .7rem;border-radius:6px}
     .msg-ok{background:rgba(16,185,129,.1);color:var(--ok)}
     .msg-err{background:rgba(239,68,68,.1);color:var(--danger)}
-    /* Org list */
     .org-item{background:var(--bg3);border:0.5px solid var(--border);border-radius:10px;padding:.9rem 1rem;margin-bottom:.6rem;cursor:pointer;transition:border var(--tr)}
     .org-item:hover,.org-item.active{border-color:var(--acc)}
     .org-item.active{background:var(--soft)}
     .org-name{font-size:.9rem;font-weight:600}
     .org-meta{font-size:.72rem;color:var(--muted);margin-top:.2rem}
-    /* User table */
     table{width:100%;border-collapse:collapse;font-size:.8rem}
     th{text-align:left;font-size:.7rem;font-weight:500;color:var(--muted);padding:.5rem .7rem;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.4px}
     td{padding:.6rem .7rem;border-bottom:0.5px solid var(--border);vertical-align:middle}
@@ -62,24 +60,27 @@
     .empty{text-align:center;color:var(--muted);padding:2rem;font-size:.82rem}
     .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
     .divider{height:1px;background:var(--border);margin:1.2rem 0}
-    /* Modal */
     .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center}
     .modal-bg.open{display:flex}
     .modal{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--rad);padding:1.6rem;width:420px;max-width:95vw}
     .modal h3{font-size:1rem;font-weight:600;margin-bottom:1.2rem}
     .modal-btns{display:flex;gap:.6rem;margin-top:1.2rem;justify-content:flex-end}
-    /* Login check */
     #loginWall{display:none;position:fixed;inset:0;background:var(--bg);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:1rem}
     #loginWall h2{color:var(--danger)}
     #loginWall p{color:var(--muted);font-size:.85rem}
     .loading{color:var(--muted);font-size:.85rem;padding:1rem}
     .spin{display:inline-block;animation:spin 1s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
+    /* Mi config superadmin */
+    .sa-config{background:rgba(245,124,0,.06);border:1px solid rgba(245,124,0,.2);border-radius:10px;padding:.85rem 1.1rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+    .sa-config label{font-size:.72rem;color:var(--muted);white-space:nowrap}
+    .sa-config input{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:.4rem .7rem;color:var(--txt);font-size:.82rem;outline:none;width:200px;transition:border var(--tr)}
+    .sa-config input:focus{border-color:var(--acc)}
+    .sa-config .hint{font-size:.7rem;color:var(--muted)}
   </style>
 </head>
 <body>
 
-<!-- Muro de acceso denegado -->
 <div id="loginWall" style="display:flex">
   <div style="text-align:center">
     <div style="font-size:3rem;margin-bottom:1rem">🔐</div>
@@ -89,9 +90,8 @@
   </div>
 </div>
 
-<!-- Contenido principal -->
 <div id="app" style="display:none;max-width:1100px;margin:0 auto">
-  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:2rem">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1rem">
     <div>
       <div style="display:flex;align-items:center;gap:.7rem;margin-bottom:.3rem">
         <h1>🏢 GestAlquiler — Panel Superadmin</h1>
@@ -105,8 +105,20 @@
     </div>
   </div>
 
+  <!-- Mi configuración: número de WhatsApp de contacto -->
+  <div class="sa-config">
+    <div>
+      <label>📱 Mi WhatsApp de contacto</label>
+      <div class="hint">Las inmobiliarias con trial vencido ven este número para comunicarse con vos</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+      <input type="text" id="saWaNum" placeholder="Ej: 5491161381046" maxlength="20">
+      <button class="btn btn-prim" onclick="saveMyWa()" id="btnSaveWa">💾 Guardar</button>
+      <span id="msgSaveWa" style="font-size:.72rem"></span>
+    </div>
+  </div>
+
   <div class="grid">
-    <!-- Columna izquierda: orgs -->
     <div>
       <div class="card">
         <h2>📋 Inmobiliarias</h2>
@@ -115,8 +127,6 @@
         <button class="btn btn-prim" style="width:100%" onclick="openNewOrg()">＋ Nueva inmobiliaria</button>
       </div>
     </div>
-
-    <!-- Columna derecha: detalle org seleccionada -->
     <div id="orgDetail">
       <div class="card" style="text-align:center;color:var(--muted);padding:3rem">
         <div style="font-size:2.5rem;margin-bottom:.8rem">👈</div>
@@ -184,16 +194,19 @@
 <script>
 'use strict';
 
-const SB_URL   = 'https://ratkgsxlqjjhjcclpcee.supabase.co';
-const SB_KEY   = 'sb_publishable_frPLdQ7k0nOOP5JsULLU-g_XEPjc1Bv';
-const FN_URL   = `${SB_URL}/functions/v1/gestalquiler-admin`;
+const SB_URL = 'https://ratkgsxlqjjhjcclpcee.supabase.co';
+const SB_KEY = 'sb_publishable_frPLdQ7k0nOOP5JsULLU-g_XEPjc1Bv';
+const FN_URL = `${SB_URL}/functions/v1/gestalquiler-admin`;
 
-let _token     = '';
+// ID de tu org (Couceiro Propiedades) — donde guardamos la config global del superadmin
+const SUPERADMIN_ORG_ID = '67a9d9d2-b0b8-43a7-998d-4a5064136cce';
+
+let _token = '';
 let _selectedOrg = null;
 let _resetUserId = '';
 
-// ── Helpers ───────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
+
 function toast(msg, ok=true) {
   const d = document.createElement('div');
   d.style.cssText = `position:fixed;bottom:1.2rem;right:1.2rem;background:${ok?'var(--ok)':'var(--danger)'};color:#fff;padding:.6rem 1.1rem;border-radius:8px;font-size:.82rem;z-index:999;font-weight:500`;
@@ -201,6 +214,7 @@ function toast(msg, ok=true) {
   document.body.appendChild(d);
   setTimeout(() => d.remove(), 3500);
 }
+
 function setMsg(id, msg, ok=true) {
   const el = $(id);
   el.className = 'msg ' + (ok ? 'msg-ok' : 'msg-err');
@@ -213,20 +227,14 @@ async function init() {
   try {
     const session = JSON.parse(localStorage.getItem('ga_session') || '{}');
     if (!session.access_token) throw new Error('no_session');
-
-    // Verificar que el token no expiró
     if (session.expires_at && session.expires_at < Date.now()/1000 + 30) throw new Error('expired');
-
     _token = session.access_token;
-
-    // Verificar superadmin en el JWT
     const payload = JSON.parse(atob(_token.split('.')[1]));
     if (!payload?.app_metadata?.superadmin) throw new Error('not_superadmin');
-
     $('adminEmail').textContent = session.user_email || payload.email || '';
     $('loginWall').style.display = 'none';
     $('app').style.display = 'block';
-
+    loadMyWa();
     loadOrgs();
   } catch(e) {
     $('loginWall').style.display = 'flex';
@@ -240,7 +248,49 @@ async function init() {
   }
 }
 
-// ── Llamadas a Edge Function ──────────────────────────────────
+// ── Mi WhatsApp de contacto ───────────────────────────────────
+// Se guarda en la tabla config de tu propia org con clave 'superadmin_wa'
+// checkTrial() en shared.js lo lee via una query pública (sin RLS) para mostrarlo
+// en la pantalla de trial vencido de cualquier inmobiliaria cliente.
+
+async function loadMyWa() {
+  try {
+    // Leer directo de Supabase con service role via Edge Function
+    const r = await callFn({ action: 'get_superadmin_config' });
+    if (r.ok && r.wa_num) {
+      $('saWaNum').value = r.wa_num;
+    }
+  } catch(e) {
+    // Silencioso — el campo queda vacío
+  }
+}
+
+async function saveMyWa() {
+  const num = $('saWaNum').value.trim().replace(/\D/g, '');
+  if (!num || num.length < 8) {
+    $('msgSaveWa').textContent = 'Ingresá un número válido';
+    $('msgSaveWa').style.color = 'var(--danger)';
+    return;
+  }
+  const btn = $('btnSaveWa');
+  btn.disabled = true;
+  $('msgSaveWa').textContent = 'Guardando…';
+  $('msgSaveWa').style.color = 'var(--muted)';
+  try {
+    await callFn({ action: 'save_superadmin_config', wa_num: num });
+    $('saWaNum').value = num;
+    $('msgSaveWa').textContent = '✓ Guardado';
+    $('msgSaveWa').style.color = 'var(--ok)';
+    setTimeout(() => { $('msgSaveWa').textContent = ''; }, 3000);
+  } catch(e) {
+    $('msgSaveWa').textContent = '✕ ' + e.message;
+    $('msgSaveWa').style.color = 'var(--danger)';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ── Edge Function ─────────────────────────────────────────────
 async function callFn(body) {
   const r = await fetch(FN_URL, {
     method: 'POST',
@@ -262,7 +312,6 @@ async function loadOrgs() {
   try {
     const { orgs } = await callFn({ action: 'list_orgs' });
     renderOrgList(orgs);
-    // Refrescar detalle si hay una org seleccionada
     if (_selectedOrg) {
       const fresh = orgs.find(o => o.id === _selectedOrg.id);
       if (fresh) { _selectedOrg = fresh; loadOrgUsers(fresh); }
@@ -296,7 +345,6 @@ function renderOrgList(orgs) {
 
 function selectOrg(org) {
   _selectedOrg = org;
-  // Actualizar estilos
   document.querySelectorAll('.org-item').forEach(el => el.classList.remove('active'));
   event.currentTarget.classList.add('active');
   loadOrgUsers(org);
@@ -314,7 +362,7 @@ async function loadOrgUsers(org) {
         </div>
         <div style="display:flex;gap:.5rem;flex-wrap:wrap">
           <button class="btn btn-sec" onclick="startTrial('${org.id}')">🕐 Demo 5 días</button>
-          <button class="btn btn-ok"  onclick="activateOrg('${org.id}')">✓ Activar sin límite</button>
+          <button class="btn btn-sec" style="color:var(--ok);border-color:rgba(16,185,129,.3)" onclick="activateOrg('${org.id}')">✓ Activar sin límite</button>
           <button class="btn btn-${org.active ? 'danger' : 'sec'}" onclick="toggleOrg('${org.id}',${!org.active})">
             ${org.active ? '⏸ Suspender' : '▶ Activar'}
           </button>
@@ -322,7 +370,6 @@ async function loadOrgUsers(org) {
         </div>
       </div>
 
-      <!-- Datos de la inmobiliaria -->
       <div style="background:var(--bg2);border-radius:10px;padding:1rem;margin-bottom:1rem">
         <div style="font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.75rem">Datos de la inmobiliaria</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:.65rem">
@@ -364,11 +411,7 @@ function renderUserTable(users) {
   }
   $('userTableWrap').innerHTML = `
     <table>
-      <thead>
-        <tr>
-          <th>Email</th><th>Rol</th><th>Último acceso</th><th>Acciones</th>
-        </tr>
-      </thead>
+      <thead><tr><th>Email</th><th>Rol</th><th>Último acceso</th><th>Acciones</th></tr></thead>
       <tbody>
         ${users.map(u => `
           <tr>
@@ -387,41 +430,74 @@ function renderUserTable(users) {
               <button class="btn btn-danger" style="font-size:.72rem;padding:.3rem .6rem;margin-left:.3rem"
                 onclick="deleteUser('${u.id}','${u.email}')">✕</button>
             </td>
-          </tr>
-        `).join('')}
+          </tr>`).join('')}
       </tbody>
     </table>`;
 }
 
-// ── Crear org ─────────────────────────────────────────────────
-function openNewOrg() {
-  $('newOrgName').value = ''; $('newOrgSlug').value = ''; clearMsg('msgOrg');
-  $('modalOrg').classList.add('open');
-  setTimeout(() => $('newOrgName').focus(), 100);
+// ── Trial ─────────────────────────────────────────────────────
+function getTrialDaysLeft(org) {
+  if (!org.trial_ends_at) return null;
+  return Math.ceil((new Date(org.trial_ends_at) - new Date()) / 864e5);
 }
 
-async function createOrg() {
-  const name = $('newOrgName').value.trim();
-  const slug = $('newOrgSlug').value.trim() ||
-    name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+function getTrialBadge(org) {
+  if (!org.trial_ends_at) return '';
+  const days = getTrialDaysLeft(org);
+  if (days > 0) return `<span class="badge" style="background:rgba(245,158,11,.15);color:#f59e0b">🕐 Demo: ${days}d</span>`;
+  return `<span class="badge badge-off">⛔ Demo vencida</span>`;
+}
 
-  if (!name) { setMsg('msgOrg', 'El nombre es obligatorio.', false); return; }
-
-  const btn = $('btnCreateOrg');
-  btn.disabled = true; btn.textContent = '⏳ Creando…'; clearMsg('msgOrg');
+async function startTrial(org_id) {
+  if (!confirm('¿Iniciar demo de 5 días para esta inmobiliaria?')) return;
+  const ends = new Date(); ends.setDate(ends.getDate() + 5);
   try {
-    await callFn({ action: 'create_org', name, slug });
-    toast('✓ Inmobiliaria creada');
-    closeModal('modalOrg');
-    loadOrgs();
+    await callFn({ action: 'update_org_data', org_id, trial_ends_at: ends.toISOString(), active: true });
+    toast('✓ Demo activada por 5 días');
+    await loadOrgs();
+  } catch(e) { toast(e.message, false); }
+}
+
+async function activateOrg(org_id) {
+  if (!confirm('¿Activar sin límite de tiempo?')) return;
+  try {
+    await callFn({ action: 'update_org_data', org_id, trial_ends_at: null, active: true });
+    toast('✓ Inmobiliaria activada sin límite');
+    await loadOrgs();
+  } catch(e) { toast(e.message, false); }
+}
+
+async function saveOrgData(org_id) {
+  const msgEl = $('msgOrgData');
+  if (msgEl) msgEl.textContent = 'Guardando…';
+  const data = {
+    contact_name: $('fi_contact')?.value?.trim() || null,
+    phone:        $('fi_phone')?.value?.trim()   || null,
+    email:        $('fi_email')?.value?.trim()   || null,
+    address:      $('fi_address')?.value?.trim() || null,
+  };
+  try {
+    await callFn({ action: 'update_org_data', org_id, ...data });
+    Object.assign(_selectedOrg, data);
+    if (msgEl) { msgEl.textContent = '✓ Guardado'; msgEl.style.color = 'var(--ok)'; }
+    await loadOrgs();
   } catch(e) {
-    setMsg('msgOrg', e.message, false);
-  } finally {
-    btn.disabled = false; btn.textContent = 'Crear inmobiliaria';
+    if (msgEl) { msgEl.textContent = '✕ ' + e.message; msgEl.style.color = 'var(--danger)'; }
   }
 }
 
-// ── Crear usuario ─────────────────────────────────────────────
+async function toggleOrg(org_id, active) {
+  if (!confirm(`¿Querés ${active ? 'activar' : 'suspender'} esta inmobiliaria?`)) return;
+  try {
+    await callFn({ action: 'toggle_org', org_id, active });
+    toast(`✓ Inmobiliaria ${active ? 'activada' : 'suspendida'}`);
+    _selectedOrg.active = active;
+    loadOrgs();
+    loadOrgUsers(_selectedOrg);
+  } catch(e) { toast(e.message, false); }
+}
+
+// ── Usuarios ──────────────────────────────────────────────────
 function openNewUser() {
   if (!_selectedOrg) return;
   $('newUserEmail').value = ''; $('newUserPass').value = '';
@@ -437,10 +513,8 @@ async function createUser() {
   const password = $('newUserPass').value;
   const name     = $('newUserName').value.trim();
   const role     = $('newUserRole').value;
-
   if (!email || !password) { setMsg('msgUser', 'Email y contraseña son obligatorios.', false); return; }
   if (password.length < 8) { setMsg('msgUser', 'La contraseña debe tener al menos 8 caracteres.', false); return; }
-
   const btn = $('btnCreateUser');
   btn.disabled = true; btn.textContent = '⏳ Creando…'; clearMsg('msgUser');
   try {
@@ -455,80 +529,31 @@ async function createUser() {
   }
 }
 
-// ── Toggle org ────────────────────────────────────────────────
-// ── Trial helpers ─────────────────────────────────────────────
-function getTrialDaysLeft(org) {
-  if (!org.trial_ends_at) return null;
-  const diff = new Date(org.trial_ends_at) - new Date();
-  return Math.ceil(diff / 864e5);
+function openNewOrg() {
+  $('newOrgName').value = ''; $('newOrgSlug').value = ''; clearMsg('msgOrg');
+  $('modalOrg').classList.add('open');
+  setTimeout(() => $('newOrgName').focus(), 100);
 }
 
-function getTrialBadge(org) {
-  if (!org.trial_ends_at) return '';
-  const days = getTrialDaysLeft(org);
-  if (days > 0) return `<span class="badge" style="background:rgba(245,158,11,.15);color:#f59e0b">🕐 Demo: ${days}d</span>`;
-  return `<span class="badge badge-off">⛔ Demo vencida</span>`;
-}
-
-async function startTrial(org_id) {
-  if (!confirm('¿Iniciar demo de 5 días para esta inmobiliaria?')) return;
-  const ends = new Date(); ends.setDate(ends.getDate() + 5);
+async function createOrg() {
+  const name = $('newOrgName').value.trim();
+  const slug = $('newOrgSlug').value.trim() ||
+    name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  if (!name) { setMsg('msgOrg', 'El nombre es obligatorio.', false); return; }
+  const btn = $('btnCreateOrg');
+  btn.disabled = true; btn.textContent = '⏳ Creando…'; clearMsg('msgOrg');
   try {
-    const r = await callFn({ action: 'update_org_data', org_id, trial_ends_at: ends.toISOString(), active: true });
-    if (r.error) { showMsg('msgOrgs', '✕ ' + r.error, 'error'); }
-    else { showMsg('msgOrgs', '✓ Demo activada por 5 días', 'ok'); await loadOrgs(); }
-  } catch(e) { showMsg('msgOrgs', '✕ ' + e.message, 'error'); }
-}
-
-async function activateOrg(org_id) {
-  if (!confirm('¿Activar sin límite de tiempo?')) return;
-  try {
-    const r = await callFn({ action: 'update_org_data', org_id, trial_ends_at: null, active: true });
-    if (r.error) { showMsg('msgOrgs', '✕ ' + r.error, 'error'); }
-    else { showMsg('msgOrgs', '✓ Inmobiliaria activada sin límite', 'ok'); await loadOrgs(); }
-  } catch(e) { showMsg('msgOrgs', '✕ ' + e.message, 'error'); }
-}
-
-async function saveOrgData(org_id) {
-  const msgEl = $('msgOrgData');
-  if (msgEl) msgEl.textContent = 'Guardando…';
-  const data = {
-    contact_name: $('fi_contact')?.value?.trim() || null,
-    phone:        $('fi_phone')?.value?.trim()   || null,
-    email:        $('fi_email')?.value?.trim()   || null,
-    address:      $('fi_address')?.value?.trim() || null,
-  };
-  try {
-    const r = await callFn({ action: 'update_org_data', org_id, ...data });
-    if (r.error) {
-      if (msgEl) { msgEl.textContent = '✕ ' + r.error; msgEl.style.color = 'var(--danger)'; }
-    } else {
-      // Actualizar _selectedOrg con los nuevos datos
-      Object.assign(_selectedOrg, data);
-      if (msgEl) { msgEl.textContent = '✓ Guardado'; msgEl.style.color = 'var(--ok)'; }
-      // Recargar lista de orgs para reflejar cambios
-      await loadOrgs();
-    }
-  } catch(e) {
-    if (msgEl) { msgEl.textContent = '✕ ' + e.message; msgEl.style.color = 'var(--danger)'; }
-  }
-}
-
-async function toggleOrg(org_id, active) {
-  const label = active ? 'activar' : 'suspender';
-  if (!confirm(`¿Querés ${label} esta inmobiliaria?`)) return;
-  try {
-    await callFn({ action: 'toggle_org', org_id, active });
-    toast(`✓ Inmobiliaria ${active ? 'activada' : 'suspendida'}`);
-    _selectedOrg.active = active;
+    await callFn({ action: 'create_org', name, slug });
+    toast('✓ Inmobiliaria creada');
+    closeModal('modalOrg');
     loadOrgs();
-    loadOrgUsers(_selectedOrg);
   } catch(e) {
-    toast(e.message, false);
+    setMsg('msgOrg', e.message, false);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Crear inmobiliaria';
   }
 }
 
-// ── Reset contraseña ──────────────────────────────────────────
 function openResetPassword(userId, email) {
   _resetUserId = userId;
   $('resetUserLabel').textContent = `Usuario: ${email}`;
@@ -553,19 +578,13 @@ async function doResetPassword() {
   }
 }
 
-// ── Eliminar usuario ──────────────────────────────────────────
 async function changeRole(userId, email, newRole) {
   if (!confirm(`¿Cambiar el rol de ${email} a "${newRole}"?`)) return;
-  loading(true, 'Cambiando rol…');
   try {
-    const r = await callFn({ action: 'change_role', user_id: userId, role: newRole, org_id: _selectedOrg.id });
-    if (r.error) { showMsg('msgUsers', '✕ ' + r.error, 'error'); }
-    else {
-      showMsg('msgUsers', `✓ Rol de ${email} cambiado a ${newRole}`, 'ok');
-      await loadUsers(_selectedOrg);
-    }
-  } catch(e) { showMsg('msgUsers', '✕ ' + e.message, 'error'); }
-  finally { loading(false); }
+    await callFn({ action: 'change_role', user_id: userId, role: newRole, org_id: _selectedOrg.id });
+    toast(`✓ Rol de ${email} cambiado a ${newRole}`);
+    loadOrgUsers(_selectedOrg);
+  } catch(e) { toast(e.message, false); }
 }
 
 async function deleteUser(userId, email) {
@@ -574,16 +593,14 @@ async function deleteUser(userId, email) {
     await callFn({ action: 'delete_user', user_id: userId });
     toast('✓ Usuario eliminado');
     loadOrgUsers(_selectedOrg);
-  } catch(e) {
-    toast(e.message, false);
-  }
+  } catch(e) { toast(e.message, false); }
 }
 
-// ── Modales ───────────────────────────────────────────────────
 function closeModal(id) { $(id).classList.remove('open'); }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.modal-bg.open').forEach(m => m.classList.remove('open')); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.modal-bg.open').forEach(m => m.classList.remove('open'));
+});
 
-// ── Auto-gen slug ─────────────────────────────────────────────
 $('newOrgName').addEventListener('input', e => {
   if (!$('newOrgSlug').value) {
     $('newOrgSlug').placeholder = e.target.value.toLowerCase()

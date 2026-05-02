@@ -182,8 +182,20 @@ const GestShared = (function () {
       if (!org.trial_ends_at) return;
       const daysLeft = Math.ceil((new Date(org.trial_ends_at) - new Date()) / 86400000);
       if (daysLeft <= 0) {
-        // TODO: leer desde superadmin_config cuando esté implementado
-        const waNum = '5491161381046';
+        // Leer número desde Edge Function (configurable en superadmin)
+        let waNum = '5491161381046'; // fallback
+        try {
+          const SB_URL = 'https://ratkgsxlqjjhjcclpcee.supabase.co';
+          const SB_KEY = 'sb_publishable_frPLdQ7k0nOOP5JsULLU-g_XEPjc1Bv';
+          const tok = (() => { try { const s = JSON.parse(localStorage.getItem('ga_session')||'{}'); return s.access_token || SB_KEY; } catch { return SB_KEY; } })();
+          const r = await fetch(`${SB_URL}/functions/v1/gestalquiler-admin`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}`, 'apikey': SB_KEY },
+            body: JSON.stringify({ action: 'get_superadmin_config' })
+          });
+          const d = await r.json();
+          if (d.ok && d.wa_num) waNum = d.wa_num;
+        } catch(e) { /* usar fallback */ }
         document.body.innerHTML = `
           <div style="min-height:100vh;background:#0d0d0d;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif">
             <div style="text-align:center;padding:2rem;max-width:420px">

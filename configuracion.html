@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cristian Sanchez Propiedades — Configuración</title>
+  <title>GestAlquiler — Configuración</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -295,11 +295,10 @@
         <label class="lbl">Alias inmobiliaria (default en WA)</label>
         <input class="inp" type="text" id="cfgAlias" placeholder="cristian.912.sapa.mp">
       </div>
-
       <div class="fl full">
-        <label class="lbl">Email de la inmobiliaria <span style="font-weight:400;color:var(--muted)">(para notificaciones automáticas)</span></label>
+        <label class="lbl">Email de la inmobiliaria</label>
         <input class="inp" type="email" id="cfgEmailInmo" placeholder="inmobiliaria@email.com">
-        <span class="hint">Recibís un resumen diario con contratos por vencer y actualizar.</span>
+
       </div>
     </div>
   </div>
@@ -307,39 +306,6 @@
   <div class="save-row">
     <span id="savingLbl" style="font-size:.75rem;color:var(--muted);display:none">💾 Guardando…</span>
     <button class="btn-prim" id="btnSave" style="padding:.5rem 1.8rem;font-size:.88rem">💾 Guardar configuración</button>
-  </div>
-
-  <!-- EmailJS config -->
-  <div class="cfg-card">
-    <div class="chdr"><span class="ico">📧</span>
-      <div><h2>Notificaciones por email</h2>
-        <p>Configurá EmailJS para recibir un resumen diario automático con contratos por vencer y actualizar</p>
-      </div>
-    </div>
-    <div style="background:rgba(55,138,221,.06);border:1px solid rgba(55,138,221,.2);border-radius:8px;padding:.7rem .9rem;font-size:.76rem;color:#b0b0b0;margin-bottom:1rem;line-height:1.7">
-      <strong style="color:#378ADD">Configuración inicial (gratis, 5 minutos):</strong><br>
-      1. Crear cuenta en <a href="https://emailjs.com" target="_blank" style="color:#378ADD">emailjs.com</a> →
-         Account → Email Services → Add New Service (Gmail o Outlook)<br>
-      2. Email Templates → Create New → agregar variables: <code>{{to_email}}</code>, <code>{{subject}}</code>, <code>{{message}}</code><br>
-      3. Copiar los tres IDs de abajo desde tu cuenta de EmailJS
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem">
-      <div class="fl">
-        <label class="lbl">Service ID</label>
-        <input class="inp" type="text" id="cfgEjsService" placeholder="service_xxxxxxx">
-      </div>
-      <div class="fl">
-        <label class="lbl">Template ID</label>
-        <input class="inp" type="text" id="cfgEjsTemplate" placeholder="template_xxxxxxx">
-      </div>
-      <div class="fl" style="grid-column:1/-1">
-        <label class="lbl">Public Key</label>
-        <input class="inp" type="text" id="cfgEjsKey" placeholder="xxxxxxxxxxxxxxxxxxxx">
-      </div>
-    </div>
-    <div class="hint" style="margin-top:.5rem">
-      Una vez configurado, el resumen se envía automáticamente la primera vez que abrís el Dashboard cada día, solo si hay alertas.
-    </div>
   </div>
 
   </div><!-- end panel-general -->
@@ -625,9 +591,7 @@ function fillFields(cfg) {
   $('cfgAdmin').value   = cfg.adminFeeDefault       ?? 5;
   $('cfgAlias').value   = cfg.aliasInmo || 'cristian.912.sapa.mp';
   if($('cfgEmailInmo')) $('cfgEmailInmo').value = cfg.emailInmo || '';
-  if($('cfgEjsService'))  $('cfgEjsService').value  = cfg.ejsServiceId  || '';
-  if($('cfgEjsTemplate')) $('cfgEjsTemplate').value = cfg.ejsTemplateId || '';
-  if($('cfgEjsKey'))      $('cfgEjsKey').value      = cfg.ejsPublicKey  || '';
+
   if($('cfgDiasExpirComp')) $('cfgDiasExpirComp').value = cfg.diasExpiracionComprador ?? 120;
   if($('cfgAniosRetencionVisitas')) $('cfgAniosRetencionVisitas').value = String(cfg.aniosRetencionVisitas ?? 10);
 }
@@ -643,9 +607,7 @@ function readFields() {
   if (p('cfgAdmin')   !== null) cfg.adminFeeDefault      = p('cfgAdmin');
   const a = $('cfgAlias').value.trim(); if (a) cfg.aliasInmo = a;
   const em = $('cfgEmailInmo') ? $('cfgEmailInmo').value.trim() : ''; if (em) cfg.emailInmo = em;
-  const esId  = $('cfgEjsService')  ? $('cfgEjsService').value.trim()  : ''; if (esId)  cfg.ejsServiceId  = esId;
-  const etId  = $('cfgEjsTemplate') ? $('cfgEjsTemplate').value.trim() : ''; if (etId)  cfg.ejsTemplateId = etId;
-  const epKey = $('cfgEjsKey')      ? $('cfgEjsKey').value.trim()      : ''; if (epKey) cfg.ejsPublicKey  = epKey;
+
   if (p('cfgDiasExpirComp') !== null) cfg.diasExpiracionComprador = p('cfgDiasExpirComp');
   const ret = $('cfgAniosRetencionVisitas') ? $('cfgAniosRetencionVisitas').value : '';
   if (ret) cfg.aniosRetencionVisitas = (ret === 'nunca' ? 'nunca' : parseInt(ret));
@@ -967,7 +929,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Sync config from Supabase
     if (cfg && Object.keys(cfg).length > 0) {
       const keys = ['diasFinContrato','diasActualizacion','diasAlertaTasacion1','diasAlertaTasacion2',
-                    'moraRateDefault','adminFeeDefault','aliasInmo','vendedores','vendedoresIdx',
+                    'moraRateDefault','adminFeeDefault','aliasInmo','emailInmo','vendedores','vendedoresIdx',
                     'diasExpiracionComprador','aniosRetencionVisitas'];
       const merged = GestShared.getConfig();
       keys.forEach(k => { if (cfg[k] !== undefined) merged[k] = cfg[k]; });

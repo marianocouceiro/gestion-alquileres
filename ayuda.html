@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ayuda — GestAlquiler</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--acc:#f57c00;--bg:#0d0d0d;--s1:#111;--s2:#181818;--brd:rgba(255,255,255,.08);--txt:#d4d4d4;--muted:#717171;--w:260px}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--txt);line-height:1.6;display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:var(--w);min-height:100vh;background:var(--s1);border-right:1px solid var(--brd);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:100;transition:transform .25s}
+.sidebar-logo{padding:1.1rem 1.2rem;border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:.6rem;text-decoration:none}
+.logo-ico{width:34px;height:34px;background:rgba(245,124,0,.15);border:1px solid rgba(245,124,0,.35);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.logo-name{font-size:.85rem;font-weight:700;color:#fff}
+.logo-sub{font-size:.65rem;color:var(--muted)}
+.search-wrap{padding:.8rem 1rem;border-bottom:1px solid var(--brd)}
+.search-inp{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--brd);border-radius:8px;padding:.45rem .75rem;font-size:.82rem;color:#fff;font-family:inherit;outline:none;transition:border-color .15s}
+.search-inp:focus{border-color:rgba(245,124,0,.5)}
+.search-inp::placeholder{color:var(--muted)}
+.nav-section{padding:.6rem 1rem .2rem;font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.nav-link{display:flex;align-items:center;gap:.5rem;padding:.42rem 1rem;font-size:.82rem;color:var(--muted);text-decoration:none;cursor:pointer;transition:background .15s,color .15s;border:none;background:none;width:100%;text-align:left}
+.nav-link:hover{background:rgba(255,255,255,.04);color:#ccc}
+.nav-link.active{background:rgba(245,124,0,.12);color:var(--acc);font-weight:600}
+.nav-link .icon{font-size:.95rem;width:18px;text-align:center}
+.sidebar-footer{margin-top:auto;padding:1rem;border-top:1px solid var(--brd)}
+.btn-app{display:block;text-align:center;background:linear-gradient(135deg,#f57c00,#ff9800);color:#fff;text-decoration:none;padding:.55rem;border-radius:8px;font-size:.8rem;font-weight:700}
+
+/* MAIN */
+.main{margin-left:var(--w);flex:1;padding:0}
+.topbar{position:sticky;top:0;z-index:50;background:var(--bg);border-bottom:1px solid var(--brd);padding:.75rem 2rem;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.topbar h1{font-size:1rem;font-weight:700;color:#fff}
+.topbar-right{display:flex;align-items:center;gap:.75rem}
+.mob-toggle{display:none;background:none;border:1px solid var(--brd);border-radius:7px;padding:.35rem .6rem;color:#ccc;cursor:pointer;font-size:.85rem}
+.content{padding:2rem 2.5rem 4rem;max-width:820px}
+
+/* SECTIONS */
+.section{display:none}
+.section.visible{display:block}
+.section-header{margin-bottom:1.8rem}
+.section-header .tag{display:inline-flex;align-items:center;gap:.4rem;background:rgba(245,124,0,.1);border:1px solid rgba(245,124,0,.25);border-radius:20px;padding:.25rem .75rem;font-size:.72rem;font-weight:700;color:var(--acc);margin-bottom:.6rem}
+.section-header h2{font-size:1.4rem;font-weight:800;color:#fff;margin-bottom:.4rem}
+.section-header p{font-size:.88rem;color:var(--muted)}
+h3{font-size:.95rem;font-weight:700;color:#fff;margin:1.8rem 0 .6rem;display:flex;align-items:center;gap:.5rem}
+h3::before{content:'';display:inline-block;width:3px;height:14px;background:var(--acc);border-radius:2px}
+p{font-size:.88rem;color:var(--txt);margin-bottom:.8rem}
+ul,ol{padding-left:1.3rem;margin-bottom:.8rem}
+li{font-size:.88rem;color:var(--txt);margin-bottom:.3rem}
+strong{color:#e8e8e8}
+
+/* CARDS */
+.card{background:var(--s1);border:1px solid var(--brd);border-radius:10px;padding:1.1rem 1.3rem;margin-bottom:.9rem}
+.card-title{font-size:.85rem;font-weight:700;color:#fff;margin-bottom:.4rem;display:flex;align-items:center;gap:.5rem}
+.card p{margin:0;font-size:.84rem;color:var(--muted)}
+.steps{counter-reset:step;display:flex;flex-direction:column;gap:.6rem;margin-bottom:1rem}
+.step{display:flex;gap:.8rem;align-items:flex-start}
+.step-num{counter-increment:step;width:24px;height:24px;border-radius:50%;background:rgba(245,124,0,.15);border:1px solid rgba(245,124,0,.35);color:var(--acc);font-size:.72rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.step-num::before{content:counter(step)}
+.step-body{font-size:.86rem;color:var(--txt);padding-top:2px}
+.step-body strong{color:#fff}
+.tip{background:rgba(245,124,0,.07);border:1px solid rgba(245,124,0,.2);border-radius:8px;padding:.75rem 1rem;margin-bottom:.9rem;font-size:.83rem;color:#c88040}
+.tip::before{content:'💡 '}
+.warn{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:.75rem 1rem;margin-bottom:.9rem;font-size:.83rem;color:#e07070}
+.warn::before{content:'⚠️ '}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem}
+.mini-card{background:var(--s2);border:1px solid var(--brd);border-radius:8px;padding:.8rem 1rem}
+.mini-card .mc-title{font-size:.78rem;font-weight:700;color:#fff;margin-bottom:.25rem}
+.mini-card p{font-size:.78rem;color:var(--muted);margin:0}
+kbd{background:#1e1e1e;border:1px solid #333;border-radius:4px;padding:1px 6px;font-size:.78rem;font-family:monospace;color:#ccc}
+.badge{display:inline-block;padding:1px 7px;border-radius:10px;font-size:.7rem;font-weight:700}
+.badge-green{background:rgba(34,197,94,.15);color:#22c55e;border:1px solid rgba(34,197,94,.25)}
+.badge-red{background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.25)}
+.badge-orange{background:rgba(245,124,0,.15);color:var(--acc);border:1px solid rgba(245,124,0,.25)}
+.badge-blue{background:rgba(59,130,246,.15);color:#60a5fa;border:1px solid rgba(59,130,246,.25)}
+table{width:100%;border-collapse:collapse;margin-bottom:1rem;font-size:.84rem}
+th{background:var(--s2);padding:.5rem .75rem;text-align:left;font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--brd)}
+td{padding:.5rem .75rem;border-bottom:1px solid rgba(255,255,255,.04);color:var(--txt)}
+tr:last-child td{border-bottom:none}
+
+/* SEARCH RESULTS */
+.no-results{text-align:center;padding:3rem 1rem;color:var(--muted);font-size:.9rem}
+
+/* MOBILE */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}
+  .mob-toggle{display:block}
+  .content{padding:1.2rem 1.2rem 3rem}
+  .grid2{grid-template-columns:1fr}
+  .topbar{padding:.75rem 1.2rem}
+  .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99}
+  .overlay.show{display:block}
+}
+</style>
+</head>
+<body>
+
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <a href="dashboard.html" class="sidebar-logo">
+    <div class="logo-ico">🏘️</div>
+    <div><div class="logo-name">GestAlquiler</div>
+         <div class="logo-sub">Centro de ayuda</div></div>
+  </a>
+
+  <div class="search-wrap">
+    <input class="search-inp" type="text" id="searchInp" placeholder="Buscar en el manual…" oninput="doSearch(this.value)">
+  </div>
+
+  <div id="navMenu">
+    <div class="nav-section">General</div>
+    <button class="nav-link active" data-sec="inicio" onclick="showSection('inicio',this)"><span class="icon">🏠</span> Primeros pasos</button>
+    <button class="nav-link" data-sec="login" onclick="showSection('login',this)"><span class="icon">🔐</span> Acceso y sesión</button>
+
+    <div class="nav-section">Módulos</div>
+    <button class="nav-link" data-sec="dashboard" onclick="showSection('dashboard',this)"><span class="icon">📊</span> Dashboard</button>
+    <button class="nav-link" data-sec="contratos" onclick="showSection('contratos',this)"><span class="icon">📄</span> Contratos</button>
+    <button class="nav-link" data-sec="administracion" onclick="showSection('administracion',this)"><span class="icon">🧾</span> Administración</button>
+    <button class="nav-link" data-sec="propiedades" onclick="showSection('propiedades',this)"><span class="icon">🏘️</span> Propiedades</button>
+    <button class="nav-link" data-sec="banco" onclick="showSection('banco',this)"><span class="icon">👤</span> Banco de compradores</button>
+    <button class="nav-link" data-sec="visitas" onclick="showSection('visitas',this)"><span class="icon">📅</span> Visitas</button>
+    <button class="nav-link" data-sec="tasaciones" onclick="showSection('tasaciones',this)"><span class="icon">📋</span> Tasaciones</button>
+    <button class="nav-link" data-sec="tareas" onclick="showSection('tareas',this)"><span class="icon">✅</span> Tareas</button>
+    <button class="nav-link" data-sec="configuracion" onclick="showSection('configuracion',this)"><span class="icon">⚙️</span> Configuración</button>
+
+    <div class="nav-section">Más</div>
+    <button class="nav-link" data-sec="indices" onclick="showSection('indices',this)"><span class="icon">📈</span> Índices ICL e IPC</button>
+    <button class="nav-link" data-sec="whatsapp" onclick="showSection('whatsapp',this)"><span class="icon">📱</span> Mensajes WhatsApp</button>
+    <button class="nav-link" data-sec="faq" onclick="showSection('faq',this)"><span class="icon">❓</span> Preguntas frecuentes</button>
+  </div>
+
+  <div class="sidebar-footer">
+    <a href="dashboard.html" class="btn-app">← Volver a la app</a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:.75rem">
+      <button class="mob-toggle" onclick="toggleSidebar()">☰</button>
+      <h1 id="topbarTitle">Primeros pasos</h1>
+    </div>
+    <div class="topbar-right">
+      <span style="font-size:.75rem;color:var(--muted)">Manual v1.0</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- INICIO -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section visible" id="sec-inicio">
+      <div class="section-header">
+        <div class="tag">🏠 Bienvenido</div>
+        <h2>Primeros pasos en GestAlquiler</h2>
+        <p>Todo lo que necesitás saber para empezar a usar el sistema desde el primer día.</p>
+      </div>
+
+      <h3>¿Qué es GestAlquiler?</h3>
+      <p>GestAlquiler es un sistema web para inmobiliarias que reemplaza las planillas de Excel. Desde acá podés gestionar contratos de alquiler, cobros, propiedades, visitas, tasaciones y más — todo en un solo lugar, desde cualquier dispositivo con internet.</p>
+
+      <h3>Lo primero que tenés que hacer</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num"></div><div class="step-body"><strong>Configurar tu inmobiliaria</strong> — andá a ⚙️ Configuración y cargá el nombre, logo y color de tu inmobiliaria. Así el sistema queda con tu marca.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body"><strong>Cargar tus propiedades</strong> — en 🏘️ Propiedades cargás las propiedades que tenés en cartera para alquilar o vender.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body"><strong>Crear tus primeros contratos</strong> — en 📄 Contratos cargás los alquileres activos con todos los datos del inquilino y propietario.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body"><strong>Registrar los pagos</strong> — en 🧾 Administración vas a llevar el control de los cobros mes a mes.</div></div>
+      </div>
+
+      <h3>Navegación</h3>
+      <p>En la parte superior de cada página encontrás el menú con todos los módulos. En el celular, el menú se abre con el botón <kbd>☰</kbd>.</p>
+      <div class="tip">Cada módulo es independiente. Podés trabajar en contratos, después pasar a visitas y volver sin perder nada.</div>
+
+      <h3>¿Qué módulo hace qué?</h3>
+      <div class="grid2">
+        <div class="mini-card"><div class="mc-title">📊 Dashboard</div><p>Resumen general: contratos activos, cobros pendientes, alertas importantes.</p></div>
+        <div class="mini-card"><div class="mc-title">📄 Contratos</div><p>Alta, baja y modificación de contratos de alquiler. Ajustes ICL/IPC.</p></div>
+        <div class="mini-card"><div class="mc-title">🧾 Administración</div><p>Registro de pagos mensuales, honorarios y mora.</p></div>
+        <div class="mini-card"><div class="mc-title">🏘️ Propiedades</div><p>Cartera de propiedades disponibles para alquiler o venta.</p></div>
+        <div class="mini-card"><div class="mc-title">👤 Banco</div><p>Base de datos de compradores interesados en propiedades.</p></div>
+        <div class="mini-card"><div class="mc-title">📅 Visitas</div><p>Agenda de visitas a propiedades con calendario semanal.</p></div>
+        <div class="mini-card"><div class="mc-title">📋 Tasaciones</div><p>Registro de tasaciones realizadas con seguimiento de estado.</p></div>
+        <div class="mini-card"><div class="mc-title">✅ Tareas</div><p>Lista de tareas pendientes del equipo de la inmobiliaria.</p></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- LOGIN -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="sec-login">
+      <div class="section-header">
+        <div class="tag">🔐 Acceso</div>
+        <h2>Acceso y sesión</h2>
+        <p>Cómo ingresar, cerrar sesión y recuperar tu contraseña.</p>
+      </div>
+
+      <h3>Iniciar sesión</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num"></div><div class="step-body">Ingresá a la URL de tu inmobiliaria en el navegador.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Escribí tu <strong>email</strong> y <strong>contraseña</strong>.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Hacé click en <strong>"Entrar"</strong> o presioná <kbd>Enter</kbd>.</div></div>
+      </div>
+      <div class="tip">El sistema recuerda tu sesión. Si cerrás el navegador y volvés a entrar, no vas a tener que loguearte de nuevo.</div>
+
+      <h3>Olvidé mi contraseña</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num"></div><div class="step-body">En la pantalla de login, hacé click en <strong>"¿Olvidaste tu contraseña?"</strong></div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Ingresá tu email y hacé click en <strong>"Enviar link"</strong>.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Revisá tu bandeja de entrada (y la carpeta de spam). Vas a recibir un email con un link para crear una nueva contraseña.</div></div>
+      </div>
+
+      <h3>Cerrar sesión</h3>
+      <p>En el menú superior, a la derecha, encontrás el botón <strong>"Salir"</strong>. Siempre cerrá sesión si usás una computadora compartida.</p>
+
+      <h3>Roles de usuario</h3>
+      <table>
+        <tr><th>Rol</th><th>Qué puede hacer</th></tr>
+        <tr><td><span class="badge badge-orange">Admin</span></td><td>Acceso completo a todos los módulos y configuración.</td></tr>
+        <tr><td><span class="badge badge-blue">Operador</span></td><td>Puede cargar y editar datos pero no accede a Configuración.</td></tr>
+        <tr><td><span class="badge badge-green">Solo lectura</span></td><td>Solo puede ver la información, no modificarla.</td></tr>
+      </table>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- DASHBOARD -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="sec-dashboard">
+      <div class="section-header">
+        <div class="tag">📊 Dashboard</div>
+        <h2>Dashboard</h2>
+        <p>El panel principal con el estado general de tu inmobiliaria.</p>
+      </div>
+
+      <h3>¿Qué muestra el Dashboard?</h3>
+      <div class="grid2">
+        <div class="mini-card"><div class="mc-title">Contratos activos</div><p>Cantidad de contratos vigentes en este momento.</p></div>
+        <div class="mini-card"><div class="mc-title">Por actualizar</div><p>Contratos que tienen un ajuste de precio próximo (dentro de 10 días).</p></div>
+        <div class="mini-card"><div class="mc-title">Por vencer</div><p>Contratos que vencen en los próximos 65 días.</p></div>
+        <div class="mini-card"><div class="mc-title">Ingresos del mes</div><p>Total de honorarios cobrados en el mes actual.</p></div>
+      </div>
+
+      <h3>Alertas importantes</h3>
+      <p>El dashboard resalta en colores los contratos que necesitan atención:</p>
+      <ul>
+        <li><span class="badge badge-red">Rojo</span> — contrato vencido o ajuste muy próximo (menos de 3 días)</li>
+        <li><span class="badge badge-orange">Naranja</span> — ajuste o vencimiento próximo (entre 3 y 10 días)</li>
+        <li><span class="badge badge-green">Verde</span> — todo en orden</li>
+      </ul>
+      <div class="tip">Revisá el dashboard al empezar el día para ver qué contratos necesitan atención hoy.</div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- CONTRATOS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="sec-contratos">
+      <div class="section-header">
+        <div class="tag">📄 Contratos</div>
+        <h2>Contratos</h2>
+        <p>El módulo central del sistema. Acá gestionás todos los alquileres.</p>
+      </div>
+
+      <h3>Crear un contrato nuevo</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num"></div><div class="step-body">Hacé click en el botón <strong>"+ Nuevo contrato"</strong>.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Completá los datos de la propiedad: dirección, piso, departamento.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Completá los datos del <strong>inquilino</strong>: nombre, teléfono, email.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Completá los datos del <strong>propietario</strong>: nombre, teléfono, alias de MercadoPago.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Ingresá las condiciones: fecha de inicio, duración (meses), monto inicial, tipo de ajuste (ICL o IPC), frecuencia de ajuste.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Hacé click en <strong>"Guardar"</strong>.</div></div>
+      </div>
+      <div class="tip">Los campos de mora y honorarios se completan automáticamente con los valores que configuraste en ⚙️ Configuración. Podés cambiarlos para ese contrato si necesitás.</div>
+
+      <h3>Campos del contrato</h3>
+      <table>
+        <tr><th>Campo</th><th>Descripción</th></tr>
+        <tr><td>Dirección</td><td>Dirección completa de la propiedad alquilada.</td></tr>
+        <tr><td>Fecha de inicio</td><td>Primer día de vigencia del contrato.</td></tr>
+        <tr><td>Duración</td><td>Cantidad de meses del contrato (ej: 24 o 36).</td></tr>
+        <tr><td>Monto inicial</td><td>Alquiler del primer mes en pesos.</td></tr>
+        <tr><td>Tipo de ajuste</td><td>ICL (Banco Central) o IPC (INDEC).</td></tr>
+        <tr><td>Frecuencia</td><td>Cada cuántos meses se ajusta: trimestral, cuatrimestral, semestral o anual.</td></tr>
+        <tr><td>% Mora</td><td>Porcentaje mensual por pago tardío (por defecto 2%).</td></tr>
+        <tr><td>% Honorarios</td><td>Comisión de la inmobiliaria sobre el alquiler (por defecto 5%).</td></tr>
+        <tr><td>Depósito</td><td>Monto del depósito en garantía.</td></tr>
+      </table>
+
+      <h3>Buscar y filtrar contratos</h3>
+      <p>En la parte superior del listado hay un buscador. Podés buscar por nombre del inquilino, dirección o propietario. También podés filtrar por estado: <span class="badge badge-green">Activos</span> <span class="badge badge-red">Vencidos</span> o todos.</p>
+
+      <h3>Registrar un ajuste de precio</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num"></div><div class="step-body">Abrí el contrato haciendo click sobre él.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Hacé click en <strong>"Registrar actualización"</strong>.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">El sistema calcula automáticamente el nuevo monto usando el índice ICL o IPC según corresponda.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Confirmá el nuevo valor y hacé click en <strong>"Guardar actualización"</strong>.</div></div>
+      </div>
+      <div class="tip">El sistema te avisa en el Dashboard cuándo hay contratos por actualizar. No necesitás llevar la cuenta vos.</div>
+
+      <h3>Prórrogas</h3>
+      <p>Si el contrato se extiende más allá de su fecha de vencimiento original, podés cargar una prórroga desde la vista del contrato con el botón <strong>"+ Prórroga"</strong>. Ingresás la cantidad de meses adicionales y el sistema recalcula la fecha de vencimiento.</p>
+
+      <h3>Acuerdo de precio</h3>
+      <p>En algunos contratos el propietario y el inquilino acuerdan un valor diferente al que da el índice. Podés registrar ese acuerdo con el botón <strong>"Acuerdo de precio"</strong> e ingresar el monto acordado manualmente.</p>
+
+      <div class="warn">Un contrato eliminado no se puede recuperar. Si el contrato venció, dejalo en el sistema — sirve como historial.</div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- ADMINISTRACIÓN -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="sec-administracion">
+      <div class="section-header">
+        <div class="tag">🧾 Administración</div>
+        <h2>Administración</h2>
+        <p>Registro de pagos mensuales, honorarios y control de mora.</p>
+      </div>
+
+      <h3>¿Para qué sirve este módulo?</h3>
+      <p>Administración es donde registrás cada vez que un inquilino paga. El sistema lleva el historial completo de pagos, calcula los honorarios de la inmobiliaria y registra si hubo mora.</p>
+
+      <h3>Registrar un pago</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num"></div><div class="step-body">Buscá el contrato en el listado por nombre del inquilino o dirección.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Hacé click en <strong>"Registrar pago"</strong>.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Verificá el monto (se completa automáticamente con el alquiler vigente del contrato).</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Si hubo mora, el sistema calcula el recargo automáticamente. Podés ajustarlo si es necesario.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Ingresá la fecha de pago y hacé click en <strong>"Confirmar pago"</strong>.</div></div>
+      </div>
+
+      <h3>Honorarios</h3>
+      <p>Los honorarios de la inmobiliaria se calculan automáticamente como porcentaje del alquiler cobrado. El porcentaje lo configurás en ⚙️ Configuración → General (por defecto 5%). Podés verlos desglosados por contrato y por mes.</p>
+
+      <h3>Mora</h3>
+      <p>Si el pago se registra después de la fecha de vencimiento, el sistema aplica automáticamente el porcentaje de mora configurado. Podés modificarlo manualmente si acordaste algo diferente con el inquilino.</p>
+
+      <h3>Mensajes de WhatsApp</h3>
+      <p>Desde la vista de administración podés generar mensajes de WhatsApp pre-armados para enviarle al inquilino (con el monto a pagar) o al propietario (con la liquidación del mes). Ver sección <strong>📱 Mensajes WhatsApp</strong> para más detalle.</p>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- PROPIEDADES -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="sec-propiedades">
+      <div class="section-header">
+        <div class="tag">🏘️ Propiedades</div>
+        <h2>Propiedades</h2>
+        <p>Cartera de propiedades disponibles para alquiler o venta.</p>
+      </div>
+
+      <h3>Cargar una propiedad nueva</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num"></div><div class="step-body">Hacé click en <strong>"+ Nueva propiedad"</strong>.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Completá la dirección, tipo de propiedad (casa, departamento, local, etc.) y características.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Indicá si está disponible para <strong>alquiler</strong>, <strong>venta</strong> o ambas.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Cargá el precio y los datos del propietario.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Hacé click en <strong>"Guardar"</strong>.</div></div>
+      </div>
+
+      <h3>Estados de una propiedad</h3>
+      <table>
+        <tr><th>Estado</th><th>Significa</th></tr>
+        <tr><td><span class="badge badge-green">Disponible</span></td><td>Lista para alquilar o vender.</td></tr>
+        <tr><td><span class="badge badge-orange">Reservada</span></td><td>Hay una negociación en curso.</td></tr>
+        <tr><td><span class="badge badge-blue">Alquilada</span></td><td>Tiene un contrato activo.</td></tr>
+        <tr><td><span class="badge badge-red">Vendida</span></td><td>Ya no está disponible.</td></tr>
+      </table>
+
+      <div class="tip">Mantené los estados actualizados. El módulo de Visitas usa esta información para saber qué propiedades están disponibles para mostrar.</div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- BANCO -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="sec-banco">
+      <div class="section-header">
+        <div class="tag">👤 Banco</div>
+        <h2>Banco de compradores</h2>
+        <p>Base de datos de personas interesadas en comprar o alquilar propiedades.</p>
+      </div>
+
+      <h3>¿Para qué sirve?</h3>
+      <p>El banco de compradores es tu base de contactos de potenciales clientes. Cuando entra una propiedad nueva, podés buscar acá quién podría estar interesado y contactarlos rápidamente.</p>
+
+      <h3>Agregar un comprador</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num"></div><div class="step-body">Hacé click en <strong>"+ Nuevo comprador"</strong>.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Cargá nombre, teléfono, email y sus preferencias: tipo de propiedad, zona, presupuesto.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Guardá el registro.</div></div>
+      </div>
+
+      <h3>Vencimiento de contactos</h3>
+      <p>Los compradores tienen una fecha de vencimiento (por defecto 120 días desde el último contacto). El sistema te avisa cuando un contacto está por vencer para que lo reactives o lo elimines. Esto te ayuda a mantener la base limpia y actualizada.</p>
+      <div class="tip">Cuando hablás con un comprador, actualizá la fecha de contacto para que no venza.</div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- VISITAS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="sec-visitas">
+      <div class="section-header">
+        <div class="tag">📅 Visitas</div>
+        <h2>Visitas</h2>
+        <p>Agenda de visitas a propiedades con vista de calendario semanal y diario.</p>
+      </div>
+
+      <h3>Agendar una visita</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num"></div><div class="step-body">Hacé click en <strong>"+ Nueva visita"</strong>.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Seleccioná la propiedad a visitar.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Cargá los datos del interesado: nombre y teléfono.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Seleccioná fecha y hora.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Asigná un vendedor de la inmobiliaria.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Guardá la visita.</div></div>
+      </div>
+
+      <h3>Estados de una visita</h3>
+      <table>
+        <tr><th>Estado</th><th>Significa</th></tr>
+        <tr><td><span class="badge badge-blue">Pendiente</span></td><td>Visita agendada, aún no realizada.</td></tr>
+        <tr><td><span class="badge badge-green">Realizada</span></td><td>La visita se concretó.</td></tr>
+        <tr><td><span class="badge badge-red">Cancelada</span></td><td>El interesado canceló o no fue.</td></tr>
+      </table>
+
+      <h3>Vista de calendario</h3>
+      <p>El módulo muestra un calendario semanal con todas las visitas del equipo. Podés cambiar entre vista <strong>semanal</strong> y <strong>diaria</strong> con los botones en la parte superior.</p>
+
+      <h3>Mensaje de WhatsApp de confirmación</h3>
+      <p>Desde la visita podés generar un mensaje de WhatsApp automático para enviarle al interesado con la confirmación de la visita (dirección, fecha y hora).</p>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- TASACIONES -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="sec-tasaciones">
+      <div class="section-header">
+        <div class="tag">📋 Tasaciones</div>
+        <h2>Tasaciones</h2>
+        <p>Registro y seguimiento de tasaciones de propiedades.</p>
+      </div>
+
+      <h3>Registrar una tasación</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num"></div><div class="step-body">Hacé click en <strong>"+ Nueva tasación"</strong>.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Cargá la dirección de la propiedad y los datos del propietario.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Ingresá el valor tasado y la fecha.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Indicá el estado: en proceso, entregada, captada o perdida.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Guardá la tasación.</div></div>
+      </div>
+
+      <h3>Seguimiento</h3>
+      <p>El sistema te avisa cuando una tasación lleva mucho tiempo sin actualización (7 o 15 días, configurable en ⚙️ Configuración). Esto te ayuda a hacer seguimiento y no perder oportunidades.</p>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- TAREAS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="sec-tareas">
+      <div class="section-header">
+        <div class="tag">✅ Tareas</div>
+        <h2>Tareas</h2>
+        <p>Lista de pendientes para el equipo de la inmobiliaria.</p>
+      </div>
+
+      <h3>¿Para qué sirve?</h3>
+      <p>Es el bloc de notas de la inmobiliaria. Podés cargar tareas pendientes, asignarlas a un usuario del equipo y marcarlas como completadas cuando las terminás.</p>
+
+      <h3>Crear una tarea</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num"></div><div class="step-body">Hacé click en <strong>"+ Nueva tarea"</strong>.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Describí la tarea, asignale una prioridad y una fecha límite.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Opcionalmente, asignala a un usuario del equipo.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Guardá.</div></div>
+      </div>
+
+      <h3>Completar una tarea</h3>
+      <p>Hacé click en el <strong>✓ checkbox</strong> a la izquierda de la tarea para marcarla como completada. Las tareas completadas se ocultan del listado principal pero se pueden ver activando el filtro "Mostrar completadas".</p>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- CONFIGURACIÓN -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="sec-configuracion">
+      <div class="section-header">
+        <div class="tag">⚙️ Configuración</div>
+        <h2>Configuración</h2>
+        <p>Personalizá el sistema con los datos de tu inmobiliaria.</p>
+      </div>
+
+      <h3>Apariencia (tu marca)</h3>
+      <p>En la sección <strong>Apariencia</strong> podés configurar:</p>
+      <ul>
+        <li><strong>Nombre de la inmobiliaria</strong> — aparece en el encabezado de todas las páginas.</li>
+        <li><strong>Subtítulo</strong> — texto debajo del nombre (ej: "Administración de Alquileres").</li>
+        <li><strong>Color principal</strong> — el color que se usa en botones y detalles de la interfaz.</li>
+        <li><strong>Logo</strong> — URL de imagen de tu logo (recomendado: cuadrado, fondo transparente).</li>
+      </ul>
+      <div class="tip">Después de guardar la apariencia, recargá la página para ver los cambios aplicados.</div>
+
+      <h3>Valores por defecto</h3>
+      <p>En la sección <strong>General</strong> configurás los valores que se usan automáticamente en los contratos nuevos:</p>
+      <ul>
+        <li><strong>% Mora por defecto</strong> — porcentaje mensual por pago tardío (ej: 2).</li>
+        <li><strong>% Honorarios por defecto</strong> — comisión de la inmobiliaria (ej: 5).</li>
+        <li><strong>Días alerta vencimiento</strong> — con cuántos días de anticipación te avisa que vence un contrato (por defecto 65).</li>
+        <li><strong>Días alerta actualización</strong> — con cuántos días de anticipación te avisa que hay un ajuste (por defecto 10).</li>
+      </ul>
+
+      <h3>Vendedores</h3>
+      <p>Podés cargar la lista de vendedores de tu inmobiliaria. Aparecen disponibles para asignar visitas y tasaciones.</p>
+
+      <h3>Backup</h3>
+      <p>Desde Configuración podés descargar un respaldo completo de tus datos en formato JSON. Se recomienda hacer un backup mensual.</p>
+      <div class="warn">Guardá el archivo de backup en un lugar seguro (Google Drive, etc.). Si necesitás restaurar datos, contactá al soporte.</div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- ÍNDICES -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="sec-indices">
+      <div class="section-header">
+        <div class="tag">📈 Índices</div>
+        <h2>Índices ICL e IPC</h2>
+        <p>Cómo funciona el ajuste automático de los contratos.</p>
+      </div>
+
+      <h3>¿Qué es el ICL?</h3>
+      <p>El <strong>Índice para Contratos de Locación (ICL)</strong> es publicado mensualmente por el Banco Central de la República Argentina (BCRA). Es el índice que establece la Ley de Alquileres para ajustar los contratos.</p>
+
+      <h3>¿Qué es el IPC?</h3>
+      <p>El <strong>Índice de Precios al Consumidor (IPC)</strong> es publicado mensualmente por el INDEC. Refleja la variación de precios de la economía.</p>
+
+      <h3>¿Cómo calcula el sistema?</h3>
+      <p>GestAlquiler obtiene los valores del ICL e IPC automáticamente desde las fuentes oficiales. Cuando registrás una actualización, el sistema calcula:</p>
+      <div class="card">
+        <div class="card-title">📐 Fórmula ICL</div>
+        <p>Nuevo monto = Monto actual × (Índice actual ÷ Índice del período anterior)</p>
+      </div>
+      <div class="card">
+        <div class="card-title">📐 Fórmula IPC</div>
+        <p>Nuevo monto = Monto actual × (1 + variación % mensual acumulada del período)</p>
+      </div>
+      <div class="tip">No necesitás calcular nada manualmente. El sistema lo hace solo. Solo confirmás el nuevo valor cuando te lo muestra.</div>
+
+      <h3>Frecuencias de ajuste</h3>
+      <table>
+        <tr><th>Frecuencia</th><th>Ajuste cada</th></tr>
+        <tr><td>Trimestral</td><td>3 meses</td></tr>
+        <tr><td>Cuatrimestral</td><td>4 meses</td></tr>
+        <tr><td>Semestral</td><td>6 meses</td></tr>
+        <tr><td>Anual</td><td>12 meses</td></tr>
+      </table>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- WHATSAPP -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="sec-whatsapp">
+      <div class="section-header">
+        <div class="tag">📱 WhatsApp</div>
+        <h2>Mensajes de WhatsApp</h2>
+        <p>Generación automática de mensajes para inquilinos y propietarios.</p>
+      </div>
+
+      <h3>¿Qué mensajes genera el sistema?</h3>
+      <div class="grid2">
+        <div class="mini-card"><div class="mc-title">Para el inquilino</div><p>Monto a pagar del mes, con detalle del alquiler, ajuste aplicado y fecha de vencimiento.</p></div>
+        <div class="mini-card"><div class="mc-title">Para el propietario</div><p>Liquidación mensual con el alquiler cobrado, honorarios descontados y monto a transferir.</p></div>
+        <div class="mini-card"><div class="mc-title">Confirmación de visita</div><p>Mensaje para el interesado con dirección, fecha y hora de la visita agendada.</p></div>
+        <div class="mini-card"><div class="mc-title">Aviso de actualización</div><p>Notificación al inquilino del nuevo monto a partir del ajuste.</p></div>
+      </div>
+
+      <h3>Cómo enviar un mensaje</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num"></div><div class="step-body">Abrí el contrato o el registro de pago.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Hacé click en el ícono de WhatsApp 📱 junto al nombre del inquilino o propietario.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Se abre WhatsApp Web con el mensaje ya armado y el número del destinatario cargado.</div></div>
+        <div class="step"><div class="step-num"></div><div class="step-body">Revisás el mensaje y hacés click en <strong>Enviar</strong> en WhatsApp.</div></div>
+      </div>
+      <div class="tip">El mensaje se genera automáticamente con los datos del contrato. Solo tenés que enviarlo — no necesitás escribir nada.</div>
+
+      <h3>Requisito</h3>
+      <p>Para que el botón de WhatsApp funcione, el inquilino y el propietario deben tener el <strong>teléfono cargado</strong> en el contrato con el formato correcto (número argentino, con o sin código de área).</p>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- FAQ -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="sec-faq">
+      <div class="section-header">
+        <div class="tag">❓ FAQ</div>
+        <h2>Preguntas frecuentes</h2>
+        <p>Las dudas más comunes de los usuarios.</p>
+      </div>
+
+      <h3>¿Puedo usar el sistema desde el celular?</h3>
+      <p>Sí. GestAlquiler funciona en cualquier navegador de celular o tablet. El diseño se adapta a la pantalla. Para la mejor experiencia en el celular, se recomienda Chrome o Safari.</p>
+
+      <h3>¿Puedo tener varios usuarios?</h3>
+      <p>Sí. El administrador de la inmobiliaria puede agregar usuarios con diferentes roles (admin, operador, solo lectura). Contactá al soporte para agregar usuarios.</p>
+
+      <h3>¿Qué pasa si me quedo sin internet?</h3>
+      <p>GestAlquiler requiere conexión a internet para funcionar. Sin conexión no podés acceder al sistema. Recomendamos siempre tener los datos de pagos importantes a mano como respaldo.</p>
+
+      <h3>¿Cómo actualizo el logo de mi inmobiliaria?</h3>
+      <p>Andá a ⚙️ Configuración → Apariencia → campo Logo. Necesitás la URL de una imagen online (podés subirla a Google Drive o Imgur y usar el link). El logo debe ser cuadrado y de fondo transparente para mejor resultado.</p>
+
+      <h3>¿Puedo eliminar un contrato por error?</h3>
+      <p>Los contratos eliminados no se pueden recuperar automáticamente. Si eliminaste un contrato por error, contactá al soporte a la brevedad indicando la dirección y datos del contrato — en algunos casos es posible recuperarlo del sistema de backup.</p>
+
+      <h3>¿El sistema actualiza los índices ICL/IPC solo?</h3>
+      <p>Sí. Los índices se actualizan automáticamente desde las fuentes oficiales (BCRA e INDEC) cada vez que hay un nuevo valor publicado. No necesitás hacer nada manualmente.</p>
+
+      <h3>¿Cómo hago un backup de mis datos?</h3>
+      <p>Andá a ⚙️ Configuración → Backup → hacé click en "Descargar backup". Se descarga un archivo con todos tus datos. Guardalo en Google Drive o un lugar seguro. Recomendamos hacerlo mensualmente.</p>
+
+      <h3>Tengo un problema que no está en este manual</h3>
+      <p>Usá el botón verde de <strong>WhatsApp</strong> que aparece en la esquina inferior derecha de la pantalla para comunicarte con el soporte. También podés escribir a <strong>infogestalquiler@gmail.com</strong>.</p>
+
+      <div class="card" style="border-color:rgba(245,124,0,.3);background:rgba(245,124,0,.05);margin-top:1.5rem">
+        <div class="card-title">📱 Soporte técnico</div>
+        <p>Ante cualquier problema, el botón verde de WhatsApp en la esquina inferior derecha de la pantalla te conecta directamente con soporte. Respondemos en horario comercial de lunes a viernes.</p>
+      </div>
+    </div>
+
+    <!-- SEARCH RESULTS -->
+    <div class="section" id="sec-search">
+      <div class="section-header">
+        <div class="tag">🔍 Búsqueda</div>
+        <h2>Resultados de búsqueda</h2>
+      </div>
+      <div id="searchResults"></div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+'use strict';
+
+const SECTIONS = {
+  inicio:        { title:'Primeros pasos',        icon:'🏠' },
+  login:         { title:'Acceso y sesión',        icon:'🔐' },
+  dashboard:     { title:'Dashboard',              icon:'📊' },
+  contratos:     { title:'Contratos',              icon:'📄' },
+  administracion:{ title:'Administración',         icon:'🧾' },
+  propiedades:   { title:'Propiedades',            icon:'🏘️' },
+  banco:         { title:'Banco de compradores',   icon:'👤' },
+  visitas:       { title:'Visitas',                icon:'📅' },
+  tasaciones:    { title:'Tasaciones',             icon:'📋' },
+  tareas:        { title:'Tareas',                 icon:'✅' },
+  configuracion: { title:'Configuración',          icon:'⚙️' },
+  indices:       { title:'Índices ICL e IPC',      icon:'📈' },
+  whatsapp:      { title:'Mensajes WhatsApp',      icon:'📱' },
+  faq:           { title:'Preguntas frecuentes',   icon:'❓' },
+};
+
+function showSection(key, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('visible'));
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  const sec = document.getElementById('sec-' + key);
+  if (sec) sec.classList.add('visible');
+  if (btn) btn.classList.add('active');
+  const info = SECTIONS[key] || {};
+  document.getElementById('topbarTitle').textContent = (info.icon ? info.icon + ' ' : '') + (info.title || key);
+  document.getElementById('searchInp').value = '';
+  closeSidebar();
+  window.scrollTo(0, 0);
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+// SEARCH
+const INDEX = [];
+document.querySelectorAll('.section[id^="sec-"]').forEach(sec => {
+  const key = sec.id.replace('sec-','');
+  if (key === 'search') return;
+  const info = SECTIONS[key] || {};
+  const text = sec.innerText;
+  const paras = sec.querySelectorAll('p, li, td');
+  paras.forEach(el => {
+    const t = el.innerText.trim();
+    if (t.length > 20) INDEX.push({ key, title: info.title, icon: info.icon, text: t });
+  });
+});
+
+function doSearch(q) {
+  q = q.trim().toLowerCase();
+  if (!q) {
+    const active = document.querySelector('.nav-link.active');
+    const key = active ? active.dataset.sec : 'inicio';
+    if (key !== 'search') showSection(key, active);
+    return;
+  }
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('visible'));
+  document.getElementById('sec-search').classList.add('visible');
+  document.getElementById('topbarTitle').textContent = '🔍 Buscando: ' + q;
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+
+  const seen = new Set();
+  const results = INDEX.filter(item => {
+    const key = item.text.toLowerCase().includes(q) || item.title.toLowerCase().includes(q);
+    return key;
+  }).filter(item => {
+    if (seen.has(item.key + item.text.slice(0,40))) return false;
+    seen.add(item.key + item.text.slice(0,40));
+    return true;
+  }).slice(0, 12);
+
+  const container = document.getElementById('searchResults');
+  if (!results.length) {
+    container.innerHTML = '<div class="no-results">Sin resultados para "<strong>' + q + '</strong>".<br>Probá con otras palabras.</div>';
+    return;
+  }
+
+  const grouped = {};
+  results.forEach(r => {
+    if (!grouped[r.key]) grouped[r.key] = { title: r.title, icon: r.icon, items: [] };
+    grouped[r.key].items.push(r.text);
+  });
+
+  container.innerHTML = Object.entries(grouped).map(([key, g]) => `
+    <div class="card" style="cursor:pointer" onclick="showSection('${key}', document.querySelector('[data-sec=${key}]'))">
+      <div class="card-title">${g.icon} ${g.title}</div>
+      ${g.items.slice(0,2).map(t => `<p style="margin-top:.3rem">${highlight(t, q)}</p>`).join('')}
+    </div>
+  `).join('');
+}
+
+function highlight(text, q) {
+  const max = 140;
+  const idx = text.toLowerCase().indexOf(q.toLowerCase());
+  let snippet = text.length > max ? (idx > 40 ? '…' + text.slice(Math.max(0,idx-30), idx+max) : text.slice(0, max) + '…') : text;
+  return snippet.replace(new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi'), '<strong style="color:var(--acc)">$1</strong>');
+}
+
+// Hash navigation
+const hash = location.hash.replace('#','');
+if (hash && SECTIONS[hash]) {
+  const btn = document.querySelector('[data-sec=' + hash + ']');
+  showSection(hash, btn);
+}
+</script>
+</body>
+</html>

@@ -157,6 +157,7 @@ const GestShared = (function () {
     { key:'administracion', href:'administracion.html',  icon:'🧾', label:'Administración' },
     { key:'tareas',         href:'tareas.html',           icon:'✅', label:'Tareas' },
     { key:'configuracion',  href:'configuracion.html',   icon:'⚙️', label:'Configuración' },
+    { key:'ayuda',          href:'ayuda.html',            icon:'❓', label:'Ayuda' },
   ];
 
   function _injectCSS() {

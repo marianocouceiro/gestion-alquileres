@@ -242,8 +242,12 @@ tr:last-child td{border-bottom:none}
         <div class="mini-card"><div class="mc-title">Contratos activos</div><p>Cantidad de contratos vigentes en este momento.</p></div>
         <div class="mini-card"><div class="mc-title">Por actualizar</div><p>Contratos que tienen un ajuste de precio próximo (dentro de 10 días).</p></div>
         <div class="mini-card"><div class="mc-title">Por vencer</div><p>Contratos que vencen en los próximos 65 días.</p></div>
-        <div class="mini-card"><div class="mc-title">Ingresos del mes</div><p>Total de honorarios cobrados en el mes actual.</p></div>
+        <div class="mini-card"><div class="mc-title">Ingresos del mes</div><p>Total de honorarios cobrados en el mes actual. Solo visible para usuarios con rol Admin.</p></div>
       </div>
+      <div class="tip">Los gráficos de honorarios y el resumen financiero son visibles solo para usuarios con rol <strong>Admin</strong>. Los operadores ven el resto del dashboard normalmente.</div>
+
+      <h3>Checklist de primeros pasos</h3>
+      <p>Cuando tu inmobiliaria es nueva, el dashboard muestra un checklist con los pasos iniciales: configurar el nombre y logo, cargar el primer contrato, registrar un pago y agendar una visita. Se oculta automáticamente cuando completás todos los pasos. Podés cerrarlo manualmente con el botón <strong>✕ Ocultar</strong>.</p>
 
       <h3>Alertas importantes</h3>
       <p>El dashboard resalta en colores los contratos que necesitan atención:</p>
@@ -338,6 +342,12 @@ tr:last-child td{border-bottom:none}
 
       <h3>Mora</h3>
       <p>Si el pago se registra después de la fecha de vencimiento, el sistema aplica automáticamente el porcentaje de mora configurado. Podés modificarlo manualmente si acordaste algo diferente con el inquilino.</p>
+
+      <h3>Totales del mes</h3>
+      <p>En la parte superior de Administración hay una barra con el total de alquileres cobrados y el total de honorarios del mes. Esta información es visible solo para usuarios con rol <strong>Admin</strong>.</p>
+
+      <h3>Imprimir recibo</h3>
+      <p>El botón <strong>"Recibo"</strong> abre una nueva pestaña con el recibo listo para imprimir. Una vez que imprimís (o cancelás), la pestaña se cierra automáticamente.</p>
 
       <h3>Mensajes de WhatsApp</h3>
       <p>Desde la vista de administración podés generar mensajes de WhatsApp pre-armados para enviarle al inquilino (con el monto a pagar) o al propietario (con la liquidación del mes). Ver sección <strong>📱 Mensajes WhatsApp</strong> para más detalle.</p>
@@ -615,6 +625,9 @@ tr:last-child td{border-bottom:none}
 
       <h3>¿El sistema actualiza los índices ICL/IPC solo?</h3>
       <p>Sí. Los índices se actualizan automáticamente desde las fuentes oficiales (BCRA e INDEC) cada vez que hay un nuevo valor publicado. No necesitás hacer nada manualmente.</p>
+
+      <h3>¿Puedo cambiar mi contraseña?</h3>
+      <p>Sí. En la pantalla de login hacé click en <strong>"¿Olvidaste tu contraseña?"</strong>, ingresá tu email y te llegará un link para crear una nueva contraseña. Revisá también la carpeta de spam.</p>
 
       <h3>¿Cómo hago un backup de mis datos?</h3>
       <p>Andá a ⚙️ Configuración → Backup → hacé click en "Descargar backup". Se descarga un archivo con todos tus datos. Guardalo en Google Drive o un lugar seguro. Recomendamos hacerlo mensualmente.</p>

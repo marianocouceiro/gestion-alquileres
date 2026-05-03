@@ -198,8 +198,11 @@ const GestShared = (function () {
   }
 
   async function checkTrial() {
-    const page = location.pathname.split('/').pop();
-    if (page === 'login.html' || page === 'superadmin.html') return;
+    // Guard robusto para login y superadmin (cubre pathname vacío en mobile)
+    const _href = location.href.toLowerCase();
+    const _page = location.pathname.split('/').pop().toLowerCase();
+    if (_page === 'login.html' || _page === 'superadmin.html') return;
+    if (_href.includes('login.html') || _href.includes('superadmin.html')) return;
     if (typeof SupabaseDB === 'undefined') return;
     try {
       const org = await SupabaseDB.getOrgPlan();
@@ -367,8 +370,10 @@ window.changeFontSize = GestShared.changeFontSize.bind(GestShared);
         GestShared.applyBranding();
         window.dispatchEvent(new CustomEvent('gs:config-synced'));
         // No correr checkTrial ni initSupportButton en el superadmin
-        const _isSuperadmin = window.location.pathname.includes('superadmin');
-        if (!_isSuperadmin) {
+        const _href2 = window.location.href.toLowerCase();
+        const _isSuperadmin = _href2.includes('superadmin');
+        const _isLogin = _href2.includes('login.html');
+        if (!_isSuperadmin && !_isLogin) {
           GestShared.checkTrial();
           GestShared.initSupportButton();
         }

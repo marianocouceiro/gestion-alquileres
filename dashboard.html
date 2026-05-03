@@ -170,7 +170,26 @@ main{max-width:1400px;margin:0 auto;padding:1.5rem;position:relative;z-index:1}
     #btnRefresh { padding: .3rem .65rem; font-size: .75rem; }
   }
   @media (min-width: 769px) { .hbg-btn { display: none; } }
-  </style>
+  
+/* ── Onboarding checklist ───────────────────────────────── */
+#onboardingCard{background:linear-gradient(135deg,rgba(245,124,0,.08),rgba(245,124,0,.04));border:1px solid rgba(245,124,0,.3);border-radius:14px;padding:1.1rem 1.3rem;margin-bottom:1.2rem;display:none}
+#onboardingCard .ob-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem}
+#onboardingCard .ob-title{font-size:.9rem;font-weight:700;color:#fff}
+#onboardingCard .ob-sub{font-size:.75rem;color:var(--muted,#717171);margin-top:1px}
+#onboardingCard .ob-dismiss{background:none;border:none;color:var(--muted,#717171);cursor:pointer;font-size:.75rem;padding:2px 6px;border-radius:4px;font-family:inherit}
+#onboardingCard .ob-dismiss:hover{color:#ccc}
+#onboardingCard .ob-steps{display:flex;flex-direction:column;gap:.5rem}
+.ob-step{display:flex;align-items:center;gap:.75rem;padding:.55rem .75rem;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;transition:background .15s}
+.ob-step.done{opacity:.45}
+.ob-step.done .ob-check{background:rgba(34,197,94,.2);border-color:rgba(34,197,94,.4);color:#22c55e}
+.ob-check{width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0;background:rgba(255,255,255,.04)}
+.ob-step-text{flex:1;font-size:.82rem;color:#d4d4d4}
+.ob-step-text span{display:block;font-size:.72rem;color:var(--muted,#717171);margin-top:1px}
+.ob-step-link{font-size:.75rem;color:var(--acc,#f57c00);text-decoration:none;font-weight:600;flex-shrink:0;opacity:.85}
+.ob-step-link:hover{opacity:1}
+.ob-progress{margin-top:.8rem;height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
+.ob-progress-bar{height:100%;background:linear-gradient(90deg,#f57c00,#ff9800);border-radius:2px;transition:width .4s ease}
+</style>
 </head>
 <body>
 
@@ -208,6 +227,53 @@ main{max-width:1400px;margin:0 auto;padding:1.5rem;position:relative;z-index:1}
 </header>
 
 <main>
+
+  <!-- Onboarding checklist — solo para cuentas nuevas -->
+  <div id="onboardingCard">
+    <div class="ob-header">
+      <div>
+        <div class="ob-title">🚀 Primeros pasos — configurá tu inmobiliaria</div>
+        <div class="ob-sub">Completá estos pasos para sacarle el máximo provecho al sistema</div>
+      </div>
+      <button class="ob-dismiss" onclick="dismissOnboarding()" title="Ocultar">✕ Ocultar</button>
+    </div>
+    <div class="ob-steps">
+      <div class="ob-step" id="ob-step-config">
+        <div class="ob-check" id="ob-check-config"></div>
+        <div class="ob-step-text">
+          Configurá tu inmobiliaria
+          <span>Nombre, logo y color de tu marca</span>
+        </div>
+        <a href="configuracion.html" class="ob-step-link">Ir →</a>
+      </div>
+      <div class="ob-step" id="ob-step-contrato">
+        <div class="ob-check" id="ob-check-contrato"></div>
+        <div class="ob-step-text">
+          Cargá tu primer contrato
+          <span>Datos del inquilino, propietario y condiciones</span>
+        </div>
+        <a href="index.html" class="ob-step-link">Ir →</a>
+      </div>
+      <div class="ob-step" id="ob-step-pago">
+        <div class="ob-check" id="ob-check-pago"></div>
+        <div class="ob-step-text">
+          Registrá un pago
+          <span>En Administración podés llevar el control de cobros</span>
+        </div>
+        <a href="administracion.html" class="ob-step-link">Ir →</a>
+      </div>
+      <div class="ob-step" id="ob-step-visita">
+        <div class="ob-check" id="ob-check-visita"></div>
+        <div class="ob-step-text">
+          Agendá una visita o cargá una propiedad
+          <span>Módulos de Visitas y Propiedades</span>
+        </div>
+        <a href="visitas.html" class="ob-step-link">Ir →</a>
+      </div>
+    </div>
+    <div class="ob-progress"><div class="ob-progress-bar" id="obProgressBar" style="width:0%"></div></div>
+  </div>
+
   <!-- Stats resumen -->
   <div class="section-title">📊 Resumen general</div>
   <div class="stats-grid" id="statsGrid">
@@ -475,6 +541,13 @@ async function loadAll() {
     const porVencer     = contractsActivos.filter(c=>{const ed=getEndDate(c);const days=Math.ceil((ed-hoy)/864e5);return days>=0&&days<=65;});
 
     setEl('stContratos',     contractsActivos.length);
+
+    // Onboarding checklist — detectar si la cuenta es nueva
+    try {
+      const pagosCheck = await SupabaseDB.getPagosMes(curYear, curMonth);
+      updateOnboarding(contracts, pagosCheck, propsRaw, visitasRaw);
+    } catch(e) { /* silencioso */ }
+
     setEl('stPorActualizar', porActualizar.length);
     setEl('stPorVencer',     porVencer.length);
 
@@ -600,6 +673,63 @@ async function loadAll() {
     }
 }
 
+
+
+// ── Onboarding checklist ─────────────────────────────────
+const OB_KEY = 'ga_ob_dismissed';
+
+function updateOnboarding(contracts, pagos, propiedades, visitas) {
+  // Si fue descartado manualmente, no mostrar
+  if (localStorage.getItem(OB_KEY) === '1') return;
+
+  const cfg = (typeof GestShared !== 'undefined') ? GestShared.getConfig() : {};
+  const hasBrand   = !!(cfg.brandName && cfg.brandName.trim());
+  const hasContrato = contracts && contracts.length > 0;
+  const hasPago     = pagos && pagos.length > 0;
+  const hasVisitaOrProp = (visitas && visitas.length > 0) || (propiedades && propiedades.length > 0);
+
+  const steps = [hasBrand, hasContrato, hasPago, hasVisitaOrProp];
+  const done  = steps.filter(Boolean).length;
+
+  // Si todo completado, ocultar definitivamente
+  if (done === steps.length) {
+    localStorage.setItem(OB_KEY, '1');
+    return;
+  }
+
+  // Marcar cada paso
+  function markStep(id, checkId, completed) {
+    const el = document.getElementById(id);
+    const ch = document.getElementById(checkId);
+    if (!el || !ch) return;
+    if (completed) {
+      el.classList.add('done');
+      ch.textContent = '✓';
+    } else {
+      el.classList.remove('done');
+      ch.textContent = '';
+    }
+  }
+
+  markStep('ob-step-config',  'ob-check-config',   hasBrand);
+  markStep('ob-step-contrato','ob-check-contrato',  hasContrato);
+  markStep('ob-step-pago',    'ob-check-pago',      hasPago);
+  markStep('ob-step-visita',  'ob-check-visita',    hasVisitaOrProp);
+
+  // Barra de progreso
+  const pct = Math.round((done / steps.length) * 100);
+  const bar = document.getElementById('obProgressBar');
+  if (bar) bar.style.width = pct + '%';
+
+  // Mostrar card
+  document.getElementById('onboardingCard').style.display = 'block';
+}
+
+function dismissOnboarding() {
+  localStorage.setItem(OB_KEY, '1');
+  const card = document.getElementById('onboardingCard');
+  if (card) { card.style.opacity='0'; card.style.transition='opacity .3s'; setTimeout(()=>card.style.display='none', 300); }
+}
 
 document.addEventListener('DOMContentLoaded', async ()=>{
     // Verificar rol y mostrar sección admin si corresponde

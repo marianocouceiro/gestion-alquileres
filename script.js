@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   script.js — GestAlquiler · Cristian Sanchez Propiedades
+   script.js — GestAlquiler
    Lógica completa: cálculos, API, UI, WhatsApp, persistencia.
    Versión refactorizada — Abril 2026
 ═══════════════════════════════════════════════════════════════ */
@@ -22,7 +22,7 @@ function getAlertDays()    { return (typeof GestShared!=='undefined') ? GestShar
 function getExpiringDays() { return (typeof GestShared!=='undefined') ? GestShared.getConfig().diasFinContrato   : 65; }
 Object.defineProperty(window,'ALERT_DAYS',    {get:getAlertDays,configurable:true});
 Object.defineProperty(window,'EXPIRING_DAYS', {get:getExpiringDays,configurable:true});
-const ALIAS_INMOB_DEFAULT = 'cristian.912.sapa.mp';
+const ALIAS_INMOB_DEFAULT = '';
 
 /* ══════════════════════════════════════════════════════════════
    1. DATOS DE ÍNDICES — ICL (BCRA) e IPC (INDEC)
@@ -1060,7 +1060,8 @@ function genMsg(c, ui, prevAmount = null, isAPIAmount = true) {
         if (ownerAliases.length) msg += `Alias: ${ownerAliases.join(' / ')}\n`;
     }
 
-    msg += `\n_Cristian Sanchez Propiedades_`;
+    const _brand = (typeof GestShared !== 'undefined') ? (GestShared.getConfig().brandName || 'GestAlquiler') : 'GestAlquiler';
+    msg += `\n_${_brand}_`;
     return msg;
 }
 

@@ -443,6 +443,25 @@ const SupabaseDB = (function () {
     return cfg;
   }
    // ── Plan y trial de la org ────────────────────────────────
+
+  // ─── Obtener rol del usuario actual ────────────────────────
+  // Cachea el resultado en memoria para no hacer múltiples requests
+  let _cachedRole = null;
+  async function getUserRole() {
+    if (_cachedRole) return _cachedRole;
+    try {
+      const s = JSON.parse(localStorage.getItem('ga_session') || '{}');
+      if (!s.access_token) return 'operador'; // fallback seguro
+      const r = await fetch(`${BASE}/rest/v1/user_roles?select=role&limit=1`, {
+        headers: getHeaders()
+      });
+      if (!r.ok) return 'operador';
+      const rows = await r.json();
+      _cachedRole = rows?.[0]?.role || 'operador';
+      return _cachedRole;
+    } catch { return 'operador'; }
+  }
+
   async function getOrgPlan() {
     try {
       const orgId = getOrgId();
@@ -507,6 +526,7 @@ const SupabaseDB = (function () {
     getVendedores, saveVendedores,
     getTareas, upsertTarea, deleteTarea,
     getConfig, saveConfig, getOrgPlan,
+    getUserRole,
     ping
   };
 

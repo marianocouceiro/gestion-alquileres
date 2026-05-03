@@ -489,7 +489,7 @@
 </header>
 
 <!-- Summary bar — sticky -->
-<div class="summary-bar" id="summaryBar">
+<div class="summary-bar" id="summaryBar" style="display:none">
     <div class="summary-item">
         <span class="summary-label">Total alquileres</span>
         <span class="summary-value accent" id="sumAlq">—</span>
@@ -1801,6 +1801,13 @@
 
     /* ══ Init ══ */
     document.addEventListener('DOMContentLoaded', async () => {
+  // Mostrar summary bar solo a admins
+  try {
+    const rol = await SupabaseDB.getUserRole();
+    if (rol === 'admin') {
+      document.getElementById('summaryBar').style.display = '';
+    }
+  } catch(e) {}
     // header hardcoded — no JS needed
         const b=$('#loadingBanner'); b.textContent='🔄 Cargando contratos…'; b.style.display='block';
         try { await loadContracts(); } catch(e) { showToast('Error al cargar contratos','error'); }

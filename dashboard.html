@@ -273,7 +273,8 @@ main{max-width:1400px;margin:0 auto;padding:1.5rem;position:relative;z-index:1}
   </div>
 
 
-  <!-- Gráficos -->
+  <!-- Gráficos — solo admin -->
+  <div id="adminSection" style="display:none">
   <div class="section-title">📈 Gráficos</div>
   <div class="charts-grid">
 
@@ -289,6 +290,7 @@ main{max-width:1400px;margin:0 auto;padding:1.5rem;position:relative;z-index:1}
     </div>
 
   </div>
+  </div><!-- /adminSection -->
 </main>
 
 <script>
@@ -599,8 +601,14 @@ async function loadAll() {
 }
 
 
-document.addEventListener('DOMContentLoaded',()=>{
-    // header hardcoded — no JS needed
+document.addEventListener('DOMContentLoaded', async ()=>{
+    // Verificar rol y mostrar sección admin si corresponde
+    try {
+      const rol = await SupabaseDB.getUserRole();
+      if (rol === 'admin') {
+        document.getElementById('adminSection').style.display = '';
+      }
+    } catch(e) {}
     loadAll();
     $('btnRefresh').onclick=loadAll;
     // Auto-refresh completo cada 5 minutos

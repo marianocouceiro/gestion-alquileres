@@ -26,7 +26,7 @@
     .badge-super{background:rgba(245,124,0,.15);color:var(--acc);border:1px solid rgba(245,124,0,.3)}
     .badge-ok{background:rgba(16,185,129,.12);color:var(--ok)}
     .badge-off{background:rgba(239,68,68,.12);color:var(--danger)}
-    .grid{display:grid;grid-template-columns:340px 1fr;gap:1.5rem;align-items:start}
+    .grid{display:grid;grid-template-columns:420px 1fr;gap:2rem;align-items:start}
     .card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--rad);padding:1.4rem}
     .card h2{color:var(--acc);font-size:.85rem;text-transform:uppercase;letter-spacing:.5px;margin-bottom:1rem}
     .lbl{display:block;font-size:.72rem;font-weight:500;color:var(--muted);margin-bottom:.3rem;margin-top:.8rem}
@@ -84,6 +84,33 @@
     .org-metric.warn .mv{color:var(--warn)}
     .org-metric.ok .mv{color:var(--ok)}
     .org-metric.danger .mv{color:var(--danger)}
+
+    /* ── Responsive mobile ─────────────────────────────────── */
+    @media (max-width: 768px) {
+      body { padding: 1rem; }
+      #app { max-width: 100% !important; }
+      h1 { font-size: 1.1rem; }
+      .subtitle { display: none; }
+      .grid { grid-template-columns: 1fr !important; gap: 1rem; }
+      /* Header mobile: apilar en columna */
+      .sa-header { flex-direction: column !important; gap: .75rem; }
+      .sa-header-left { order: 1; }
+      .sa-header-right { order: 2; width: 100%; justify-content: space-between !important; }
+      .sa-header-right #adminEmail { display: none; }
+      /* Config WA */
+      .sa-config { flex-direction: column; gap: .5rem; }
+      .sa-config input { width: 100% !important; }
+      /* Datos inmobiliaria: 1 columna en mobile */
+      .fi-grid { grid-template-columns: 1fr !important; }
+      /* Botones de acción: wrap */
+      .section-head { flex-direction: column; align-items: flex-start !important; gap: .6rem; }
+      .section-head > div:last-child { display: flex; flex-wrap: wrap; gap: .4rem; width: 100%; }
+      .section-head .btn { flex: 1; min-width: 120px; justify-content: center; font-size: .75rem; padding: .45rem .6rem; }
+      /* Tabla usuarios: scroll horizontal */
+      table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      /* Modal full width */
+      .modal { width: 95vw !important; padding: 1.2rem; }
+    }
   </style>
 </head>
 <body>
@@ -98,15 +125,15 @@
 </div>
 
 <div id="app" style="display:none;max-width:1100px;margin:0 auto">
-  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1rem">
-    <div>
+  <div class="sa-header" style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1rem">
+    <div class="sa-header-left">
       <div style="display:flex;align-items:center;gap:.7rem;margin-bottom:.3rem">
         <h1>🏢 GestAlquiler — Panel Superadmin</h1>
         <span class="badge badge-super">SUPERADMIN</span>
       </div>
       <p class="subtitle">Gestión de inmobiliarias clientes y sus usuarios. Solo visible para vos.</p>
     </div>
-    <div style="display:flex;gap:.6rem;align-items:center">
+    <div class="sa-header-right" style="display:flex;gap:.6rem;align-items:center">
       <span id="adminEmail" style="font-size:.75rem;color:var(--muted)"></span>
       <a href="dashboard.html" class="btn btn-sec" style="text-decoration:none">← App</a>
       <button class="btn btn-danger" onclick="superadminLogout()" style="font-size:.78rem">⏻ Salir</button>
@@ -413,7 +440,7 @@ async function loadOrgUsers(org) {
 
       <div style="background:var(--bg2);border-radius:10px;padding:1rem;margin-bottom:1rem">
         <div style="font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.75rem">Datos de la inmobiliaria</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.65rem">
+        <div class="fi-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:.65rem">
           <div><label style="font-size:.72rem;color:var(--muted)">Contacto</label>
             <input class="inp" id="fi_contact" value="${org.contact_name||''}" placeholder="Nombre del responsable"></div>
           <div><label style="font-size:.72rem;color:var(--muted)">Teléfono</label>

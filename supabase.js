@@ -102,6 +102,8 @@ const SupabaseDB = (function () {
 
   function logout() {
     localStorage.removeItem('ga_session');
+    localStorage.removeItem('ga_user_role'); // limpiar caché de rol
+    _cachedRole = null;
     window.location.replace('login.html');
   }
 
@@ -451,8 +453,23 @@ const SupabaseDB = (function () {
   async function getUserRole() {
     if (_cachedRole) return _cachedRole;
     // Leer del caché de localStorage si ya fue cargado por shared.js
+    // Validar que el caché corresponde al usuario actual
     const cached = localStorage.getItem('ga_user_role');
-    if (cached) { _cachedRole = cached; return _cachedRole; }
+    if (cached) {
+      try {
+        const s2 = JSON.parse(localStorage.getItem('ga_session') || '{}');
+        const pay = JSON.parse(atob(s2.access_token.split('.')[1]));
+        const cachedUserId = localStorage.getItem('ga_user_role_uid');
+        if (!cachedUserId || cachedUserId === pay.sub) {
+          _cachedRole = cached; return _cachedRole;
+        }
+        // Diferente usuario — limpiar caché
+        localStorage.removeItem('ga_user_role');
+        localStorage.removeItem('ga_user_role_uid');
+      } catch {
+        _cachedRole = cached; return _cachedRole;
+      }
+    }
     try {
       const s = JSON.parse(localStorage.getItem('ga_session') || '{}');
       if (!s.access_token) return 'operador';
@@ -466,16 +483,25 @@ const SupabaseDB = (function () {
         }
       } catch {}
 
-      // 2) Consultar tabla user_roles con getHeadersAsync (espera token fresco)
-      const headers = await getHeadersAsync();
-      const r = await fetch(`${BASE}/rest/v1/user_roles?select=role&limit=1`, { headers });
-      if (r.ok) {
-        const rows = await r.json();
-        if (rows?.[0]?.role) {
-          _cachedRole = rows[0].role;
-          return _cachedRole;
+      // 2) Consultar tabla user_roles filtrando por user_id del JWT
+      try {
+        const payload2 = JSON.parse(atob(s.access_token.split('.')[1]));
+        const userId = payload2.sub;
+        if (userId) {
+          const headers = await getHeadersAsync();
+          const r = await fetch(
+            `${BASE}/rest/v1/user_roles?select=role&user_id=eq.${userId}&limit=1`,
+            { headers }
+          );
+          if (r.ok) {
+            const rows = await r.json();
+            if (rows?.[0]?.role) {
+              _cachedRole = rows[0].role;
+              return _cachedRole;
+            }
+          }
         }
-      }
+      } catch {}
 
       // 3) Fallback: si el email del superadmin está en el JWT, es admin
       try {

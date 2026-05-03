@@ -445,20 +445,48 @@ const SupabaseDB = (function () {
    // ── Plan y trial de la org ────────────────────────────────
 
   // ─── Obtener rol del usuario actual ────────────────────────
-  // Cachea el resultado en memoria para no hacer múltiples requests
+  // Primero intenta leer del JWT (app_metadata.role si está)
+  // Si no, consulta user_roles con el token correcto
   let _cachedRole = null;
   async function getUserRole() {
     if (_cachedRole) return _cachedRole;
+    // Leer del caché de localStorage si ya fue cargado por shared.js
+    const cached = localStorage.getItem('ga_user_role');
+    if (cached) { _cachedRole = cached; return _cachedRole; }
     try {
       const s = JSON.parse(localStorage.getItem('ga_session') || '{}');
-      if (!s.access_token) return 'operador'; // fallback seguro
-      const r = await fetch(`${BASE}/rest/v1/user_roles?select=role&limit=1`, {
-        headers: getHeaders()
-      });
-      if (!r.ok) return 'operador';
-      const rows = await r.json();
-      _cachedRole = rows?.[0]?.role || 'operador';
-      return _cachedRole;
+      if (!s.access_token) return 'operador';
+
+      // 1) Intentar leer del JWT app_metadata
+      try {
+        const payload = JSON.parse(atob(s.access_token.split('.')[1]));
+        if (payload?.app_metadata?.role) {
+          _cachedRole = payload.app_metadata.role;
+          return _cachedRole;
+        }
+      } catch {}
+
+      // 2) Consultar tabla user_roles con getHeadersAsync (espera token fresco)
+      const headers = await getHeadersAsync();
+      const r = await fetch(`${BASE}/rest/v1/user_roles?select=role&limit=1`, { headers });
+      if (r.ok) {
+        const rows = await r.json();
+        if (rows?.[0]?.role) {
+          _cachedRole = rows[0].role;
+          return _cachedRole;
+        }
+      }
+
+      // 3) Fallback: si el email del superadmin está en el JWT, es admin
+      try {
+        const payload = JSON.parse(atob(s.access_token.split('.')[1]));
+        if (payload?.app_metadata?.superadmin) {
+          _cachedRole = 'admin';
+          return _cachedRole;
+        }
+      } catch {}
+
+      return 'operador';
     } catch { return 'operador'; }
   }
 

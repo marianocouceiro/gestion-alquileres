@@ -603,12 +603,18 @@ async function loadAll() {
 
 document.addEventListener('DOMContentLoaded', async ()=>{
     // Verificar rol y mostrar sección admin si corresponde
-    try {
-      const rol = await SupabaseDB.getUserRole();
-      if (rol === 'admin') {
-        document.getElementById('adminSection').style.display = '';
-      }
-    } catch(e) {}
+    // Intentar inmediatamente, y si no hay caché, reintentar tras 800ms
+    async function applyRoleVisibility() {
+      try {
+        const rol = await SupabaseDB.getUserRole();
+        if (rol === 'admin') {
+          document.getElementById('adminSection').style.display = '';
+        }
+      } catch(e) {}
+    }
+    applyRoleVisibility();
+    // Segundo intento para cuando checkTrial todavía no terminó
+    setTimeout(applyRoleVisibility, 1200);
     loadAll();
     $('btnRefresh').onclick=loadAll;
     // Auto-refresh completo cada 5 minutos

@@ -129,7 +129,6 @@ tr:last-child td{border-bottom:none}
 
     <div class="nav-section">Más</div>
     <button class="nav-link" data-sec="indices" onclick="showSection('indices',this)"><span class="icon">📈</span> Índices ICL e IPC</button>
-    <button class="nav-link" data-sec="whatsapp" onclick="showSection('whatsapp',this)"><span class="icon">📱</span> Mensajes WhatsApp</button>
     <button class="nav-link" data-sec="faq" onclick="showSection('faq',this)"><span class="icon">❓</span> Preguntas frecuentes</button>
   </div>
 
@@ -596,6 +595,8 @@ tr:last-child td{border-bottom:none}
 
       <h3>Requisito</h3>
       <p>Para que el botón de WhatsApp funcione, el inquilino y el propietario deben tener el <strong>teléfono cargado</strong> en el contrato con el formato correcto (número argentino, con o sin código de área).</p>
+
+      <div class="warn">Esta sección es para mensajes a inquilinos y propietarios. Para contactar al soporte de GestAlquiler escribí a <strong>infogestalquiler@gmail.com</strong>.</div>
     </div>
 
     <!-- ══════════════════════════════════════════ -->
@@ -633,11 +634,11 @@ tr:last-child td{border-bottom:none}
       <p>Andá a ⚙️ Configuración → Backup → hacé click en "Descargar backup". Se descarga un archivo con todos tus datos. Guardalo en Google Drive o un lugar seguro. Recomendamos hacerlo mensualmente.</p>
 
       <h3>Tengo un problema que no está en este manual</h3>
-      <p>Usá el botón verde de <strong>WhatsApp</strong> que aparece en la esquina inferior derecha de la pantalla para comunicarte con el soporte. También podés escribir a <strong>infogestalquiler@gmail.com</strong>.</p>
+      <p>Escribinos a <strong><a href="mailto:infogestalquiler@gmail.com" style="color:var(--acc)">infogestalquiler@gmail.com</a></strong> y te respondemos en horario comercial de lunes a viernes.</p>
 
       <div class="card" style="border-color:rgba(245,124,0,.3);background:rgba(245,124,0,.05);margin-top:1.5rem">
-        <div class="card-title">📱 Soporte técnico</div>
-        <p>Ante cualquier problema, el botón verde de WhatsApp en la esquina inferior derecha de la pantalla te conecta directamente con soporte. Respondemos en horario comercial de lunes a viernes.</p>
+        <div class="card-title">✉️ Soporte técnico</div>
+        <p>Para cualquier consulta o problema escribinos a <strong>infogestalquiler@gmail.com</strong>. Respondemos de lunes a viernes en horario comercial.</p>
       </div>
     </div>
 
@@ -669,7 +670,7 @@ const SECTIONS = {
   tareas:        { title:'Tareas',                 icon:'✅' },
   configuracion: { title:'Configuración',          icon:'⚙️' },
   indices:       { title:'Índices ICL e IPC',      icon:'📈' },
-  whatsapp:      { title:'Mensajes WhatsApp',      icon:'📱' },
+  whatsapp:      { title:'Mensajes WhatsApp',       icon:'📱' },
   faq:           { title:'Preguntas frecuentes',   icon:'❓' },
 };
 

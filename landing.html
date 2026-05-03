@@ -168,7 +168,7 @@ footer{padding:2rem;border-top:1px solid var(--border);display:flex;align-items:
     <h1>Todo tu negocio<br>en <em>un solo lugar</em></h1>
     <p class="hero-sub">Contratos, cobros, visitas y ajustes ICL/IPC automáticos. Dejá el Excel atrás y gestioná tu inmobiliaria de forma profesional.</p>
     <div class="hero-actions">
-      <a href="https://gestion-alquileres-jet.vercel.app/login.html" class="btn-primary">Empezar prueba gratis →</a>
+      <a href="#" class="btn-primary" onclick="pedirDemo(event)">Empezar prueba gratis →</a>
       <a href="#features" class="btn-secondary">Ver cómo funciona</a>
     </div>
     <p class="hero-note">5 días de prueba gratis · Sin tarjeta de crédito · Cancelás cuando querés</p>
@@ -384,6 +384,36 @@ document.querySelectorAll('.faq-q').forEach(q => {
     if (!isOpen) item.classList.add('open');
   });
 });
+
+// Demo request
+function pedirDemo(e) {
+  e.preventDefault();
+  // Abrir email
+  window.location.href = 'mailto:infogestalquiler@gmail.com?subject=PEDIDO%20APP%20DE%20PRUEBA';
+  // Mostrar modal de confirmación
+  setTimeout(() => {
+    document.getElementById('modalDemo').style.display = 'flex';
+  }, 400);
+}
+function cerrarModal() {
+  document.getElementById('modalDemo').style.display = 'none';
+}
+// Cerrar con Escape o click fuera
+document.addEventListener('keydown', e => { if(e.key === 'Escape') cerrarModal(); });
 </script>
+
+<!-- Modal confirmación demo -->
+<div id="modalDemo" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:999;align-items:center;justify-content:center;padding:1rem">
+  <div style="background:#151515;border:1px solid rgba(245,124,0,.3);border-radius:20px;padding:2.5rem 2rem;max-width:420px;width:100%;text-align:center;position:relative">
+    <div style="font-size:3rem;margin-bottom:1rem">🎉</div>
+    <h3 style="font-family:'Fraunces',serif;font-size:1.5rem;font-weight:900;color:#f0ede8;margin-bottom:.75rem">¡Pedido enviado!</h3>
+    <p style="color:#9a9690;font-size:.95rem;line-height:1.6;margin-bottom:.5rem">Te abrimos el email con el pedido listo para enviar.</p>
+    <p style="color:#9a9690;font-size:.95rem;line-height:1.6;margin-bottom:1.8rem">Te contactamos en menos de <strong style="color:#f0ede8">24 horas hábiles</strong> con tus credenciales para empezar la prueba gratuita.</p>
+    <div style="background:rgba(245,124,0,.08);border:1px solid rgba(245,124,0,.2);border-radius:10px;padding:.9rem 1rem;margin-bottom:1.5rem">
+      <p style="font-size:.82rem;color:#f57c00;font-weight:500">📧 infogestalquiler@gmail.com</p>
+    </div>
+    <button onclick="cerrarModal()" style="background:linear-gradient(135deg,#f57c00,#ff9800);color:#fff;border:none;border-radius:10px;padding:.75rem 2rem;font-size:.95rem;font-weight:600;cursor:pointer;font-family:inherit;width:100%">Entendido ✓</button>
+  </div>
+</div>
 </body>
 </html>

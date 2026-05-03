@@ -293,7 +293,7 @@
       </div>
       <div class="fl full">
         <label class="lbl">Alias inmobiliaria (default en WA)</label>
-        <input class="inp" type="text" id="cfgAlias" placeholder="cristian.912.sapa.mp">
+        <input class="inp" type="text" id="cfgAlias" placeholder="alias.inmobiliaria.mp">
       </div>
       <div class="fl full">
         <label class="lbl">Email de la inmobiliaria</label>
@@ -589,7 +589,7 @@ function fillFields(cfg) {
   $('cfgTasD2').value   = cfg.diasAlertaTasacion2  ?? 15;
   $('cfgMora').value    = cfg.moraRateDefault       ?? 2;
   $('cfgAdmin').value   = cfg.adminFeeDefault       ?? 5;
-  $('cfgAlias').value   = cfg.aliasInmo || 'cristian.912.sapa.mp';
+  $('cfgAlias').value   = cfg.aliasInmo || '';
   if($('cfgEmailInmo')) $('cfgEmailInmo').value = cfg.emailInmo || '';
 
   if($('cfgDiasExpirComp')) $('cfgDiasExpirComp').value = cfg.diasExpiracionComprador ?? 120;

@@ -1119,7 +1119,7 @@
             <hr class="separator">
             <div class="recibo-wrap">${reciboDueno}</div>
         </div>
-        <script>window.onload=function(){ window.print(); }<\/script>
+        <script>window.onload=function(){ window.print(); }; window.onafterprint=function(){ window.close(); };<\/script>
         <script src="supabase.js"><\/script>
 </body></html>`);
         win.document.close();

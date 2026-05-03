@@ -1,11 +1,34 @@
 // ============================================================
-// GestAlquiler Shared v5.0
-// Config · Vendedores · WA · FontSize · Header
+// GestAlquiler Shared v5.1
+// Config · Vendedores · WA · FontSize · Header · Sentry
 // ─────────────────────────────────────────────────────────
-// v5: Eliminado Google Apps Script por completo.
-//     Config se lee de localStorage (sync) y se sincroniza
-//     con Supabase en background al cargar cada página.
+// v5.1: Sentry error monitoring integrado
 // ============================================================
+
+// ─── SENTRY — Error monitoring ────────────────────────────
+(function() {
+  const isProd = location.hostname !== 'localhost' && !location.hostname.includes('staging');
+  if (!isProd) return;
+  const script = document.createElement('script');
+  script.src = 'https://js.sentry-cdn.com/9476414ed442d5f573b3f9bbaba63073.min.js';
+  script.crossOrigin = 'anonymous';
+  script.onload = function() {
+    if (typeof Sentry === 'undefined') return;
+    Sentry.init({
+      dsn: 'https://9476414ed442d5f573b3f9bbaba63073@o4511326393925632.ingest.us.sentry.io/4511326399102976',
+      environment: 'production',
+      beforeSend(event) {
+        try {
+          const s = JSON.parse(localStorage.getItem('ga_session') || '{}');
+          if (s.user_email) event.user = { email: s.user_email };
+        } catch(e) {}
+        return event;
+      }
+    });
+  };
+  document.head.appendChild(script);
+})();
+
 const GestShared = (function () {
   'use strict';
 

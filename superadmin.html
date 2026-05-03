@@ -232,16 +232,15 @@ function clearMsg(id) { $(id).textContent = ''; $(id).className = ''; }
 
 // ── Logout ────────────────────────────────────────────────────
 function superadminLogout() {
-  localStorage.removeItem('ga_session');
-  localStorage.removeItem('ga_user_role');
-  localStorage.removeItem('ga_user_role_uid');
-  window.location.replace('login.html');
+  localStorage.removeItem('ga_sa_session');
+  window.location.replace('superadmin_login.html');
 }
 
 // ── Auth ──────────────────────────────────────────────────────
 async function init() {
   try {
-    const session = JSON.parse(localStorage.getItem('ga_session') || '{}');
+    // Usar sesión exclusiva del superadmin
+    const session = JSON.parse(localStorage.getItem('ga_sa_session') || '{}');
     if (!session.access_token) throw new Error('no_session');
     if (session.expires_at && session.expires_at < Date.now()/1000 + 30) throw new Error('expired');
     _token = session.access_token;
@@ -253,14 +252,8 @@ async function init() {
     loadMyWa();
     loadOrgs();
   } catch(e) {
-    $('loginWall').style.display = 'flex';
-    if (e.message === 'not_superadmin') {
-      $('wallMsg').textContent = 'Acceso denegado';
-      $('wallSub').textContent = 'Esta pantalla es solo para el administrador del sistema.';
-    } else {
-      $('wallMsg').textContent = 'Sesión no válida';
-      $('wallSub').textContent = 'Iniciá sesión primero.';
-    }
+    // Redirigir al login del superadmin
+    window.location.replace('superadmin_login.html');
   }
 }
 

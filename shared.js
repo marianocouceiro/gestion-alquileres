@@ -203,6 +203,10 @@ const GestShared = (function () {
     if (typeof SupabaseDB === 'undefined') return;
     try {
       const org = await SupabaseDB.getOrgPlan();
+      // Precargar el rol del usuario en background (lo usa dashboard y administracion)
+      SupabaseDB.getUserRole().then(r => {
+        try { localStorage.setItem('ga_user_role', r); } catch {}
+      }).catch(() => {});
       if (!org) return;
       if (!org.trial_ends_at) return;
       const daysLeft = Math.ceil((new Date(org.trial_ends_at) - new Date()) / 86400000);

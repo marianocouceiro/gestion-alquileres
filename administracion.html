@@ -1802,12 +1802,16 @@
     /* ══ Init ══ */
     document.addEventListener('DOMContentLoaded', async () => {
   // Mostrar summary bar solo a admins
-  try {
-    const rol = await SupabaseDB.getUserRole();
-    if (rol === 'admin') {
-      document.getElementById('summaryBar').style.display = '';
-    }
-  } catch(e) {}
+  async function applyRoleVisibility() {
+    try {
+      const rol = await SupabaseDB.getUserRole();
+      if (rol === 'admin') {
+        document.getElementById('summaryBar').style.display = '';
+      }
+    } catch(e) {}
+  }
+  applyRoleVisibility();
+  setTimeout(applyRoleVisibility, 1200);
     // header hardcoded — no JS needed
         const b=$('#loadingBanner'); b.textContent='🔄 Cargando contratos…'; b.style.display='block';
         try { await loadContracts(); } catch(e) { showToast('Error al cargar contratos','error'); }

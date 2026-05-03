@@ -746,7 +746,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     // Segundo intento para cuando checkTrial todavía no terminó
     setTimeout(applyRoleVisibility, 1200);
     loadAll();
-    $('btnRefresh').onclick=loadAll;
+    if ($('btnRefresh')) $('btnRefresh').onclick=loadAll;
     // Auto-refresh completo cada 5 minutos
     setInterval(loadAll, 300000 + Math.random()*30000);
     // Auto-refresh del gráfico honorarios cada 60 segundos, solo cuando la pestaña está visible

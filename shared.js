@@ -366,8 +366,12 @@ window.changeFontSize = GestShared.changeFontSize.bind(GestShared);
         await GestShared.syncConfigFromSupabase();
         GestShared.applyBranding();
         window.dispatchEvent(new CustomEvent('gs:config-synced'));
-        GestShared.checkTrial();
-        GestShared.initSupportButton();
+        // No correr checkTrial ni initSupportButton en el superadmin
+        const _isSuperadmin = window.location.pathname.includes('superadmin');
+        if (!_isSuperadmin) {
+          GestShared.checkTrial();
+          GestShared.initSupportButton();
+        }
       } catch(e) { console.warn('[GestShared] auto-sync:', e); }
     })();
   } else {

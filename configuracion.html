@@ -1369,47 +1369,49 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 // ── Cascade: actualizar nombre de vendedor en toda la BD ─────
+// getVisitas/getTasaciones/getCompradores devuelven el objeto JS directo (row.data)
+// upsertVisita/upsertTasacion/upsertComprador reciben el objeto completo
 async function actualizarNombreVendedorEnBD(oldName, newName) {
   if (!oldName || !newName || oldName === newName) return;
+  let vCnt = 0, tCnt = 0, cCnt = 0;
 
-  // 1. Visitas: actualizar campo vendedor
-  const visitas = await SupabaseDB.getVisitas().catch(() => []);
-  const visitasUpdate = visitas.filter(v => {
-    const d = typeof v.data === 'string' ? JSON.parse(v.data) : (v.data || {});
-    return d.vendedor === oldName;
-  });
-  for (const v of visitasUpdate) {
-    const d = typeof v.data === 'string' ? JSON.parse(v.data) : (v.data || {});
-    d.vendedor = newName;
-    await SupabaseDB.upsertVisita({ ...v, data: d }).catch(() => {});
-  }
+  // 1. Visitas
+  try {
+    const visitas = await SupabaseDB.getVisitas();
+    for (const v of visitas) {
+      if (v.vendedor === oldName) {
+        await SupabaseDB.upsertVisita({ ...v, vendedor: newName });
+        vCnt++;
+      }
+    }
+  } catch(e) { console.warn('[cascade visitas]', e.message); }
 
-  // 2. Tasaciones: actualizar campo vendedor
-  const tasaciones = await SupabaseDB.getTasaciones().catch(() => []);
-  const tasUpdate = tasaciones.filter(t => {
-    const d = typeof t.data === 'string' ? JSON.parse(t.data) : (t.data || {});
-    return d.vendedor === oldName;
-  });
-  for (const t of tasUpdate) {
-    const d = typeof t.data === 'string' ? JSON.parse(t.data) : (t.data || {});
-    d.vendedor = newName;
-    await SupabaseDB.upsertTasacion({ ...t, data: d }).catch(() => {});
-  }
+  // 2. Tasaciones
+  try {
+    const tasaciones = await SupabaseDB.getTasaciones();
+    for (const t of tasaciones) {
+      if (t.vendedor === oldName) {
+        await SupabaseDB.upsertTasacion({ ...t, vendedor: newName });
+        tCnt++;
+      }
+    }
+  } catch(e) { console.warn('[cascade tasaciones]', e.message); }
 
-  // 3. Compradores/Banco: actualizar campo vendedor asignado
-  const compradores = await SupabaseDB.getCompradores().catch(() => []);
-  const compUpdate = compradores.filter(c => {
-    const d = typeof c.data === 'string' ? JSON.parse(c.data) : (c.data || {});
-    return d.vendedor === oldName || d.vendedorAsignado === oldName;
-  });
-  for (const c of compUpdate) {
-    const d = typeof c.data === 'string' ? JSON.parse(c.data) : (c.data || {});
-    if (d.vendedor === oldName) d.vendedor = newName;
-    if (d.vendedorAsignado === oldName) d.vendedorAsignado = newName;
-    await SupabaseDB.upsertComprador({ ...c, data: d }).catch(() => {});
-  }
+  // 3. Compradores
+  try {
+    const compradores = await SupabaseDB.getCompradores();
+    for (const c of compradores) {
+      if (c.vendedor === oldName || c.vendedorAsignado === oldName) {
+        const updated = { ...c };
+        if (c.vendedor === oldName) updated.vendedor = newName;
+        if (c.vendedorAsignado === oldName) updated.vendedorAsignado = newName;
+        await SupabaseDB.upsertComprador(updated);
+        cCnt++;
+      }
+    }
+  } catch(e) { console.warn('[cascade compradores]', e.message); }
 
-  console.log(`[Vendedor] "${oldName}" → "${newName}": ${visitasUpdate.length} visitas, ${tasUpdate.length} tasaciones, ${compUpdate.length} compradores actualizados`);
+  console.log(`[Vendedor] "${oldName}" → "${newName}": ${vCnt} visitas, ${tCnt} tasaciones, ${cCnt} compradores`);
 }
 </script>
 </body>

@@ -1920,7 +1920,8 @@
       document.body.style.overflow = '';
     }
     window.closeMobMenu = closeMobMenu;
-    document.getElementById('hbgBtn').onclick = function() {
+    var _hbg = document.getElementById('hbgBtn');
+  if (_hbg) _hbg.onclick = function() {
       document.getElementById('gs-mob-menu').classList.contains('open') ? closeMobMenu() : openMobMenu();
     };
   })();

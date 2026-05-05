@@ -596,6 +596,7 @@ function isoDate(d) {
 /* ═══ State ═══ */
 let visitas = [];
 let propiedades = [];
+let contratosActivos = []; // Para entrega de llaves
 let currentDay = new Date(); currentDay.setHours(0,0,0,0);
 let currentWeekStart = getWeekStart(new Date());
 
@@ -657,11 +658,34 @@ async function loadPropiedades() {
     } catch(e) { propiedades = []; }
 }
 
+async function loadContratosActivos() {
+    try {
+        const todos = await SupabaseDB.getContratos();
+        const hoy = new Date(); hoy.setHours(0,0,0,0);
+        contratosActivos = todos.filter(c => {
+            if (!c.startDate) return false;
+            const s = new Date(c.startDate + 'T00:00:00');
+            const meses = parseInt(c.duration||0) + ((c.prorrogas||[]).reduce((a,p)=>a+parseInt(p.months||0),0));
+            const fin = new Date(s); fin.setMonth(fin.getMonth() + meses);
+            return fin > hoy;
+        }).sort((a,b) => (a.address||'').localeCompare(b.address||'','es'));
+    } catch(e) { contratosActivos = []; }
+}
+
 function populatePropiedadSelect() {
     const sel = $('#vPropiedad');
-    sel.innerHTML = '<option value="">— Seleccionar propiedad —</option>'
-        + propiedades.map(p=>`<option value="${p.address}">${p.address}${p.tipo==='alquiler'?' (ALQ)':' (VTA)'}</option>`).join('')
-        + '<option value="__colega__">📌 Propiedad de colega (ingresar manualmente)</option>';
+    const tipo = $('#vTipo').value;
+    const esEntrega = tipo === 'Entrega de llaves';
+    if (esEntrega) {
+        // Para entrega de llaves: usar contratos activos
+        sel.innerHTML = '<option value="">— Seleccionar contrato activo —</option>'
+            + contratosActivos.map(c=>`<option value="${c.address}">${c.address} — ${c.tenant||''}</option>`).join('')
+            + '<option value="__colega__">📌 Propiedad de colega (ingresar manualmente)</option>';
+    } else {
+        sel.innerHTML = '<option value="">— Seleccionar propiedad —</option>'
+            + propiedades.map(p=>`<option value="${p.address}">${p.address}${p.tipo==='alquiler'?' (ALQ)':' (VTA)'}</option>`).join('')
+            + '<option value="__colega__">📌 Propiedad de colega (ingresar manualmente)</option>';
+    }
 }
 
 /* ═══ Save / Delete ═══ */
@@ -1149,7 +1173,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     loading(true,'Cargando visitas…');
     // Esperar a que se sincronice la configuración (vendedores) desde Supabase
     try { if (window._gsReady) await window._gsReady; } catch {}
-    await Promise.all([loadVisitas(), loadPropiedades()]);
+    await Promise.all([loadVisitas(), loadPropiedades(), loadContratosActivos()]);
     loading(false);
 
     // Limpieza automática del historial según configuración (máx. 1 vez cada 24h)
@@ -1196,6 +1220,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     $('#modalVisita').onclick    = e=>{ if(e.target===$('#modalVisita')) $('#modalVisita').classList.remove('open'); };
 
     // Propiedad change → toggle bloque de colega
+    $('#vTipo').onchange = () => {
+        populatePropiedadSelect();
+    };
     $('#vPropiedad').onchange = () => {
         toggleColeagaBlock($('#vPropiedad').value === '__colega__');
     };

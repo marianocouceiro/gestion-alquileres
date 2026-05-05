@@ -5,7 +5,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://maps.googleapis.com https://js.sentry-cdn.com https://browser.sentry-cdn.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.sentry.io https://o4511326393925632.ingest.us.sentry.io https://browser.sentry-cdn.com https://api.estadisticasbcra.com https://corsproxy.io https://api.allorigins.win https://maps.googleapis.com; img-src 'self' data: blob: https://maps.gstatic.com https://maps.googleapis.com; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://maps.googleapis.com https://js.sentry-cdn.com https://browser.sentry-cdn.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.sentry.io https://o4511326393925632.ingest.us.sentry.io https://browser.sentry-cdn.com https://api.estadisticasbcra.com https://corsproxy.io https://api.allorigins.win https://maps.googleapis.com; img-src 'self' https://*.supabase.co https: data: blob: https://maps.gstatic.com https://maps.googleapis.com; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'"
         },
         {
           "key": "X-Content-Type-Options",

@@ -410,11 +410,15 @@
           <input class="inp" id="brSubtitulo" type="text" placeholder="Ej: Alquileres y Ventas" maxlength="60">
         </div>
         <div style="grid-column:1/-1">
-          <label class="lbl">URL del logo <span style="color:var(--muted);font-weight:400">(imagen PNG/JPG, recomendado fondo transparente)</span></label>
-          <input class="inp" id="brLogo" type="url" placeholder="https://tu-sitio.com/logo.png">
-          <div style="font-size:.72rem;color:var(--muted);margin-top:.3rem">
-            💡 Podés subir tu logo gratis en <a href="https://imgbb.com" target="_blank" style="color:var(--acc)">imgbb.com</a> y pegar el link directo acá.
+          <label class="lbl">Logo de la inmobiliaria <span style="color:var(--muted);font-weight:400">(PNG, SVG, JPG — máx. 2MB)</span></label>
+          <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+            <input class="inp" id="brLogo" type="url" placeholder="Se completa automáticamente al subir" style="flex:1;min-width:200px">
+            <label style="background:rgba(245,124,0,.15);border:1px solid rgba(245,124,0,.35);color:var(--acc);border-radius:8px;padding:.5rem .9rem;font-size:.8rem;font-weight:600;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:.4rem">
+              📁 Subir logo
+              <input type="file" id="logoFile" accept="image/png,image/svg+xml,image/jpeg,image/webp" style="display:none">
+            </label>
           </div>
+          <div id="logoUploadMsg" style="font-size:.75rem;margin-top:.4rem;display:none"></div>
         </div>
       </div>
     </div>
@@ -1306,6 +1310,52 @@ document.addEventListener('DOMContentLoaded', () => {
         ? closeMobMenu() : openMobMenu();
     };
   })();
+
+  // ── Upload logo a Supabase Storage ──────────────────────────
+  const _logoFileInput = document.getElementById('logoFile');
+  if (_logoFileInput) {
+    _logoFileInput.onchange = async function() {
+      const file = this.files[0];
+      if (!file) return;
+      const msg = document.getElementById('logoUploadMsg');
+      msg.style.display = 'block';
+      msg.style.color = 'var(--muted)';
+      msg.textContent = '⏳ Subiendo logo…';
+      try {
+        const session = JSON.parse(localStorage.getItem('ga_session') || '{}');
+        if (!session.access_token) throw new Error('Sin sesión');
+        const ext = file.name.split('.').pop().toLowerCase();
+        const payload = JSON.parse(atob(session.access_token.split('.')[1]));
+        const orgId = payload?.app_metadata?.org_id || 'default';
+        const fileName = orgId + '/logo_' + Date.now() + '.' + ext;
+        const SBASE = 'https://ratkgsxlqjjhjcclpcee.supabase.co';
+        const AKEY  = 'sb_publishable_frPLdQ7k0nOOP5JsULLU-g_XEPjc1Bv';
+        const r = await fetch(SBASE + '/storage/v1/object/logos/' + fileName, {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + session.access_token,
+            'apikey': AKEY,
+            'Content-Type': file.type,
+            'x-upsert': 'true'
+          },
+          body: file
+        });
+        if (!r.ok) {
+          const err = await r.json().catch(() => ({}));
+          throw new Error(err.error || err.message || 'Error ' + r.status);
+        }
+        const publicUrl = SBASE + '/storage/v1/object/public/logos/' + fileName;
+        document.getElementById('brLogo').value = publicUrl;
+        document.getElementById('brLogo').dispatchEvent(new Event('input'));
+        msg.style.color = 'var(--ok)';
+        msg.textContent = '✅ Logo subido. Hacé click en Guardar para aplicarlo.';
+        this.value = '';
+      } catch(e) {
+        msg.style.color = 'var(--danger)';
+        msg.textContent = '❌ Error: ' + e.message;
+      }
+    };
+  }
 </script>
 </body>
 </html>

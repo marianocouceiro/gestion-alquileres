@@ -492,14 +492,16 @@
 
 <!-- Summary bar — sticky -->
 <div class="summary-bar" id="summaryBar" style="display:none">
-    <div class="summary-item">
+    <!-- Solo admin -->
+    <div class="summary-item summary-admin-only" id="itemSumAlq">
         <span class="summary-label">Total alquileres</span>
         <span class="summary-value accent" id="sumAlq">—</span>
     </div>
-    <div class="summary-item">
+    <div class="summary-item summary-admin-only" id="itemSumInmob">
         <span class="summary-label">Total inmobiliaria</span>
         <span class="summary-value accent" id="sumInmob">—</span>
     </div>
+    <!-- Visible para todos -->
     <div class="summary-item">
         <span class="summary-label">Sin pago (luego del día 10)</span>
         <span class="summary-value warning" id="sumMora">—</span>
@@ -1811,6 +1813,11 @@
       const rol = await SupabaseDB.getUserRole();
       if (rol === 'admin') {
         document.getElementById('summaryBar').style.display = '';
+        // Ocultar totales financieros para no-admins
+        const _admRole = localStorage.getItem('ga_user_role') || 'operador';
+        document.querySelectorAll('.summary-admin-only').forEach(el => {
+            el.style.display = _admRole === 'admin' ? '' : 'none';
+        });
       }
     } catch(e) {}
   }

@@ -682,15 +682,24 @@ function renderVendedores() {
     inp.onblur = async () => {
       const idx = parseInt(inp.dataset.i);
       const newName = inp.value.trim();
-      if (!newName || newName === _vendList[idx]) return;
+      const oldName = _vendList[idx];
+      if (!newName || newName === oldName) return;
+
       _vendList[idx] = newName;
       await SupabaseDB.saveVendedores(_vendList);
       const cfg = GestShared.getConfig();
       cfg.vendedores = _vendList;
       GestShared.saveConfig(cfg);
-      // Disparar evento para que visitas/tasaciones/banco se actualicen
+
+      // Cascade: actualizar el nombre en visitas, tasaciones y compradores
+      try {
+        await actualizarNombreVendedorEnBD(oldName, newName);
+        toast('Vendedor actualizado en toda la app ✓');
+      } catch(e) {
+        toast('Vendedor guardado (error al actualizar registros: ' + e.message + ')');
+      }
+
       window.dispatchEvent(new CustomEvent('gs:vendedores-updated', { detail: _vendList }));
-      toast('Vendedor actualizado');
     };
     inp.onkeydown = e => { if (e.key === 'Enter') inp.blur(); };
   });
@@ -1358,6 +1367,50 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     };
   }
+
+// ── Cascade: actualizar nombre de vendedor en toda la BD ─────
+async function actualizarNombreVendedorEnBD(oldName, newName) {
+  if (!oldName || !newName || oldName === newName) return;
+
+  // 1. Visitas: actualizar campo vendedor
+  const visitas = await SupabaseDB.getVisitas().catch(() => []);
+  const visitasUpdate = visitas.filter(v => {
+    const d = typeof v.data === 'string' ? JSON.parse(v.data) : (v.data || {});
+    return d.vendedor === oldName;
+  });
+  for (const v of visitasUpdate) {
+    const d = typeof v.data === 'string' ? JSON.parse(v.data) : (v.data || {});
+    d.vendedor = newName;
+    await SupabaseDB.upsertVisita({ ...v, data: d }).catch(() => {});
+  }
+
+  // 2. Tasaciones: actualizar campo vendedor
+  const tasaciones = await SupabaseDB.getTasaciones().catch(() => []);
+  const tasUpdate = tasaciones.filter(t => {
+    const d = typeof t.data === 'string' ? JSON.parse(t.data) : (t.data || {});
+    return d.vendedor === oldName;
+  });
+  for (const t of tasUpdate) {
+    const d = typeof t.data === 'string' ? JSON.parse(t.data) : (t.data || {});
+    d.vendedor = newName;
+    await SupabaseDB.upsertTasacion({ ...t, data: d }).catch(() => {});
+  }
+
+  // 3. Compradores/Banco: actualizar campo vendedor asignado
+  const compradores = await SupabaseDB.getCompradores().catch(() => []);
+  const compUpdate = compradores.filter(c => {
+    const d = typeof c.data === 'string' ? JSON.parse(c.data) : (c.data || {});
+    return d.vendedor === oldName || d.vendedorAsignado === oldName;
+  });
+  for (const c of compUpdate) {
+    const d = typeof c.data === 'string' ? JSON.parse(c.data) : (c.data || {});
+    if (d.vendedor === oldName) d.vendedor = newName;
+    if (d.vendedorAsignado === oldName) d.vendedorAsignado = newName;
+    await SupabaseDB.upsertComprador({ ...c, data: d }).catch(() => {});
+  }
+
+  console.log(`[Vendedor] "${oldName}" → "${newName}": ${visitasUpdate.length} visitas, ${tasUpdate.length} tasaciones, ${compUpdate.length} compradores actualizados`);
+}
 </script>
 </body>
 </html>

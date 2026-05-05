@@ -1251,10 +1251,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     $('#msgModal').onclick = e=>{ if(e.target===$('#msgModal')) $('#msgModal').style.display='none'; };
 
     // Vendedores modal
-    $('#btnVendedores').onclick       = ()=>{ renderVendedoresList(); $('#modalVendedores').classList.add('open'); };
-    $('#btnCloseVendedores').onclick  = ()=>$('#modalVendedores').classList.remove('open');
+    if($('#btnVendedores')) $('#btnVendedores').onclick = ()=>{ renderVendedoresList(); $('#modalVendedores').classList.add('open'); };
+    if($('#btnCloseVendedores')) $('#btnCloseVendedores').onclick = ()=>$('#modalVendedores').classList.remove('open');
     if($('#btnCloseVendedores2')) $('#btnCloseVendedores2').onclick = ()=>$('#modalVendedores').classList.remove('open');
-    $('#modalVendedores').onclick     = e=>{ if(e.target===$('#modalVendedores')) $('#modalVendedores').classList.remove('open'); };
+    if($('#modalVendedores')) $('#modalVendedores').onclick = e=>{ if(e.target===$('#modalVendedores')) $('#modalVendedores').classList.remove('open'); };
     $('#btnAgregarVendedor').onclick  = ()=>{
         const nombre = $('#nuevoVendedor').value.trim();
         if (!nombre) return;

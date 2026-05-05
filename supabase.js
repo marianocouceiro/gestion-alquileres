@@ -420,11 +420,15 @@ const SupabaseDB = (function () {
     return r.success ? (r.data || []).map(v => v.nombre) : [];
   }
   async function saveVendedores(lista) {
-    await fetch(`${BASE}/rest/v1/vendedores?id=gt.0`, {
-      method: 'DELETE', headers: getHeaders()
-    });
+    // Borrar solo los vendedores de esta org (filtro por org_id)
+    const orgId = getOrgId();
+    if (orgId) {
+      await fetch(`${BASE}/rest/v1/vendedores?org_id=eq.${orgId}`, {
+        method: 'DELETE', headers: getHeaders()
+      });
+    }
     if (!lista.length) return { success: true };
-    const rows = lista.map((nombre, i) => ({ nombre, activo: true, orden: i, org_id: getOrgId() }));
+    const rows = lista.map((nombre, i) => ({ nombre, activo: true, orden: i, org_id: orgId }));
     const r = await fetch(`${BASE}/rest/v1/vendedores`, {
       method: 'POST',
       headers: { ...getHeaders(), 'Prefer': 'return=minimal' },

@@ -493,12 +493,22 @@ const SupabaseDB = (function () {
             `${BASE}/rest/v1/user_roles?select=role&user_id=eq.${userId}&limit=1`,
             { headers }
           );
+          // Ignorar errores 500 silenciosamente
           if (r.ok) {
             const rows = await r.json();
             if (rows?.[0]?.role) {
               _cachedRole = rows[0].role;
+              // Guardar en localStorage para no repetir la query
+              try {
+                localStorage.setItem('ga_user_role', _cachedRole);
+                localStorage.setItem('ga_user_role_uid', userId);
+              } catch {}
               return _cachedRole;
             }
+          } else if (r.status === 500) {
+            // Error interno de Supabase — intentar leer desde app_metadata.role
+            // que la Edge Function graba al crear/cambiar usuarios
+            console.warn('[getUserRole] user_roles 500, usando app_metadata fallback');
           }
         }
       } catch {}

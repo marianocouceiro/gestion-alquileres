@@ -1153,6 +1153,10 @@ const TAS = (function() {
              guardarContacto, borrarContacto, editarActual, eliminarActual,
              abrirAlertas, cerrarAlertas, guardarAlertas, render,
              cambiarTab, histPrev, histNext };
+  // Actualizar lista de vendedores si se editaron desde Configuración
+  window.addEventListener('gs:vendedores-updated', () => {
+    if (typeof renderVendedoresList === 'function') renderVendedoresList();
+  });
 })();
 </script>
 <script>// header hardcoded — no JS needed</script>

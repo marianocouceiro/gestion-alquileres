@@ -195,7 +195,7 @@
       <div><h2>Vendedores</h2><p>Se asignan en rotación automática a nuevos compradores</p></div>
     </div>
     <div class="vend-list" id="vendList"></div>
-    <div class="add-row">
+    <div class="add-row" id="vendAddRow" style="display:none">
       <input class="inp" id="inpVend" placeholder="Nombre del vendedor…" style="flex:1">
       <button class="btn-prim" id="btnAddVend">+ Agregar</button>
     </div>
@@ -645,9 +645,20 @@ async function loadVendedoresFromSupabase() {
 function renderVendedores() {
   const el = $('vendList');
   if (!_vendList.length) { el.innerHTML = '<div style="font-size:.76rem;color:var(--muted)">Sin vendedores cargados.</div>'; return; }
-  el.innerHTML = _vendList.map((v, i) =>
-    `<div class="vend-item"><span>👤 ${v}</span><button class="vend-rm" data-i="${i}">✕</button></div>`
+  const isAdmin = (localStorage.getItem('ga_user_role') || 'operador') === 'admin';
+  el.innerHTML = _vendList.map((v, i) => `
+    <div class="vend-item" data-i="${i}">
+      ${isAdmin
+        ? `<input class="vend-name-inp" data-i="${i}" value="${v.replace(/"/g,'&quot;')}" style="flex:1;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.1);color:inherit;font-size:.85rem;padding:.15rem .2rem;font-family:inherit">`
+        : `<span>👤 ${v}</span>`
+      }
+      ${isAdmin ? `<button class="vend-rm" data-i="${i}" style="margin-left:.5rem">✕</button>` : ''}
+    </div>`
   ).join('');
+  // Mostrar/ocultar fila agregar
+  const addRow = $('vendAddRow');
+  if (addRow) addRow.style.display = isAdmin ? '' : 'none';
+  // Borrar vendedor (solo admin)
   el.querySelectorAll('.vend-rm').forEach(btn => {
     btn.onclick = async () => {
       const idx = parseInt(btn.dataset.i);
@@ -659,6 +670,23 @@ function renderVendedores() {
       renderVendedores();
       toast('Vendedor eliminado');
     };
+  });
+  // Editar nombre vendedor inline (solo admin)
+  el.querySelectorAll('.vend-name-inp').forEach(inp => {
+    inp.onblur = async () => {
+      const idx = parseInt(inp.dataset.i);
+      const newName = inp.value.trim();
+      if (!newName || newName === _vendList[idx]) return;
+      _vendList[idx] = newName;
+      await SupabaseDB.saveVendedores(_vendList);
+      const cfg = GestShared.getConfig();
+      cfg.vendedores = _vendList;
+      GestShared.saveConfig(cfg);
+      // Disparar evento para que visitas/tasaciones/banco se actualicen
+      window.dispatchEvent(new CustomEvent('gs:vendedores-updated', { detail: _vendList }));
+      toast('Vendedor actualizado');
+    };
+    inp.onkeydown = e => { if (e.key === 'Enter') inp.blur(); };
   });
 }
 

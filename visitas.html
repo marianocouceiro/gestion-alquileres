@@ -465,6 +465,7 @@
                         <option>Visita venta</option>
                         <option>Tasación</option>
                         <option>Firma boleto</option>
+                        <option>Firma escritura</option>
                         <option>Firma alquiler</option>
                         <option>Fotos</option>
                         <option>Entrega de llaves</option>
@@ -673,13 +674,36 @@ async function loadContratosActivos() {
 }
 
 function populatePropiedadSelect() {
-    const sel = $('#vPropiedad');
-    const tipo = $('#vTipo').value;
-    const esEntrega = tipo === 'Entrega de llaves';
+    const sel      = $('#vPropiedad');
+    const propRow  = sel ? sel.closest('.fl') : null;
+    const coleRow  = $('#coleagaBlock');
+    const tipo     = $('#vTipo').value;
+
+    const esEntrega   = tipo === 'Entrega de llaves';
+    const esReunion   = tipo === 'Reunión';
+    const esBoleto    = tipo === 'Firma boleto';
+    const esEscritura = tipo === 'Firma escritura';
+
+    // Ocultar propiedad en Reunión
+    if (propRow) propRow.style.display = esReunion ? 'none' : '';
+    if (esReunion) {
+        if (sel) sel.value = '';
+        toggleColeagaBlock(false);
+        return;
+    }
+
+    if (!sel) return;
+
     if (esEntrega) {
-        // Para entrega de llaves: usar contratos activos
+        // Contratos activos → dirección + inquilino
         sel.innerHTML = '<option value="">— Seleccionar contrato activo —</option>'
-            + contratosActivos.map(c=>`<option value="${c.address}">${c.address} — ${c.tenant||''}</option>`).join('')
+            + contratosActivos.map(c=>`<option value="${c.address}" data-tenant="${c.tenant||''}" data-phone="${c.tenantPhone||''}">${c.address} — ${c.tenant||''}</option>`).join('')
+            + '<option value="__colega__">📌 Propiedad de colega (ingresar manualmente)</option>';
+    } else if (esBoleto || esEscritura) {
+        // Solo propiedades en venta
+        const enVenta = propiedades.filter(p => p.tipo !== 'alquiler');
+        sel.innerHTML = '<option value="">— Seleccionar propiedad en venta —</option>'
+            + enVenta.map(p=>`<option value="${p.address}">${p.address} (VTA)</option>`).join('')
             + '<option value="__colega__">📌 Propiedad de colega (ingresar manualmente)</option>';
     } else {
         sel.innerHTML = '<option value="">— Seleccionar propiedad —</option>'
@@ -1224,7 +1248,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         populatePropiedadSelect();
     };
     $('#vPropiedad').onchange = () => {
-        toggleColeagaBlock($('#vPropiedad').value === '__colega__');
+        const val  = $('#vPropiedad').value;
+        toggleColeagaBlock(val === '__colega__');
+        // Autocompletar inquilino y celular en Entrega de llaves
+        if ($('#vTipo').value === 'Entrega de llaves' && val && val !== '__colega__') {
+            const opt = $('#vPropiedad').options[$('#vPropiedad').selectedIndex];
+            if (opt) {
+                const tenant = opt.dataset.tenant || '';
+                const phone  = opt.dataset.phone  || '';
+                if (tenant && $('#vCliente').value === '') $('#vCliente').value = tenant;
+                if (phone  && $('#vCelular').value === '') $('#vCelular').value = phone;
+            }
+        }
     };
 
     // WA recordatorio

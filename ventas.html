@@ -353,7 +353,8 @@
     document.getElementById('hbgBtn').classList.remove('open');
     document.body.style.overflow = '';
   }
-  document.getElementById('hbgBtn').onclick = function() {
+  var _hbg = document.getElementById('hbgBtn');
+  if (_hbg) _hbg.onclick = function() {
     if (document.getElementById('gs-mob-menu').classList.contains('open')) closeMobMenu();
     else openMobMenu();
   };

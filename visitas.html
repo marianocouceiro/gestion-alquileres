@@ -1420,6 +1420,10 @@ async function renderHistorial() {
     }, 500);
   });
 
+  // Actualizar lista de vendedores si se editaron desde Configuración
+  window.addEventListener('gs:vendedores-updated', () => {
+    if (typeof renderVendedoresList === 'function') renderVendedoresList();
+  });
 })();
 </script>
 

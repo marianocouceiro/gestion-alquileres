@@ -743,6 +743,11 @@ function openModalWABanco(msg,tel,nombre){document.getElementById('waBancoTitle'
         ? closeMobMenu() : openMobMenu();
     };
   })();
+
+  // Actualizar lista de vendedores si se editaron desde Configuración
+  window.addEventListener('gs:vendedores-updated', () => {
+    if (typeof renderVendedoresList === 'function') renderVendedoresList();
+  });
 </script>
 </body>
 </html>

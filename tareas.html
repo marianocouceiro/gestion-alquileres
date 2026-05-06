@@ -384,13 +384,14 @@ async function loadTareas() {
 
 /* ── Estadísticas ── */
 function renderStats() {
-  $('stTotal').textContent = tareas.length;
-  $('stPend').textContent  = tareas.filter(t => !t.completada).length;
-  $('stComp').textContent  = tareas.filter(t => t.completada).length;
-  $('stAlta').textContent  = tareas.filter(t => !t.completada && t.prioridad === 'alta').length;
+  const visibles = tareas.filter(t => !t.archivedFromActivas);
+  $('stTotal').textContent = visibles.length;
+  $('stPend').textContent  = visibles.filter(t => !t.completada).length;
+  $('stComp').textContent  = visibles.filter(t => t.completada).length;
+  $('stAlta').textContent  = visibles.filter(t => !t.completada && t.prioridad === 'alta').length;
   var mEl = $('stMedia'), bEl = $('stBaja');
-  if (mEl) mEl.textContent = tareas.filter(t => !t.completada && t.prioridad === 'media').length;
-  if (bEl) bEl.textContent = tareas.filter(t => !t.completada && t.prioridad === 'baja').length;
+  if (mEl) mEl.textContent = visibles.filter(t => !t.completada && t.prioridad === 'media').length;
+  if (bEl) bEl.textContent = visibles.filter(t => !t.completada && t.prioridad === 'baja').length;
 }
 
 /* ── Filtrar ── */
@@ -402,6 +403,8 @@ function setFilter(f) {
 
 function getFiltered() {
   return tareas.filter(t => {
+    // Las archivadas solo viven en Historial, nunca en Activas
+    if (t.archivedFromActivas) return false;
     if (filtroActivo === 'pendientes')  return !t.completada;
     if (filtroActivo === 'completadas') return  t.completada;
     if (filtroActivo === 'alta')   return !t.completada && t.prioridad === 'alta';
@@ -478,20 +481,40 @@ async function reabrir(id) {
   const t = tareas.find(x => x.id === id);
   if (!t) return;
   t.completada = false;
+  delete t.completedAt;
+  delete t.archivedFromActivas; // vuelve a Activas si estaba archivada
   const r = await SupabaseDB.upsertTarea(t);
   if (r && r.success === false) { t.completada = true; toast('Error: ' + (r.error||''), 'err'); }
-  else toast('Tarea reabierta', 'info');
+  else {
+    toast('Tarea reabierta ↩', 'info');
+    // Si estaba en historial, volver al panel Activas
+    if (tareasTab === 'historial') switchTareasTab('activas');
+  }
   renderStats(); renderList();
 }
 
-/* ── Eliminar ── */
+/* ── Eliminar / Archivar ── */
 async function deleteTarea(id) {
-  if (!confirm('¿Eliminar esta tarea?')) return;
-  try {
-    await SupabaseDB.deleteTarea(id);
-    tareas = tareas.filter(t => t.id !== id);
-    toast('Tarea eliminada', 'info');
-  } catch(e) { toast('Error al eliminar', 'err'); }
+  const t = tareas.find(x => x.id === id);
+  if (!t) return;
+
+  if (t.completada) {
+    // Tarea completada: archivar (desaparece de Activas, permanece en Historial)
+    if (!confirm('¿Quitar esta tarea de la lista activa?\n\nVa a quedar guardada en el Historial.')) return;
+    t.archivedFromActivas = true;
+    try {
+      await SupabaseDB.upsertTarea(t);
+      toast('Tarea movida al historial 🗂', 'info');
+    } catch(e) { t.archivedFromActivas = false; toast('Error al archivar', 'err'); }
+  } else {
+    // Tarea pendiente: borrar definitivamente
+    if (!confirm('¿Eliminar esta tarea pendiente? Esta acción no se puede deshacer.')) return;
+    try {
+      await SupabaseDB.deleteTarea(id);
+      tareas = tareas.filter(t => t.id !== id);
+      toast('Tarea eliminada', 'info');
+    } catch(e) { toast('Error al eliminar', 'err'); }
+  }
   renderStats();
   renderList();
 }
@@ -609,6 +632,7 @@ function renderHistorialTareas() {
       <th style="min-width:200px">Tarea</th>
       <th style="min-width:75px">Prioridad</th>
       <th style="min-width:140px">Observaciones</th>
+      <th style="min-width:70px">Acciones</th>
     </tr></thead>
     <tbody>
       ${completadas.map(t => {
@@ -623,6 +647,7 @@ function renderHistorialTareas() {
           <td style="font-weight:500">${esc(t.texto || '—')}</td>
           <td><span style="font-size:.68rem;font-weight:700;padding:.12rem .4rem;border-radius:4px;background:${bg};color:${col};white-space:nowrap">${lbl}</span></td>
           <td style="font-size:.78rem;color:var(--muted)">${esc(t.observaciones || '')}</td>
+          <td><button class="icon-btn" title="Reabrir tarea" onclick="reabrir('${t.id}')" style="font-size:.75rem;opacity:.7" title="Reabrir como pendiente">↩</button></td>
         </tr>`;
       }).join('')}
     </tbody>

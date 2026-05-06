@@ -416,7 +416,7 @@ function estaEnProceso(p) {
     if (p.tipo !== 'venta') return true; // solo tipo venta es matcheable
     const estado = String(p.estado || '').toLowerCase();
     return (
-        p.proceso === true ||
+        !!p.proceso ||
         p.contratoCreado ||
         !!p.reservadaPor ||
         estado === 'reservada' ||

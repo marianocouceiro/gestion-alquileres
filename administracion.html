@@ -491,7 +491,7 @@
 </header>
 
 <!-- Summary bar — sticky -->
-<div class="summary-bar" id="summaryBar" style="display:none">
+<div class="summary-bar" id="summaryBar">
     <!-- Solo admin -->
     <div class="summary-item summary-admin-only" id="itemSumAlq">
         <span class="summary-label">Total alquileres</span>
@@ -1811,14 +1811,22 @@
   async function applyRoleVisibility() {
     try {
       const rol = await SupabaseDB.getUserRole();
-      if (rol === 'admin') {
-        document.getElementById('summaryBar').style.display = '';
-        // Ocultar totales financieros para no-admins
-        const _admRole = localStorage.getItem('ga_user_role') || 'operador';
-        document.querySelectorAll('.summary-admin-only').forEach(el => {
-            el.style.display = _admRole === 'admin' ? '' : 'none';
-        });
-      }
+      // Todos ven el summaryBar
+      const sb = document.getElementById('summaryBar');
+      if (sb) sb.style.display = 'flex';
+      // Solo admins ven Total alquileres y Total inmobiliaria
+      document.querySelectorAll('.summary-admin-only').forEach(el => {
+        el.style.display = rol === 'admin' ? '' : 'none';
+      });
+      // Ajustar top del month-nav para que no tape el primer contrato
+      setTimeout(() => {
+        const hdr = document.querySelector('.app-hdr');
+        const sum = document.getElementById('summaryBar');
+        const nav = document.querySelector('.month-nav');
+        if (hdr && sum && nav) {
+          nav.style.top = (hdr.offsetHeight + sum.offsetHeight) + 'px';
+        }
+      }, 100);
     } catch(e) {}
   }
   applyRoleVisibility();

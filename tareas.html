@@ -119,6 +119,25 @@
     .stat-chip{padding:.35rem .75rem;border-radius:8px;font-size:.75rem;font-weight:600;background:var(--bg2);border:1px solid var(--border)}
     .stat-chip span{color:var(--acc);font-size:.9rem;margin-left:.3rem}
 
+    /* ── Tabs ── */
+    .tabs-bar-tar{display:flex;border-bottom:1px solid var(--border);margin-bottom:1rem;gap:0}
+    .tab-btn-tar{padding:.5rem 1.1rem;font-size:.82rem;font-weight:600;color:var(--muted);background:none;border:none;border-bottom:2.5px solid transparent;cursor:pointer;font-family:inherit;transition:color .15s,border-color .15s;white-space:nowrap}
+    .tab-btn-tar:hover{color:var(--txt)}
+    .tab-btn-tar.active{color:var(--acc);border-bottom-color:var(--acc)}
+    .tab-panel-tar{display:none}
+    .tab-panel-tar.active{display:block}
+
+    /* ── Historial ── */
+    .hist-nav-tar{display:flex;align-items:center;gap:.75rem;margin-bottom:.85rem;flex-wrap:wrap}
+    .hist-nav-tar button{background:var(--bg2);border:1px solid var(--border);color:var(--txt);border-radius:7px;width:32px;height:32px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;font-family:inherit;transition:background .15s}
+    .hist-nav-tar button:hover{background:var(--bg3)}
+    .hist-year-tar{font-size:1rem;font-weight:700;min-width:55px;text-align:center}
+    .hist-count-tar{font-size:.75rem;color:var(--muted)}
+    .hist-table{width:100%;border-collapse:collapse;font-size:.8rem}
+    .hist-table th{padding:.5rem .75rem;text-align:left;font-size:.67rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border);white-space:nowrap;background:var(--bg2)}
+    .hist-table td{padding:.48rem .75rem;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:top}
+    .hist-table tbody tr:hover td{background:rgba(255,255,255,.02)}
+
   /* ══ Mobile overlay — siempre oculto por defecto ══ */
   #gs-mob-menu { display: none; }
 
@@ -232,35 +251,63 @@
 <div class="wrap">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.6rem">
     <div class="page-title" style="margin:0">✅ Tareas</div>
-    <button class="btn btn-primary" onclick="openModal()">+ Nueva tarea</button>
+    <button class="btn btn-primary" id="btnNuevaTarea" onclick="openModal()">+ Nueva tarea</button>
   </div>
 
-  <!-- Stats -->
-  <div class="stats-bar" id="statsBar">
-    <div class="stat-chip">Total<span id="stTotal">—</span></div>
-    <div class="stat-chip">Pendientes<span id="stPend" style="color:#f59e0b">—</span></div>
-    <div class="stat-chip">Completadas<span id="stComp" style="color:#10b981">—</span></div>
-  </div>
-  <div class="stats-bar stats-bar-prio" id="statsBarPrio">
-    <div class="stat-chip" style="border-color:rgba(239,68,68,.3)">🔴 Alta<span id="stAlta" style="color:#ef4444">—</span></div>
-    <div class="stat-chip" style="border-color:rgba(245,158,11,.3)">🟡 Media<span id="stMedia" style="color:#f59e0b">—</span></div>
-    <div class="stat-chip" style="border-color:rgba(16,185,129,.3)">🟢 Baja<span id="stBaja" style="color:#10b981">—</span></div>
+  <!-- Tabs -->
+  <div class="tabs-bar-tar">
+    <button class="tab-btn-tar active" id="tabBtnActivas" onclick="switchTareasTab('activas')">✅ Activas</button>
+    <button class="tab-btn-tar" id="tabBtnHistorial" onclick="switchTareasTab('historial')">🗂 Historial</button>
   </div>
 
-  <!-- Filters -->
-  <div class="filters">
-    <button class="filt on"     data-f="todas"       onclick="setFilter('todas')">Todas</button>
-    <button class="filt"        data-f="pendientes"  onclick="setFilter('pendientes')">Pendientes</button>
-    <button class="filt"        data-f="completadas" onclick="setFilter('completadas')">Completadas</button>
-    <button class="filt filt-alta"  data-f="alta"   onclick="setFilter('alta')">🔴 Alta</button>
-    <button class="filt filt-media" data-f="media"  onclick="setFilter('media')">🟡 Media</button>
-    <button class="filt filt-baja"  data-f="baja"   onclick="setFilter('baja')">🟢 Baja</button>
-  </div>
+  <!-- Panel: Activas -->
+  <div id="panelActivas" class="tab-panel-tar active">
 
-  <!-- List -->
-  <div class="tareas-list" id="tareasList">
-    <div class="empty">Cargando tareas…</div>
-  </div>
+    <!-- Stats -->
+    <div class="stats-bar" id="statsBar">
+      <div class="stat-chip">Total<span id="stTotal">—</span></div>
+      <div class="stat-chip">Pendientes<span id="stPend" style="color:#f59e0b">—</span></div>
+      <div class="stat-chip">Completadas<span id="stComp" style="color:#10b981">—</span></div>
+    </div>
+    <div class="stats-bar stats-bar-prio" id="statsBarPrio">
+      <div class="stat-chip" style="border-color:rgba(239,68,68,.3)">🔴 Alta<span id="stAlta" style="color:#ef4444">—</span></div>
+      <div class="stat-chip" style="border-color:rgba(245,158,11,.3)">🟡 Media<span id="stMedia" style="color:#f59e0b">—</span></div>
+      <div class="stat-chip" style="border-color:rgba(16,185,129,.3)">🟢 Baja<span id="stBaja" style="color:#10b981">—</span></div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters">
+      <button class="filt on"     data-f="todas"       onclick="setFilter('todas')">Todas</button>
+      <button class="filt"        data-f="pendientes"  onclick="setFilter('pendientes')">Pendientes</button>
+      <button class="filt"        data-f="completadas" onclick="setFilter('completadas')">Completadas</button>
+      <button class="filt filt-alta"  data-f="alta"   onclick="setFilter('alta')">🔴 Alta</button>
+      <button class="filt filt-media" data-f="media"  onclick="setFilter('media')">🟡 Media</button>
+      <button class="filt filt-baja"  data-f="baja"   onclick="setFilter('baja')">🟢 Baja</button>
+    </div>
+
+    <!-- List -->
+    <div class="tareas-list" id="tareasList">
+      <div class="empty">Cargando tareas…</div>
+    </div>
+
+  </div><!-- /panelActivas -->
+
+  <!-- Panel: Historial -->
+  <div id="panelHistorial" class="tab-panel-tar">
+
+    <div class="hist-nav-tar">
+      <button onclick="histTareasPrev()">←</button>
+      <span class="hist-year-tar" id="histTarYear">2025</span>
+      <button onclick="histTareasNext()">→</button>
+      <span class="hist-count-tar" id="histTarCount"></span>
+    </div>
+
+    <div id="histTareasList">
+      <div class="empty">Seleccioná el año</div>
+    </div>
+
+  </div><!-- /panelHistorial -->
+
 </div>
 
 <!-- Modal nueva/editar tarea -->
@@ -330,6 +377,7 @@ async function loadTareas() {
     tareas = [];
     toast('Error al cargar tareas', 'err');
   }
+  await autoLimpiarHistorialTareas();
   renderStats();
   renderList();
 }
@@ -419,8 +467,9 @@ async function completar(id) {
   const t = tareas.find(x => x.id === id);
   if (!t) return;
   t.completada = true;
+  t.completedAt = new Date().toISOString(); // registrar fecha de completado para historial
   const r = await SupabaseDB.upsertTarea(t);
-  if (r && r.success === false) { t.completada = false; toast('Error: ' + (r.error||''), 'err'); }
+  if (r && r.success === false) { t.completada = false; delete t.completedAt; toast('Error: ' + (r.error||''), 'err'); }
   else toast('Tarea completada ✔', 'ok');
   renderStats(); renderList();
 }
@@ -507,6 +556,97 @@ async function saveTarea() {
   renderList();
 }
 
+/* ── Tabs ── */
+let tareasTab = 'activas';
+let histTarAnio = new Date().getFullYear();
+
+function switchTareasTab(tab) {
+  tareasTab = tab;
+  document.getElementById('panelActivas').classList.toggle('active', tab === 'activas');
+  document.getElementById('panelHistorial').classList.toggle('active', tab === 'historial');
+  document.getElementById('tabBtnActivas').classList.toggle('active', tab === 'activas');
+  document.getElementById('tabBtnHistorial').classList.toggle('active', tab === 'historial');
+  if (tab === 'historial') renderHistorialTareas();
+}
+
+function histTareasPrev() { histTarAnio--; renderHistorialTareas(); }
+function histTareasNext() { histTarAnio++; renderHistorialTareas(); }
+
+function renderHistorialTareas() {
+  document.getElementById('histTarYear').textContent = histTarAnio;
+  const completadas = tareas.filter(t => {
+    if (!t.completada) return false;
+    const fecha = t.completedAt || t.createdAt || '';
+    if (!fecha) return false;
+    return parseInt(fecha.substring(0, 4)) === histTarAnio;
+  }).sort((a, b) => {
+    const fa = a.completedAt || a.createdAt || '';
+    const fb = b.completedAt || b.createdAt || '';
+    return fb.localeCompare(fa);
+  });
+  const countEl = document.getElementById('histTarCount');
+  countEl.textContent = completadas.length
+    ? `${completadas.length} tarea${completadas.length !== 1 ? 's' : ''}`
+    : '';
+  const el = document.getElementById('histTareasList');
+  if (!completadas.length) {
+    el.innerHTML = `<div class="empty">No hay tareas completadas en ${histTarAnio}</div>`;
+    return;
+  }
+  const fmtFecha = s => {
+    if (!s) return '—';
+    try { return new Date(s).toLocaleDateString('es-AR', {day:'2-digit',month:'2-digit',year:'numeric'}); }
+    catch { return s.substring(0,10); }
+  };
+  el.innerHTML = `<div style="overflow-x:auto"><table class="hist-table">
+    <thead><tr>
+      <th style="min-width:95px">Completada</th>
+      <th style="min-width:200px">Tarea</th>
+      <th style="min-width:75px">Prioridad</th>
+      <th style="min-width:140px">Observaciones</th>
+    </tr></thead>
+    <tbody>
+      ${completadas.map(t => {
+        const col = PRIO_COLOR[t.prioridad] || '#f59e0b';
+        const bg  = PRIO_BG[t.prioridad]   || 'rgba(245,158,11,.12)';
+        const lbl = PRIO_LABEL[t.prioridad] || 'Media';
+        const fechaLbl = fmtFecha(t.completedAt || t.createdAt);
+        return `<tr>
+          <td style="font-size:.78rem;color:var(--muted);white-space:nowrap">${fechaLbl}</td>
+          <td style="font-weight:500">${esc(t.texto || '—')}</td>
+          <td><span style="font-size:.68rem;font-weight:700;padding:.12rem .4rem;border-radius:4px;background:${bg};color:${col};white-space:nowrap">${lbl}</span></td>
+          <td style="font-size:.78rem;color:var(--muted)">${esc(t.observaciones || '')}</td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table></div>`;
+}
+
+/* ── Auto-limpiar historial de tareas completadas antiguas ── */
+async function autoLimpiarHistorialTareas() {
+  try {
+    const cfg = (typeof GestShared !== 'undefined') ? GestShared.getConfig() : {};
+    const anios = cfg.aniosRetencionTareas;
+    if (!anios || anios === 'nunca') return;
+    const cutoff = new Date();
+    cutoff.setFullYear(cutoff.getFullYear() - parseInt(anios));
+    const cutoffStr = cutoff.toISOString();
+    const aEliminar = tareas.filter(t => {
+      if (!t.completada) return false;
+      const fecha = t.completedAt || t.createdAt || '';
+      return fecha && fecha < cutoffStr;
+    });
+    if (!aEliminar.length) return;
+    for (const t of aEliminar) {
+      await SupabaseDB.deleteTarea(t.id);
+    }
+    tareas = tareas.filter(t => !aEliminar.some(d => d.id === t.id));
+    console.log(`[Tareas] Auto-limpieza: ${aEliminar.length} tarea${aEliminar.length !== 1 ? 's' : ''} completadas antiguas eliminadas`);
+  } catch(e) {
+    console.warn('[Tareas] autoLimpiar error:', e);
+  }
+}
+
 /* ── Enter en el formulario ── */
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeModal();
@@ -516,6 +656,8 @@ document.addEventListener('keydown', e => {
 /* ── Init ── */
 document.addEventListener('DOMContentLoaded', async () => {
   (function(){var fs=parseInt(localStorage.getItem('app_fs'))||15;document.documentElement.style.fontSize=fs+'px';})();
+  histTarAnio = new Date().getFullYear();
+  document.getElementById('histTarYear').textContent = histTarAnio;
   try { if (window._gsReady) await window._gsReady; } catch {}
   await loadTareas();
 });

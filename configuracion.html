@@ -262,6 +262,58 @@
     </div>
   </div>
 
+  <!-- Retención Historial de Tareas -->
+  <div class="cfg-card">
+    <div class="chdr"><span class="ico">✅</span>
+      <div><h2>Historial de Tareas</h2><p>Borrado automático de tareas completadas antiguas</p></div>
+    </div>
+    <div class="fg">
+      <div class="fl">
+        <label class="lbl">🗑️ Conservar tareas completadas durante</label>
+        <select class="inp" id="cfgAniosRetencionTareas">
+          <option value="1">1 año</option>
+          <option value="2">2 años</option>
+          <option value="3">3 años</option>
+          <option value="4">4 años</option>
+          <option value="5">5 años</option>
+          <option value="6">6 años</option>
+          <option value="7">7 años</option>
+          <option value="8">8 años</option>
+          <option value="9">9 años</option>
+          <option value="10" selected>10 años</option>
+          <option value="nunca">Nunca borrar</option>
+        </select>
+        <span class="hint">Las tareas completadas con fecha anterior al período se eliminan automáticamente al abrir Tareas. Default: 10 años.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Retención Historial de Tasaciones -->
+  <div class="cfg-card">
+    <div class="chdr"><span class="ico">📋</span>
+      <div><h2>Historial de Tasaciones</h2><p>Borrado automático de tasaciones antiguas (rechazadas y tomadas)</p></div>
+    </div>
+    <div class="fg">
+      <div class="fl">
+        <label class="lbl">🗑️ Conservar tasaciones durante</label>
+        <select class="inp" id="cfgAniosRetencionTasaciones">
+          <option value="1">1 año</option>
+          <option value="2">2 años</option>
+          <option value="3">3 años</option>
+          <option value="4">4 años</option>
+          <option value="5">5 años</option>
+          <option value="6">6 años</option>
+          <option value="7">7 años</option>
+          <option value="8">8 años</option>
+          <option value="9">9 años</option>
+          <option value="10" selected>10 años</option>
+          <option value="nunca">Nunca borrar</option>
+        </select>
+        <span class="hint">Las tasaciones rechazadas o tomadas con fecha anterior al período se eliminan automáticamente al abrir Tasaciones. Default: 10 años.</span>
+      </div>
+    </div>
+  </div>
+
   <!-- Alertas Tasaciones -->
   <div class="cfg-card">
     <div class="chdr"><span class="ico">📋</span>
@@ -599,7 +651,9 @@ function fillFields(cfg) {
   if($('cfgEmailInmo')) $('cfgEmailInmo').value = cfg.emailInmo || '';
 
   if($('cfgDiasExpirComp')) $('cfgDiasExpirComp').value = cfg.diasExpiracionComprador ?? 120;
-  if($('cfgAniosRetencionVisitas')) $('cfgAniosRetencionVisitas').value = String(cfg.aniosRetencionVisitas ?? 10);
+  if($('cfgAniosRetencionVisitas'))   $('cfgAniosRetencionVisitas').value   = String(cfg.aniosRetencionVisitas   ?? 10);
+  if($('cfgAniosRetencionTareas'))    $('cfgAniosRetencionTareas').value    = String(cfg.aniosRetencionTareas    ?? 10);
+  if($('cfgAniosRetencionTasaciones'))$('cfgAniosRetencionTasaciones').value = String(cfg.aniosRetencionTasaciones ?? 10);
 }
 
 function readFields() {
@@ -617,6 +671,10 @@ function readFields() {
   if (p('cfgDiasExpirComp') !== null) cfg.diasExpiracionComprador = p('cfgDiasExpirComp');
   const ret = $('cfgAniosRetencionVisitas') ? $('cfgAniosRetencionVisitas').value : '';
   if (ret) cfg.aniosRetencionVisitas = (ret === 'nunca' ? 'nunca' : parseInt(ret));
+  const retTar = $('cfgAniosRetencionTareas') ? $('cfgAniosRetencionTareas').value : '';
+  if (retTar) cfg.aniosRetencionTareas = (retTar === 'nunca' ? 'nunca' : parseInt(retTar));
+  const retTas = $('cfgAniosRetencionTasaciones') ? $('cfgAniosRetencionTasaciones').value : '';
+  if (retTas) cfg.aniosRetencionTasaciones = (retTas === 'nunca' ? 'nunca' : parseInt(retTas));
   return cfg;
 }
 

@@ -602,6 +602,33 @@ const TAS = (function() {
             guardarLocal();
         } catch(e) { console.warn('[Tasaciones] getAll error', e); }
     }
+
+    // ── Auto-limpiar tasaciones antiguas (rechazadas y tomadas) ──
+    async function autoLimpiarHistorialTasaciones() {
+        try {
+            const cfg = (typeof GestShared !== 'undefined') ? GestShared.getConfig() : {};
+            const anios = cfg.aniosRetencionTasaciones;
+            if (!anios || anios === 'nunca') return;
+            const cutoff = new Date();
+            cutoff.setFullYear(cutoff.getFullYear() - parseInt(anios));
+            const cutoffStr = cutoff.toISOString().slice(0, 10); // YYYY-MM-DD
+            const aEliminar = lista.filter(t => {
+                if (t.estado !== 'rechazada' && t.estado !== 'tomada') return false;
+                const fecha = t.fecha || '';
+                if (!fecha) return false;
+                return fecha < cutoffStr;
+            });
+            if (!aEliminar.length) return;
+            for (const t of aEliminar) {
+                await eliminarEnAPI(t.id);
+            }
+            lista = lista.filter(t => !aEliminar.some(d => d.id === t.id));
+            guardarLocal();
+            console.log(`[Tasaciones] Auto-limpieza: ${aEliminar.length} tasación${aEliminar.length !== 1 ? 'es' : ''} antiguas eliminadas`);
+        } catch(e) {
+            console.warn('[Tasaciones] autoLimpiar error:', e);
+        }
+    }
     async function guardarEnAPI(item) {
         if(!API_ON) return;
         try { await SupabaseDB.upsertTasacion(item); }
@@ -1076,6 +1103,7 @@ const TAS = (function() {
         cargando(true, 'Cargando tasaciones…');
         try { if (window._gsReady) await window._gsReady; } catch {}
         await cargar();
+        await autoLimpiarHistorialTasaciones();
         cargando(false);
         render();
 

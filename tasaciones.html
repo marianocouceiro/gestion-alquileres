@@ -540,6 +540,9 @@ const TAS = (function() {
     const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
     const fmtFecha = s => s ? new Date(s+'T00:00:00').toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
     const fmtMoney = (v,m) => v ? (m==='ARS'?'$':'U$D ')+Number(v).toLocaleString('es-AR') : '—';
+    // ── FIX: esc definida como helper HTML para evitar ReferenceError en renderHistorial ──
+    const esc = s => String(s == null ? '' : s)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     const diasDesde = s => s ? Math.floor((Date.now() - new Date(s+'T00:00:00').getTime())/864e5) : 999;
     const ultimoContacto = t => {
         if(!t.contactos||!t.contactos.length) return t.fecha||hoy();
@@ -574,7 +577,6 @@ const TAS = (function() {
     }
 
     // ── Persistencia ────────────────────────────────────────
-    // Guardar siempre en localStorage primero, luego intentar API
     function guardarLocal() {
         try { localStorage.setItem(LOCAL_KEY, JSON.stringify(lista)); } catch(e){ console.error("[Tasaciones]",e); }
     }
@@ -593,10 +595,8 @@ const TAS = (function() {
         }catch(e){console.error('[Tasaciones API]',e);return null;}
     }
     async function cargar() {
-        // Cargar desde localStorage primero (respuesta inmediata)
         const local = localStorage.getItem(LOCAL_KEY);
         if(local) { try { lista = JSON.parse(local); } catch(e) { lista=[]; } }
-        // Cargar desde Supabase
         try {
             lista = await SupabaseDB.getTasaciones();
             guardarLocal();
@@ -671,13 +671,13 @@ const TAS = (function() {
             const diasLabel = dias === 0 ? 'Hoy' : `Hace ${dias}d`;
 
             return `<tr class="${rowCls}" data-id="${t.id}">
-                <td><div class="dir-cell" title="${t.direccion||''}">${t.direccion||'—'}</div><div class="dir-sub">${t.tipo||''} ${t.superficie?'· '+t.superficie+'m²':''}</div></td>
-                <td style="font-size:.8rem">${t.propietario||'—'}<br><span style="font-size:.72rem">${t.celular?GestShared.waSpan(t.celular):''}</span></td>
+                <td><div class="dir-cell" title="${esc(t.direccion||'')}">${esc(t.direccion||'—')}</div><div class="dir-sub">${esc(t.tipo||'')} ${t.superficie?'· '+t.superficie+'m²':''}</div></td>
+                <td style="font-size:.8rem">${esc(t.propietario||'—')}<br><span style="font-size:.72rem">${t.celular?GestShared.waSpan(t.celular):''}</span></td>
                 <td><span style="font-size:.72rem;font-weight:600;padding:2px 8px;border-radius:20px;background:${t.destino==='venta'?'rgba(79,142,247,.12)':'rgba(16,185,129,.1)'};color:${t.destino==='venta'?'#4f8ef7':'#10b981'}">${t.destino||'—'}</span></td>
-                <td style="font-size:.78rem;color:var(--muted)">${t.tipo||'—'}${t.zona?'<br><span style="font-size:.7rem">'+t.zona.replace(/_/g,' ')+'</span>':''}</td>
+                <td style="font-size:.78rem;color:var(--muted)">${esc(t.tipo||'—')}${t.zona?'<br><span style="font-size:.7rem">'+t.zona.replace(/_/g,' ')+'</span>':''}</td>
                 <td style="font-weight:700;color:var(--ok);font-size:.8rem">${fmtMoney(t.valorTasado,t.moneda)}</td>
                 <td style="font-size:.8rem;color:var(--warn)">${fmtMoney(t.valorPretendido,t.moneda)}</td>
-                <td style="font-size:.78rem">${t.vendedor||'—'}</td>
+                <td style="font-size:.78rem">${esc(t.vendedor||'—')}</td>
                 <td><span style="color:${diasColor};font-weight:600;font-size:.78rem">${diasLabel}</span></td>
                 <td><span class="badge-estado" style="background:${est.bg};color:${est.color};border:1px solid ${est.border}">${est.label}</span></td>
                 <td>
@@ -786,24 +786,18 @@ const TAS = (function() {
             item.historialPrecios = [{ fecha, valor:item.valorTasado, moneda:item.moneda }];
         }
 
-        // 1. Actualizar lista local INMEDIATAMENTE
         const idx = lista.findIndex(t => t.id === id);
         if(idx >= 0) lista[idx] = item; else lista.push(item);
         guardarLocal();
 
-        // 2. Cerrar modal y renderizar
         cerrarModal();
         render();
         toast('Tasación guardada','ok');
 
-        // 3. Intentar guardar en API (en background, no bloquea la UI)
         cargando(true, 'Sincronizando…');
         await guardarEnAPI(item);
         cargando(false);
 
-        // 4. Sincronizar con visitas:
-        //    - Siempre si es nueva
-        //    - Si cambió fecha u hora en una edición
         const fechaHoraCambio = existing && (existing.fecha !== item.fecha || existing.hora !== item.hora);
         if(esNueva || fechaHoraCambio) {
             try { await sincronizarVisita(item); } catch(e){ console.error("[Tasaciones]",e); }
@@ -812,7 +806,6 @@ const TAS = (function() {
 
     // ── Registrar / actualizar en Visitas ────────────────────
     async function sincronizarVisita(item) {
-        // Supabase v5: always sync via SupabaseDB
         const v = {
             id: 'tas_' + item.id,
             fecha: item.fecha,
@@ -826,7 +819,6 @@ const TAS = (function() {
             estado: 'por_visitar',
             obs: `Tasación · ${item.destino||''} · ${item.tipo||''} · ${item.moneda||''}${item.valorTasado?' '+Number(item.valorTasado).toLocaleString('es-AR'):''}`
         };
-        const qs = `action=save&data=${encodeURIComponent(JSON.stringify(v))}`;
         await SupabaseDB.upsertVisita(v);
     }
 
@@ -855,20 +847,16 @@ const TAS = (function() {
     function renderHistorial() {
         ge('histYear').textContent = histAnio;
         const fmtF = s => s ? new Date(s+'T00:00:00').toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
-        // Extraer año de fecha en cualquier formato: YYYY-MM-DD, DD/MM/YYYY, etc.
         function extraerAnio(fecha) {
             if (!fecha) return null;
             const s = String(fecha);
-            // ISO: YYYY-MM-DD
             if (/^\d{4}-/.test(s)) return parseInt(s.substring(0,4));
-            // Argentino: DD/MM/YYYY
             const m = s.match(/(\d{4})$/);
             return m ? parseInt(m[1]) : null;
         }
         const filtradas = lista
             .filter(t => extraerAnio(t.fecha) === histAnio)
             .sort((a,b) => {
-                // normalizar para ordenar
                 const fa = String(a.fecha||''), fb = String(b.fecha||'');
                 return fb.localeCompare(fa);
             });
@@ -883,12 +871,12 @@ const TAS = (function() {
             return `<tr>
                 <td style="font-size:.78rem">${fmtF(t.fecha)}</td>
                 <td style="font-size:.78rem;color:var(--muted)">${t.hora||'—'}</td>
-                <td><div class="dir-cell" title="${t.direccion||''}">${t.direccion||'—'}</div></td>
-                <td style="font-size:.8rem">${esc?esc(t.propietario):t.propietario||'—'}<br><span style="font-size:.7rem">${t.celular?((typeof GestShared!=='undefined')?GestShared.waSpan(t.celular):'📱 '+t.celular):''}</span></td>
+                <td><div class="dir-cell" title="${esc(t.direccion||'')}">${esc(t.direccion||'—')}</div></td>
+                <td style="font-size:.8rem">${esc(t.propietario||'—')}<br><span style="font-size:.7rem">${t.celular?((typeof GestShared!=='undefined')?GestShared.waSpan(t.celular):'📱 '+esc(t.celular)):''}</span></td>
                 <td><span style="font-size:.72rem;font-weight:600;padding:2px 8px;border-radius:20px;background:${t.destino==='venta'?'rgba(79,142,247,.12)':'rgba(16,185,129,.1)'};color:${t.destino==='venta'?'#4f8ef7':'#10b981'}">${t.destino||'—'}</span></td>
-                <td style="font-size:.78rem;color:var(--muted)">${t.tipo||'—'}${t.zona?'<br><span style="font-size:.7rem">'+t.zona.replace(/_/g,' ')+'</span>':''}</td>
+                <td style="font-size:.78rem;color:var(--muted)">${esc(t.tipo||'—')}${t.zona?'<br><span style="font-size:.7rem">'+t.zona.replace(/_/g,' ')+'</span>':''}</td>
                 <td style="font-weight:700;color:var(--ok);font-size:.8rem">${fmtMoney(t.valorTasado,t.moneda)}</td>
-                <td style="font-size:.78rem">${t.vendedor||'—'}</td>
+                <td style="font-size:.78rem">${esc(t.vendedor||'—')}</td>
                 <td><span class="badge-estado" style="background:${est.bg};color:${est.color};border:1px solid ${est.border}">${est.label}</span></td>
             </tr>`;
         }).join('');
@@ -920,7 +908,6 @@ const TAS = (function() {
         ge('segTitulo').textContent = t.direccion || '—';
         ge('segSub').textContent = `${t.propietario||''}${t.celular?' · '+t.celular:''} · Tasación: ${fmtFecha(t.fecha)}`;
 
-        // Botones de estado
         const segEst = ge('segEstados');
         const estAct = t.estado || 'en_seguimiento';
         segEst.innerHTML = Object.entries(ESTADOS).map(([k,v]) => {
@@ -929,27 +916,24 @@ const TAS = (function() {
                 style="padding:.32rem .85rem;border-radius:20px;font-size:.75rem;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid ${v.border};color:${activo?'#fff':v.color};background:${activo?v.color:'transparent'}">${v.label}</button>`;
         }).join('');
 
-        // Info
         ge('segInfo').innerHTML = `
             <div style="flex:1;min-width:130px"><span style="font-size:.68rem;color:var(--muted);display:block;text-transform:uppercase;letter-spacing:.3px">Valor tasado</span><span style="font-size:.9rem;font-weight:700;color:var(--ok)">${fmtMoney(t.valorTasado,t.moneda)}</span></div>
             <div style="flex:1;min-width:130px"><span style="font-size:.68rem;color:var(--muted);display:block;text-transform:uppercase;letter-spacing:.3px">Val. pretendido</span><span style="font-size:.9rem;font-weight:700;color:var(--warn)">${fmtMoney(t.valorPretendido,t.moneda)}</span></div>
             <div style="flex:1;min-width:100px"><span style="font-size:.68rem;color:var(--muted);display:block;text-transform:uppercase;letter-spacing:.3px">Días desde tasación</span><span style="font-size:.9rem;font-weight:700">${diasDesde(t.fecha)}d</span></div>
             ${t.urlPublicacion ? `<div style="flex:2;min-width:180px"><span style="font-size:.68rem;color:var(--muted);display:block;text-transform:uppercase;letter-spacing:.3px">URL publicación</span><a href="${t.urlPublicacion}" target="_blank" style="font-size:.78rem;color:var(--info);text-decoration:none;word-break:break-all">${t.urlPublicacion.replace(/^https?:\/\//,'')}</a></div>` : ''}`;
 
-        // Precios
         const precios = (t.historialPrecios||[]);
         ge('segPrecios').innerHTML = precios.length
             ? [...precios].sort((a,b)=>a.fecha.localeCompare(b.fecha)).map(p=>`<span class="precio-chip"><span class="pf">${fmtFecha(p.fecha)}</span><span class="pv">${fmtMoney(p.valor,p.moneda)}</span></span>`).join('')
             : '<span style="font-size:.75rem;color:var(--muted)">Sin historial</span>';
 
-        // Contactos
         const contactos = (t.contactos||[]);
         ge('segContactos').innerHTML = contactos.length
             ? [...contactos].sort((a,b)=>b.fecha.localeCompare(a.fecha)).map((c,i)=>`
                 <div class="contacto-item">
                     <span class="cont-fecha">${fmtFecha(c.fecha)}</span>
                     <span class="cont-tipo">${TIPOS_C[c.tipo]||c.tipo}</span>
-                    <div style="flex:1"><div>${c.nota||'—'}</div>${c.resultado?`<div style="font-size:.7rem;color:var(--muted);font-style:italic">${c.resultado}</div>`:''}</div>
+                    <div style="flex:1"><div>${esc(c.nota||'—')}</div>${c.resultado?`<div style="font-size:.7rem;color:var(--muted);font-style:italic">${esc(c.resultado)}</div>`:''}</div>
                     <button onclick="TAS.borrarContacto(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;padding:0">✕</button>
                 </div>`).join('')
             : '<div style="color:var(--muted);font-size:.78rem;padding:.5rem 0">Sin contactos registrados</div>';
@@ -966,10 +950,8 @@ const TAS = (function() {
 
         cargando(true, 'Guardando…');
 
-        // 1. Guardar en API de tasaciones (historial incluido)
         await guardarEnAPI(t);
 
-        // 2. Si pasa a TOMADA: crear propiedad en ventas.html
         if(estado === 'tomada' && estadoAnterior !== 'tomada') {
             try {
                 const propVenta = {
@@ -986,10 +968,9 @@ const TAS = (function() {
                     honVend:     '',
                     honComp:     '',
                     fNotas:      t.obs   || '',
-                    origenTasacion: t.id,   // referencia a la tasación original
+                    origenTasacion: t.id,
                     createdAt:   new Date().toISOString(),
                 };
-                // Supabase v5: URL de GAS ya no se usa
                 await SupabaseDB.upsertPropiedad(propVenta);
                 toast('✓ Tasación tomada — propiedad creada en Ventas','ok');
             } catch(e) {
@@ -1093,13 +1074,11 @@ const TAS = (function() {
     // ── Init ─────────────────────────────────────────────────
     window.addEventListener('DOMContentLoaded', async () => {
         cargando(true, 'Cargando tasaciones…');
-        // Esperar sincronización de config (vendedores) desde Supabase
         try { if (window._gsReady) await window._gsReady; } catch {}
         await cargar();
         cargando(false);
         render();
 
-        // Cerrar modales con Esc
         document.addEventListener('keydown', e => {
             if(e.key === 'Escape') {
                 ge('modalTas').classList.remove('open');
@@ -1107,12 +1086,10 @@ const TAS = (function() {
                 ge('modalAlertas').classList.remove('open');
             }
         });
-        // Cerrar modales haciendo clic fuera
         ge('modalTas').addEventListener('click',     e => { if(e.target===ge('modalTas'))     ge('modalTas').classList.remove('open'); });
         ge('modalSeg').addEventListener('click',     e => { if(e.target===ge('modalSeg'))     ge('modalSeg').classList.remove('open'); });
         ge('modalAlertas').addEventListener('click', e => { if(e.target===ge('modalAlertas')) ge('modalAlertas').classList.remove('open'); });
 
-        // Auto-refresh inteligente cada 60s
         function isUserTypingTas() {
             const el = document.activeElement;
             if (!el) return false;
@@ -1134,14 +1111,14 @@ const TAS = (function() {
     // ── Export CSV ─────────────────────────────────────────────
     function exportarCSV() {
         if (!lista.length) { toast('Sin datos','err'); return; }
-        const esc = v => { const s=String(v==null?'':v); return s.includes(',')||s.includes('"')||s.includes('\n')?'"'+s.replace(/"/g,'""')+'"':s; };
+        const csvEsc = v => { const s=String(v==null?'':v); return s.includes(',')||s.includes('"')||s.includes('\n')?'"'+s.replace(/"/g,'""')+'"':s; };
         const headers = ['Fecha','Dirección','Propietario','Celular','Vendedor','Destino','Tipo','Zona','Sup.','Moneda','Valor Tasado','Valor Pretendido','Estado','URL','Observaciones'];
         const rows = lista.map(t => [
             t.fecha||'', t.direccion||'', t.propietario||'', t.celular||'',
             t.vendedor||'', t.destino||'', t.tipo||'', t.zona||'',
             t.superficie||'', t.moneda||'', t.valorTasado||'', t.valorPretendido||'',
             t.estado||'', t.urlPublicacion||'', t.obs||''
-        ].map(esc).join(','));
+        ].map(csvEsc).join(','));
         const csv = '\uFEFF' + headers.join(',') + '\n' + rows.join('\n');
         const url = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}));
         const a = document.createElement('a'); a.href=url;
@@ -1156,11 +1133,12 @@ const TAS = (function() {
              guardarContacto, borrarContacto, editarActual, eliminarActual,
              abrirAlertas, cerrarAlertas, guardarAlertas, render,
              cambiarTab, histPrev, histNext };
-  // Actualizar lista de vendedores si se editaron desde Configuración
-  window.addEventListener('gs:vendedores-updated', () => {
-    if (typeof renderVendedoresList === 'function') renderVendedoresList();
-  });
 })();
+
+// Actualizar lista de vendedores si se editaron desde Configuración
+window.addEventListener('gs:vendedores-updated', () => {
+  if (typeof renderVendedoresList === 'function') renderVendedoresList();
+});
 </script>
 <script>// header hardcoded — no JS needed</script>
 

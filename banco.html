@@ -391,7 +391,7 @@ async function api(url,params,retries=1){
     const isWrite=WRITES.has(params.action||'');
     for(let i=0;i<=retries;i++){
         const ctrl=new AbortController();
-        const timer=setTimeout(()=>ctrl.abort(),20000); // 20s timeout
+        const timer=setTimeout(()=>ctrl.abort(),20000);
         try{
             let r;
             if(isWrite){r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams(params).toString(),signal:ctrl.signal})}
@@ -408,20 +408,63 @@ async function api(url,params,retries=1){
     return null;
 }
 
+/* ── FIX: Detectar si una propiedad está en proceso de venta, reservada o vendida ──
+   Excluye propiedades que NO deben aparecer como match para compradores.
+   Cubre los estados que se usan en ventas.html: Reservada, en proceso, vendida, etc. */
+function estaEnProceso(p) {
+    if (!p) return false;
+    if (p.tipo !== 'venta') return true; // solo tipo venta es matcheable
+    const estado = String(p.estado || '').toLowerCase();
+    return (
+        p.proceso === true ||
+        p.contratoCreado ||
+        !!p.reservadaPor ||
+        estado === 'reservada' ||
+        estado === 'en proceso' ||
+        estado === 'en_proceso' ||
+        estado === 'proceso_venta' ||
+        estado === 'vendida' ||
+        estado === 'vendido' ||
+        estado === 'cerrado'
+    );
+}
+
+/* ── FIX: Limpiar propiedadesInteres de compradores cuando una prop entra en proceso ──
+   allProps debe ser el array completo sin filtrar (para detectar las que entraron en proceso).
+   Si un comprador tenía asignada manualmente una propiedad que ahora está en proceso,
+   la sacamos de su lista y guardamos en Supabase. */
+async function limpiarMatchesProceso(allProps) {
+    // Adreses de propiedades que están en proceso/reservada/vendida
+    const enProceso = new Set(
+        allProps.filter(p => p.tipo === 'venta' && estaEnProceso(p)).map(p => p.address)
+    );
+    if (!enProceso.size) return;
+
+    const updates = [];
+    for (const c of compradores) {
+        const antes = (c.propiedadesInteres || []).length;
+        c.propiedadesInteres = (c.propiedadesInteres || []).filter(addr => !enProceso.has(addr));
+        if (c.propiedadesInteres.length !== antes) {
+            updates.push(SupabaseDB.upsertComprador(c));
+        }
+    }
+    if (updates.length) {
+        try { await Promise.all(updates); } catch(e) { console.warn('[Banco] limpiarMatchesProceso', e); }
+        console.log(`[Banco] Se limpiaron matches manuales en ${updates.length} comprador(es) por propiedades en proceso.`);
+    }
+}
+
 /* Vendedores — safe fallback si shared.js no cargó */
 function _gs(){return (typeof GestShared!=='undefined')?GestShared:null;}
 function getVendedores(){const g=_gs();if(g)return g.getVendedores();try{return JSON.parse(localStorage.getItem('banco_vendedores')||'[]');}catch{return [];}}
 function saveVendedores(l){const g=_gs();if(g){g.saveVendedores(l);}else{try{localStorage.setItem('banco_vendedores',JSON.stringify(l));}catch{}}}
-// Rotación de vendedores: asigna en orden, sin repetir hasta completar la vuelta
 function getNextVendedorRotacion(){
     const lista=getVendedores();
     if(!lista.length)return'';
-    // Contar cuántas veces fue asignado cada uno entre compradores activos
     const activos=compradores.filter(c=>c.estado==='activo');
     const cuenta={};
     lista.forEach(v=>cuenta[v]=0);
     activos.forEach(c=>{if(c.vendedor&&cuenta[c.vendedor]!==undefined)cuenta[c.vendedor]++;});
-    // Asignar al que tiene menos asignaciones
     let min=Infinity,elegido=lista[0];
     for(const v of lista){if(cuenta[v]<min){min=cuenta[v];elegido=v;}}
     return elegido;
@@ -432,45 +475,42 @@ function buildVendedorSelect(sel=''){const l=getVendedores();$('cVendedor').inne
 function renderVendedoresList(){const l=getVendedores();$('vendedoresList').innerHTML=l.length?l.map((v,i)=>'<div class="vendedor-item">'+v+'<button onclick="removeVendedor('+i+')" style="background:none;border:none;color:var(--danger);cursor:pointer">✕</button></div>').join(''):'<div style="font-size:.78rem;color:var(--muted);padding:.4rem 0">Sin vendedores.</div>';}
 function removeVendedor(i){const l=getVendedores();l.splice(i,1);saveVendedores(l);renderVendedoresList();buildVendedorSelect();}
 
-/* Match: 1°credito → 2°rubro(any) → 3°precio±15% → 4°ambientes≥min → 5°barrio */
+/* ── FIX: matchear — solo propiedades tipo venta y no en proceso ──
+   La array `propiedades` ya está pre-filtrada al cargar, pero se verifica
+   nuevamente con estaEnProceso por si hubo actualización parcial en memoria. */
 function matchear(comp){
     const vistas=comp.vistasProps||[],noInt=comp.noInteresaProps||[],interesManual=comp.propiedadesInteres||[];
 
-    // 1. Propiedades asignadas manualmente (bypass de filtros automáticos)
+    // 1. Propiedades asignadas manualmente — también deben estar en venta activa
     const manual=propiedades.filter(p=>{
-        if(p.tipo==='alquiler'||p.contratoCreado)return false;
+        if(estaEnProceso(p))return false; // excluir si entró en proceso
         if(vistas.includes(p.address)||noInt.includes(p.address))return false;
         return interesManual.includes(p.address);
     });
 
-    // 2. Propiedades que matchean por criterios — orden estricto y excluyente
+    // 2. Propiedades que matchean por criterios automáticos
     const auto=propiedades.filter(p=>{
-        // Solo propiedades activas en venta (no alquiler, no ya vendidas, no reservadas, no en proceso cerrado)
-        if(p.tipo==='alquiler'||p.contratoCreado)return false;
-        if(p.estado==='Reservada'||p.reservadaPor)return false;
+        // Solo propiedades tipo venta, activas (no en proceso, no reservadas, no vendidas)
+        if(estaEnProceso(p))return false;
         if(vistas.includes(p.address)||noInt.includes(p.address))return false;
         if(interesManual.includes(p.address))return false;
 
-        // PASO 1 — CRÉDITO (excluyente): si el comprador tiene crédito,
-        // la propiedad DEBE aceptar crédito. Sin esto, no hay match.
+        // PASO 1 — CRÉDITO (excluyente)
         if(comp.credito===true && p.cCredito===false) return false;
 
-        // PASO 2 — RUBRO (excluyente): si el comprador eligió rubros,
-        // la propiedad DEBE matchear alguno. Sin rubro en común, no hay match.
+        // PASO 2 — RUBRO (excluyente)
         if(comp.rubros&&comp.rubros.length>0){
             if(!p.rubro||!comp.rubros.includes(p.rubro)) return false;
         }
 
-        // PASO 3 — MONTO ±10% (excluyente): solo si ambos tienen precio definido.
-        // Si alguno no tiene precio, se omite este filtro.
+        // PASO 3 — MONTO ±10% (excluyente, solo si ambos tienen precio)
         const precio=parseFloat(p.precioAut||p.precioPubl)||0;
         const presup=parseFloat(comp.presupuesto)||0;
         if(presup>0&&precio>0){
             if(precio<presup*0.90||precio>presup*1.10) return false;
         }
 
-        // PASO 4 — AMBIENTES MÍNIMOS (excluyente): la propiedad debe tener
-        // al menos los ambientes mínimos pedidos por el comprador.
+        // PASO 4 — AMBIENTES MÍNIMOS (excluyente)
         const ambP=p.ambientes!==''&&p.ambientes!=null?parseInt(p.ambientes):null;
         const ambMin=comp.ambMin!==''&&comp.ambMin!=null?parseInt(comp.ambMin):null;
         if(ambP!==null&&ambMin!==null&&ambP<ambMin) return false;
@@ -478,7 +518,6 @@ function matchear(comp){
         return true;
     });
 
-    // Las manuales van primero
     return manual.concat(auto);
 }
 
@@ -502,7 +541,6 @@ function renderVendorCounts(){
     const el = $('vendorCounts');
     if (!el) return;
     const vendedores = getVendedores();
-    // Contar compradores ACTIVOS por vendedor (coincide con la lógica de rotación)
     const cuenta = {};
     vendedores.forEach(v => cuenta[v] = 0);
     let sinAsignar = 0;
@@ -604,19 +642,17 @@ async function marcarReservo(cid,addr,pid){
     const c=compradores.find(x=>x.id===cid);
     if(!c)return;
     if(!confirm('¿Confirmar que '+c.nombre+' SE RESERVÓ "'+addr+'"?\n\nOtra persona reservó esta propiedad. Se cerrará al comprador y la propiedad dejará de aparecer en matches.'))return;
-    // Cerrar el comprador
     c.estado='cerrado';
     c.vistasProps=c.vistasProps||[];
     if(!c.vistasProps.includes(addr))c.vistasProps.push(addr);
     loading(true,'Guardando…');
     await SupabaseDB.upsertComprador(c);
-    // Marcar la propiedad como reservada (ya no matchea con nadie)
     const prop=propiedades.find(p=>p.address===addr);
     if(prop){
         const pData={...prop, estado:'Reservada', reservadaPor:'otro', reservadaFecha:new Date().toISOString().slice(0,10)};
         await SupabaseDB.upsertPropiedad(pData);
-        const idx=propiedades.findIndex(p=>p.address===addr);
-        if(idx>=0)propiedades[idx]=pData;
+        // FIX: actualizar en memoria y sacar de propiedades disponibles
+        propiedades=propiedades.filter(p=>p.address!==addr);
     }
     loading(false);
     renderMatchBanner();renderCompradores();
@@ -627,13 +663,20 @@ async function marcarNoInteresa(cid,addr){const c=compradores.find(x=>x.id===cid
 
 async function iniciarReserva(cid,addr,pid){const c=compradores.find(x=>x.id===cid);if(!c)return;const p=propiedades.find(x=>x.address===addr);if(!p)return;if(!confirm(c.nombre+' quiere reservar "'+addr+'"?\n\nSe marcará como Cerrado y se abrirá el proceso en Ventas.'))return;c.estado='cerrado';loading(true,'Procesando…');await SupabaseDB.upsertComprador(c);loading(false);sessionStorage.setItem('gestalquiler_reserva',JSON.stringify({propAddress:addr,propId:pid||p.id,compradorNombre:c.nombre,compradorTel:c.tel||'',presupuesto:c.presupuesto||0,credito:c.credito||false}));window.location.href='ventas.html';}
 
-/* Asignar propiedad manualmente (agregar a "las que le pueden interesar") */
+/* Asignar propiedad manualmente */
 function openAsignarModal(cid){_asignarCompId=cid;const c=compradores.find(x=>x.id===cid);$('asignarTitle').textContent='Agregar propiedad a '+(c?c.nombre:'');$('asignarSearch').value='';renderAsignarList('');$('modalAsignar').classList.add('open');setTimeout(()=>$('asignarSearch').focus(),80);}
+
+/* ── FIX: renderAsignarList — propiedades ya está pre-filtrada (tipo venta, no en proceso) ── */
 function renderAsignarList(term){
     const c=compradores.find(x=>x.id===_asignarCompId);
     const yaInteres=(c&&c.propiedadesInteres)||[];
     const yaVistas=(c&&c.vistasProps)||[];
-    const filtered=propiedades.filter(p=>!p.venta&&p.tipo!=='alquiler'&&!p.proceso&&!yaInteres.includes(p.address)&&!yaVistas.includes(p.address)&&(!term||p.address.toLowerCase().includes(term)));
+    // `propiedades` ya contiene solo las de tipo venta que NO están en proceso
+    const filtered=propiedades.filter(p=>
+        !yaInteres.includes(p.address) &&
+        !yaVistas.includes(p.address) &&
+        (!term||p.address.toLowerCase().includes(term))
+    );
     const el=$('asignarList');
     el.innerHTML='';
     if(!filtered.length){el.innerHTML='<div style="font-size:.78rem;color:var(--muted);padding:.6rem">Sin propiedades disponibles para agregar.</div>';return;}
@@ -655,7 +698,6 @@ async function agregarInteresManual(addr){
     loading(true,'Guardando…');
     await SupabaseDB.upsertComprador(c);
     loading(false);
-    // Refrescar la lista del modal para sacar la que acabamos de agregar
     renderAsignarList($('asignarSearch').value.toLowerCase());
     renderMatchBanner();
     renderCompradores();
@@ -666,15 +708,16 @@ async function agregarInteresManual(addr){
 function exportarCompradores(){if(!compradores.length){toast('Sin datos','err');return;}const h=['Nombre','Teléfono','Rubros','Zonas','Presupuesto','Ambientes','Crédito','Estado','Vendedor','Obs','Fecha'];const e=v=>{const s=String(v==null?'':v);return s.includes(',')||s.includes('"')||s.includes('\n')?'"'+s.replace(/"/g,'""')+'"':s;};const rows=compradores.map(c=>[c.nombre,c.tel||'',(c.rubros||[]).join('|'),(c.zonas||[]).join('|'),c.presupuesto||'',(c.ambMin||'')+'-'+(c.ambMax||''),c.credito?'Sí':'No',c.estado||'',c.vendedor||'',c.obs||'',c.fechaAlta||''].map(e).join(','));const csv='\uFEFF'+h.join(',')+' \n'+rows.join('\n');const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));const a=document.createElement('a');a.href=url;a.download='compradores_'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);toast(compradores.length+' exportados');}
 
 document.addEventListener('DOMContentLoaded',async()=>{
-    // header hardcoded
     (function(){var fs=parseInt(localStorage.getItem('app_fs'))||15;document.documentElement.style.fontSize=fs+'px';})();
     loading(true,'Cargando…');
-    // Esperar sincronización de config (vendedores) desde Supabase
     try { if (window._gsReady) await window._gsReady; } catch {}
     try{
         const[comprArr,propArr]=await Promise.all([SupabaseDB.getCompradores(),SupabaseDB.getPropiedades()]);
         compradores=comprArr.sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
-        propiedades=propArr.filter(p=>p.tipo!=='alquiler');
+        // FIX: solo propiedades tipo venta que NO estén en proceso/reservada/vendida
+        propiedades=propArr.filter(p=>p.tipo==='venta'&&!estaEnProceso(p));
+        // FIX: limpiar matches manuales de compradores si alguna prop entró en proceso
+        await limpiarMatchesProceso(propArr);
     }catch(e){console.error('[Banco load]',e);toast('Error al conectar','err');}
     loading(false);renderMatchBanner();renderCompradores();
     $('btnNuevoComp').onclick=()=>openModalComp();
@@ -692,7 +735,31 @@ document.addEventListener('DOMContentLoaded',async()=>{
     $('modalAsignar').onclick=e=>{if(e.target===$('modalAsignar'))$('modalAsignar').classList.remove('open');};
     $('asignarSearch').oninput=e=>renderAsignarList(e.target.value.toLowerCase());
     document.onkeydown=e=>{if(e.key==='Escape'){$('modalComp').classList.remove('open');$('modalVendedores').classList.remove('open');$('modalAsignar').classList.remove('open');}};
-    setInterval(async()=>{try{const nuevo=(await SupabaseDB.getCompradores()).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));if(JSON.stringify(nuevo.map(x=>x.id+':'+(x.updatedAt||x.fechaAlta)))!==JSON.stringify(compradores.map(x=>x.id+':'+(x.updatedAt||x.fechaAlta)))){compradores=nuevo;renderMatchBanner();renderCompradores();}}catch(e){}},60000);
+
+    // ── FIX: auto-refresh también refresca propiedades y corre limpiarMatchesProceso ──
+    setInterval(async()=>{
+        try{
+            const [nuevosComp, propArr] = await Promise.all([
+                SupabaseDB.getCompradores(),
+                SupabaseDB.getPropiedades()
+            ]);
+            const nuevo=nuevosComp.sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
+            const nuevasProps=propArr.filter(p=>p.tipo==='venta'&&!estaEnProceso(p));
+
+            // Actualizar array de propiedades disponibles
+            propiedades=nuevasProps;
+
+            // Limpiar matches manuales si alguna prop entró en proceso
+            // (se actualiza `compradores` in-place antes de renderizar)
+            await limpiarMatchesProceso(propArr);
+
+            if(JSON.stringify(nuevo.map(x=>x.id+':'+(x.updatedAt||x.fechaAlta)))!==JSON.stringify(compradores.map(x=>x.id+':'+(x.updatedAt||x.fechaAlta)))){
+                compradores=nuevo;
+            }
+            renderMatchBanner();
+            renderCompradores();
+        }catch(e){ console.warn('[Banco] auto-refresh error', e); }
+    },60000);
 });
 </script>
 <div id="modalWABanco" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:2000;align-items:center;justify-content:center;padding:1rem"><div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;width:100%;max-width:520px;box-shadow:var(--sh)"><div style="padding:1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between"><h4 id="waBancoTitle" style="margin:0;font-size:.92rem;font-weight:700;color:#25d366">💬 WhatsApp</h4><button onclick="document.getElementById('modalWABanco').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;line-height:1">&times;</button></div><div style="padding:1rem 1.5rem"><pre id="waBancoText" style="white-space:pre-wrap;font-family:inherit;font-size:.84rem;color:var(--txt);background:rgba(0,0,0,.2);padding:.75rem;border-radius:8px;margin:0;line-height:1.7;max-height:50vh;overflow-y:auto"></pre></div><div style="padding:.75rem 1.5rem 1rem;display:flex;gap:.5rem;justify-content:flex-end"><button id="waBancoCopy" style="background:var(--bg3);border:1px solid var(--border);color:var(--txt);border-radius:8px;padding:.4rem 1rem;font-size:.82rem;cursor:pointer;font-family:inherit">📋 Copiar</button><button id="waBancoSend" style="background:#25D366;border:none;color:#fff;border-radius:8px;padding:.4rem 1rem;font-size:.82rem;cursor:pointer;font-family:inherit;font-weight:600">Enviar</button></div></div></div>

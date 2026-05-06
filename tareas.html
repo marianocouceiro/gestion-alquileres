@@ -574,11 +574,16 @@ function histTareasNext() { histTarAnio++; renderHistorialTareas(); }
 
 function renderHistorialTareas() {
   document.getElementById('histTarYear').textContent = histTarAnio;
+  const anioActual = new Date().getFullYear();
   const completadas = tareas.filter(t => {
     if (!t.completada) return false;
-    const fecha = t.completedAt || t.createdAt || '';
-    if (!fecha) return false;
-    return parseInt(fecha.substring(0, 4)) === histTarAnio;
+    if (t.completedAt) {
+      // Tiene fecha de completado: usar esa
+      return parseInt(t.completedAt.substring(0, 4)) === histTarAnio;
+    }
+    // Sin completedAt (completadas antes de esta versión):
+    // mostrarlas bajo el año actual ya que no sabemos cuándo se completaron
+    return histTarAnio === anioActual;
   }).sort((a, b) => {
     const fa = a.completedAt || a.createdAt || '';
     const fb = b.completedAt || b.createdAt || '';
@@ -610,7 +615,9 @@ function renderHistorialTareas() {
         const col = PRIO_COLOR[t.prioridad] || '#f59e0b';
         const bg  = PRIO_BG[t.prioridad]   || 'rgba(245,158,11,.12)';
         const lbl = PRIO_LABEL[t.prioridad] || 'Media';
-        const fechaLbl = fmtFecha(t.completedAt || t.createdAt);
+        const fechaLbl = t.completedAt
+          ? fmtFecha(t.completedAt)
+          : (t.createdAt ? fmtFecha(t.createdAt) + ' <span style="color:var(--muted);font-size:.65rem">(aprox)</span>' : '—');
         return `<tr>
           <td style="font-size:.78rem;color:var(--muted);white-space:nowrap">${fechaLbl}</td>
           <td style="font-weight:500">${esc(t.texto || '—')}</td>
@@ -633,8 +640,10 @@ async function autoLimpiarHistorialTareas() {
     const cutoffStr = cutoff.toISOString();
     const aEliminar = tareas.filter(t => {
       if (!t.completada) return false;
+      // Usar completedAt si existe, sino createdAt — si ninguno hay, no borrar
       const fecha = t.completedAt || t.createdAt || '';
-      return fecha && fecha < cutoffStr;
+      if (!fecha) return false;
+      return fecha < cutoffStr;
     });
     if (!aEliminar.length) return;
     for (const t of aEliminar) {

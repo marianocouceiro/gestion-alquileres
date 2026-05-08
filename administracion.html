@@ -1133,64 +1133,162 @@
         win.document.close();
     }
 
-    async function downloadRecibosPDF(c, rec) {
+    function downloadRecibosPDF(c, rec) {
         const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
         const clean = s => (s || '').replace(/[<>:"/\\|?*\n\r]/g, '').trim();
+        const { jsPDF } = window.jspdf;
 
-        async function generar(destino) {
+        const { alq, mora, descuento, difDeposito, pagosServ, honorarios, paraDueno,
+                mLuz, mGas, mAgua, mAbl, mExpensas, mOtros } = calcRow(rec);
+        const hayExtras  = mora>0||descuento>0||difDeposito>0||pagosServ>0;
+        const totalInq   = hayExtras ? alq+mora-descuento+difDeposito+pagosServ : alq;
+        const adminFee   = parseFloat(c.adminFee)||parseFloat(rec.adminFee)||0;
+        const ownerAlias = [c.aliasOwner1,c.aliasOwner2,c.aliasOwner3,c.aliasOwner4].filter(Boolean)[0]||'';
+        const aliasInmob = c.aliasInmobiliaria||'';
+        const brand      = (typeof GestShared!=='undefined'?GestShared.getConfig().brandName:null)||'GestAlquiler';
+        const mesAnio    = `${MESES[curMonth]} ${curYear}`;
+        const fechaPago  = rec.fechaPago ? new Date(rec.fechaPago+'T00:00:00').toLocaleDateString('es-AR') : '';
+        const idxEf      = (c.acuerdoIndice&&c.acuerdoFecha)?c.acuerdoIndice:c.indexType;
+        const idxLabel   = idxEf==='FIJO'?`Fijo ${c.fixedPercent}% c/${c.updateFrequency}m`:`${idxEf} c/${c.updateFrequency}m`;
+
+        function dibujar(destino) {
             const esInq = destino === 'INQUILINO';
-            const wrapper = document.createElement('div');
-            wrapper.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;background:#fff;padding:12px;box-sizing:border-box;font-family:Arial,sans-serif;color:#111';
-            wrapper.innerHTML = buildReciboHtml(c, rec, destino);
-            document.body.appendChild(wrapper);
+            const pdf   = new jsPDF({ unit:'mm', format:'a4' });
+            const W=210, M=10, CW=W-2*M;
+            const NEGRO=[34,34,34], GRIS=[120,120,120], CLARO=[200,200,200];
+            let y = M;
 
-            // html2canvas no renderiza display:grid. Convertimos el grid de 2 columnas
-            // en una <table> HTML que sí soporta bien.
-            const grid = wrapper.querySelector('div[style*="grid-template-columns"]');
-            if (grid) {
-                const cols = Array.from(grid.children);
-                const tbl = document.createElement('table');
-                tbl.style.cssText = 'width:100%;border-collapse:collapse;table-layout:fixed';
-                const tr = document.createElement('tr');
-                const tdL = document.createElement('td');
-                tdL.style.cssText = 'width:50%;padding:5px 10px;padding-right:8px;border-right:1px solid #ddd;vertical-align:top';
-                tdL.innerHTML = cols[0] ? cols[0].innerHTML : '';
-                const tdR = document.createElement('td');
-                tdR.style.cssText = 'width:50%;padding:5px 10px;padding-left:8px;vertical-align:middle';
-                tdR.innerHTML = cols[1] ? cols[1].innerHTML : '';
-                tr.appendChild(tdL); tr.appendChild(tdR);
-                tbl.appendChild(tr);
-                grid.parentNode.replaceChild(tbl, grid);
-            }
-            // Cancela reglas globales del tema oscuro: min-width:860px y background:#0d0d0d
-            wrapper.querySelectorAll('table').forEach(t => {
-                t.style.minWidth = '0'; t.style.width = '100%'; t.style.borderCollapse = 'collapse';
-            });
-            wrapper.querySelectorAll('td,th').forEach(el => { el.style.backgroundColor = 'transparent'; });
+            // helper texto
+            const txt = (t, x, yy, o={}) => {
+                if (!t) return 0;
+                pdf.setTextColor(...(o.color||NEGRO));
+                pdf.setFontSize(o.size||8);
+                pdf.setFont('helvetica', o.bold?'bold':'normal');
+                const lines = o.maxW ? pdf.splitTextToSize(String(t), o.maxW) : [String(t)];
+                pdf.text(lines, x, yy, {align: o.align||'left'});
+                return lines.length;
+            };
 
-            try {
-                const canvas = await html2canvas(wrapper, {
-                    scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false
-                });
-                const { jsPDF } = window.jspdf;
-                const pdfW = 210;
-                const pdfH = Math.round((canvas.height * pdfW) / canvas.width);
-                const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [pdfW, pdfH] });
-                pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pdfW, pdfH);
-                const nombre = esInq ? c.tenant : c.owner;
-                const tipo   = esInq ? 'Inquilino' : 'Propietario';
-                pdf.save(`${clean(c.address)} - ${clean(nombre)} (${tipo}) - ${MESES[curMonth]} ${curYear}.pdf`);
-            } finally {
-                document.body.removeChild(wrapper);
+            // ── HEADER ──
+            pdf.setDrawColor(...NEGRO); pdf.setLineWidth(0.4);
+            pdf.roundedRect(M, y, 10, 10, 1, 1, 'S');
+            txt('CS', M+5, y+6.5, {bold:true, size:7, align:'center'});
+            txt(brand,        M+13, y+4.5, {bold:true, size:10});
+            txt('GestAlquiler',M+13, y+8.5, {size:7, color:GRIS});
+            // badge Recibo
+            pdf.roundedRect(W-M-28, y, 27, 10, 1, 1, 'S');
+            txt('RECIBO', W-M-14.5, y+3.8, {bold:true, size:6.5, align:'center'});
+            txt(mesAnio,  W-M-14.5, y+7.8, {bold:true, size:7.5, align:'center'});
+            // badge destino
+            pdf.setLineWidth(0.6);
+            pdf.roundedRect(W-M-58, y, 27, 10, 1, 1, 'S');
+            txt('PARA EL', W-M-44.5, y+3.8, {bold:true, size:6,   align:'center'});
+            txt(destino,   W-M-44.5, y+7.8, {bold:true, size:7.5, align:'center'});
+            y += 11;
+            pdf.setDrawColor(...NEGRO); pdf.setLineWidth(0.5);
+            pdf.line(M, y, W-M, y);
+            y += 5;
+
+            // ── COLUMNAS ──
+            const colW  = (CW-4)/2;   // ~93 mm
+            const lX=M, rX=M+colW+4;
+            const bodyY = y;
+
+            // helpers columna izquierda
+            const sec = t => { txt(t, lX, y, {bold:true, size:6.5, color:GRIS}); y+=3.5; };
+            const row = (lbl, val, bold=false) => {
+                txt(lbl, lX, y, {size:7.5, color:GRIS});
+                if (val) txt(val, lX+colW, y, {size:7.5, bold, maxW:colW, align:'right'});
+                y += 4;
+            };
+
+            sec('DATOS DEL CONTRATO');
+            row('Propiedad',    c.address);
+            row('Inquilino',    c.tenant);
+            row('Propietario',  c.owner);
+            if (fechaPago) row('Fecha de pago', fechaPago);
+            row('Actualizacion', idxLabel);
+            y += 1;
+            sec('DETALLE');
+            row('Alquiler '+mesAnio, fmtCur(alq));
+            if (mora)      row('Mora',              fmtCur(mora));
+            if (descuento) row('Descuento',         '- '+fmtCur(descuento));
+            if (difDeposito) row('Actualiz. deposito', fmtCur(difDeposito));
+            if (mLuz)      row('Pago Luz'     +(rec.chkLuz     ?'':' (inf.)'), fmtCur(mLuz));
+            if (mGas)      row('Pago Gas'     +(rec.chkGas     ?'':' (inf.)'), fmtCur(mGas));
+            if (mAgua)     row('Pago Agua'    +(rec.chkAgua    ?'':' (inf.)'), fmtCur(mAgua));
+            if (mAbl)      row('Pago ABL'     +(rec.chkAbl     ?'':' (inf.)'), fmtCur(mAbl));
+            if (mExpensas) row('Pago Expensas'+(rec.chkExpensas?'':' (inf.)'), fmtCur(mExpensas));
+            if (mOtros)    row('Pago Otros'   +(rec.chkOtros   ?'':' (inf.)'), fmtCur(mOtros));
+            pdf.setDrawColor(...CLARO); pdf.setLineWidth(0.2);
+            pdf.line(lX, y, lX+colW, y); y+=3;
+            row('TOTAL', fmtCur(totalInq), true);
+            const leftEndY = y;
+
+            // helpers columna derecha
+            let ry = bodyY;
+            pdf.setDrawColor(...CLARO); pdf.setLineWidth(0.2);
+            pdf.line(rX-2, bodyY-2, rX-2, Math.max(leftEndY, bodyY+40));
+            const rLbl = t => { txt(t, rX, ry, {bold:true, size:6.5, color:GRIS}); ry+=3.5; };
+            const rVal = (t,big=false) => { const n=txt(t,rX,ry,{bold:true,size:big?10:8.5,maxW:W-M-rX}); ry+=(big?5:4)*(n||1); };
+            const rAli = t => { if(t){ txt(t, rX, ry, {size:7.5, color:GRIS, maxW:W-M-rX}); ry+=4; } };
+            const rSep = () => { pdf.setDrawColor(...CLARO); pdf.line(rX,ry,W-M,ry); ry+=3; };
+
+            if (esInq) {
+                if (honorarios>0 && !c.honorariosPorDueno) {
+                    rLbl('PAGAR A LA INMOBILIARIA'); rVal(fmtCur(honorarios),true); rAli(aliasInmob); rSep();
+                    rLbl('PAGAR AL PROPIETARIO');    rVal(fmtCur(paraDueno),true);  rAli(ownerAlias);
+                } else {
+                    rLbl('PAGAR AL PROPIETARIO'); rVal(fmtCur(totalInq),true); rAli(ownerAlias);
+                }
+            } else {
+                if (honorarios>0) {
+                    if (c.honorariosPorDueno) {
+                        rLbl('COBRADO DEL INQUILINO');            rVal(fmtCur(totalInq),true); rAli(ownerAlias); rSep();
+                        rLbl(`HONORARIOS INMOB. (${adminFee}%)`); rVal('- '+fmtCur(honorarios)); rAli(aliasInmob); rSep();
+                        rLbl('NETO PARA EL DUENO');               rVal(fmtCur(paraDueno),true);
+                    } else {
+                        rLbl(`INMOBILIARIA (${adminFee}%)`); rVal(fmtCur(honorarios)); rAli(aliasInmob); rSep();
+                        rLbl('PARA EL DUENO');               rVal(fmtCur(paraDueno),true); rAli(ownerAlias);
+                    }
+                    rSep();
+                    const hBg  = rec.honRecibido?[230,249,242]:[255,247,237];
+                    const hCol = rec.honRecibido?[22,101,52]:[154,52,18];
+                    pdf.setFillColor(...hBg); pdf.setDrawColor(...hCol); pdf.setLineWidth(0.3);
+                    pdf.roundedRect(rX, ry, W-M-rX, 5, 1, 1, 'FD');
+                    txt(rec.honRecibido?'Honorarios recibidos':'Honorarios pendientes',
+                        rX+(W-M-rX)/2, ry+3.3, {bold:true, size:6.5, color:hCol, align:'center'});
+                    ry+=7;
+                } else {
+                    rLbl('PARA EL DUENO'); rVal(fmtCur(paraDueno),true); rAli(ownerAlias);
+                }
             }
+            if (rec.observaciones) {
+                rSep();
+                txt(rec.observaciones, rX, ry, {size:6.5, color:GRIS, maxW:W-M-rX});
+            }
+
+            // ── FOOTER ──
+            const footY = Math.max(leftEndY, ry)+5;
+            pdf.setDrawColor(...CLARO); pdf.setLineWidth(0.3);
+            pdf.line(M, footY, W-M, footY);
+            txt(brand, M, footY+4, {size:7.5});
+            pdf.line(W-M-35, footY+4, W-M, footY+4);
+            txt('Firma y sello', W-M-17.5, footY+7.5, {size:6.5, color:GRIS, align:'center'});
+
+            // borde exterior
+            pdf.setDrawColor(...CLARO); pdf.setLineWidth(0.3);
+            pdf.rect(M, M, CW, footY+9-M);
+
+            return pdf;
         }
 
         try {
             showToast('Generando PDFs…', 'info');
-            await generar('INQUILINO');
-            await generar('DUENO');
+            dibujar('INQUILINO').save(`${clean(c.address)} - ${clean(c.tenant)} (Inquilino) - ${mesAnio}.pdf`);
+            dibujar('DUENO').save(`${clean(c.address)} - ${clean(c.owner)} (Propietario) - ${mesAnio}.pdf`);
             showToast('PDFs descargados', 'success');
-        } catch (e) {
+        } catch(e) {
             console.error('[PDF]', e);
             showToast('Error al generar PDF', 'error');
         }

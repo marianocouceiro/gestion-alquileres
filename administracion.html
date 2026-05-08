@@ -12,6 +12,8 @@
     <script src="logger.js"></script>
     <script src="shared.js"></script>
     <script src="supabase.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1131,6 +1133,42 @@
         win.document.close();
     }
 
+    async function downloadReciboPDF(c, rec, destino) {
+        const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+        const esInq = destino === 'INQUILINO';
+
+        // Contenedor temporal fuera de pantalla al ancho de A4 en pantalla
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;background:#fff;padding:12px;box-sizing:border-box';
+        wrapper.innerHTML = buildReciboHtml(c, rec, destino);
+        document.body.appendChild(wrapper);
+
+        try {
+            showToast('Generando PDF…', 'info');
+            const canvas = await html2canvas(wrapper, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false });
+            const { jsPDF } = window.jspdf;
+            const imgW = canvas.width;
+            const imgH = canvas.height;
+            const pdfW = 210;
+            const pdfH = Math.round((imgH * pdfW) / imgW);
+            const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [pdfW, pdfH] });
+            pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pdfW, pdfH);
+
+            // Nombre: "Av Corrientes 1234 - García (Inquilino) - Mayo 2026.pdf"
+            const clean = s => (s || '').replace(/[<>:"/\\|?*\n\r]/g, '').trim();
+            const nombre = esInq ? c.tenant : c.owner;
+            const tipo   = esInq ? 'Inquilino' : 'Propietario';
+            const filename = `${clean(c.address)} - ${clean(nombre)} (${tipo}) - ${MESES[curMonth]} ${curYear}.pdf`;
+            pdf.save(filename);
+            showToast('PDF descargado', 'success');
+        } catch (e) {
+            console.error('[PDF]', e);
+            showToast('Error al generar PDF', 'error');
+        } finally {
+            document.body.removeChild(wrapper);
+        }
+    }
+
     /** Devuelve los nombres de los meses que cubre el período actualmente cobrado */
     function getCurrentPeriodMonths(c) {
         const MESES_NOM = ['enero','febrero','marzo','abril','mayo','junio',
@@ -1425,6 +1463,8 @@
             <button data-act="wa-inq">WA Inquilino</button>
             <button data-act="wa-due">WA Dueño</button>
             <button data-act="print">Recibo</button>
+            <button data-act="pdf-inq" style="color:#3b82f6">PDF Inquilino</button>
+            <button data-act="pdf-due" style="color:#8b5cf6">PDF Dueño</button>
           </div>`;
 
         attachListeners(card, c, rec, null);
@@ -1449,6 +1489,8 @@
         card.querySelector('[data-act="print"]').onclick = () => {
             printRecibo(c, records[c.address] || rec);
         };
+        card.querySelector('[data-act="pdf-inq"]').onclick = () => downloadReciboPDF(c, records[c.address] || rec, 'INQUILINO');
+        card.querySelector('[data-act="pdf-due"]').onclick = () => downloadReciboPDF(c, records[c.address] || rec, 'DUENO');
 
         return card;
     }
@@ -1546,6 +1588,8 @@
                 <button class="btn-wa-row" title="Imprimir recibo" data-act="print" style="color:#7b8fa1">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                 </button>
+                <button class="btn-wa-row" title="PDF Inquilino" data-act="pdf-inq" style="color:#3b82f6;font-size:.6rem;font-weight:700;padding:0 4px">INQ<br>PDF</button>
+                <button class="btn-wa-row" title="PDF Propietario" data-act="pdf-due" style="color:#8b5cf6;font-size:.6rem;font-weight:700;padding:0 4px">DUE<br>PDF</button>
             </div>
         </td>`;
         fragment.appendChild(tr2);
@@ -1768,6 +1812,12 @@
         // Print button
         const printBtn = get('[data-act="print"]');
         if (printBtn) printBtn.onclick = () => printRecibo(c, rec);
+
+        // PDF buttons
+        const pdfInqBtn = get('[data-act="pdf-inq"]');
+        if (pdfInqBtn) pdfInqBtn.onclick = () => downloadReciboPDF(c, records[c.address] || rec, 'INQUILINO');
+        const pdfDueBtn = get('[data-act="pdf-due"]');
+        if (pdfDueBtn) pdfDueBtn.onclick = () => downloadReciboPDF(c, records[c.address] || rec, 'DUENO');
     }
 
     /* ══ Summary ══ */

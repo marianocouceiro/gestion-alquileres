@@ -313,7 +313,17 @@ tr:last-child td{border-bottom:none}
       <h3>Acuerdo de precio</h3>
       <p>En algunos contratos el propietario y el inquilino acuerdan un valor diferente al que da el índice. Podés registrar ese acuerdo con el botón <strong>"Acuerdo de precio"</strong> e ingresar el monto acordado manualmente.</p>
 
-      <div class="warn">Un contrato eliminado no se puede recuperar. Si el contrato venció, dejalo en el sistema — sirve como historial.</div>
+      <h3>Renovar contrato ♻️</h3>
+      <p>Cuando vence un contrato y se firma uno nuevo para la misma propiedad, usá el botón <strong>"♻️ Renovar"</strong> de la fila. Podés elegir entre renovar con el mismo inquilino o uno nuevo. El contrato anterior se elimina y se crea el nuevo ya cargado con los datos del propietario, servicios y aliases.</p>
+
+      <h3>Finalizar contrato 🏁</h3>
+      <p>Si el inquilino se va y va a entrar uno nuevo en la misma propiedad, usá el botón <strong>"🏁 Finalizar"</strong> (en la fila o en el detalle del contrato). A diferencia de Renovar, el contrato anterior <strong>no se elimina</strong> — queda guardado como historial. El sistema abre automáticamente el formulario de nuevo contrato pre-completado con los datos que no cambian: propietario, números de servicios, quién paga cada servicio, aliases de cobro y honorarios. Solo tenés que completar: inquilino, fecha de inicio, monto y condiciones.</p>
+      <div class="tip">Usá <strong>Finalizar</strong> cuando cambia el inquilino pero querés conservar el historial del contrato anterior. Usá <strong>Renovar</strong> cuando ya no necesitás ese historial.</div>
+
+      <h3>Imprimir ficha del contrato</h3>
+      <p>En el detalle del contrato, el botón <strong>"🖨️ Imprimir"</strong> abre una hoja A4 con todos los datos del contrato lista para imprimir. La ventana se cierra automáticamente al terminar.</p>
+
+      <div class="warn">Un contrato eliminado no se puede recuperar. Si el contrato venció o cambió el inquilino, usá <strong>Finalizar</strong> en vez de eliminar — sirve como historial.</div>
     </div>
 
     <!-- ══════════════════════════════════════════ -->
@@ -340,15 +350,33 @@ tr:last-child td{border-bottom:none}
 
       <h3>Honorarios</h3>
       <p>Los honorarios de la inmobiliaria se calculan automáticamente como porcentaje del alquiler cobrado. El porcentaje lo configurás en ⚙️ Configuración → General (por defecto 5%). Podés verlos desglosados por contrato y por mes.</p>
+      <p>En cada fila aparece un badge que muestra el estado de cobro de los honorarios: <strong>⏳ Pendiente</strong> (todavía no los recibiste) o <strong>✓ Recibido</strong> (ya los cobraste). Hacé click sobre el badge para cambiar el estado — se guarda automáticamente. La barra superior muestra cuántos contratos tienen honorarios pendientes en el mes.</p>
 
       <h3>Mora</h3>
       <p>Si el pago se registra después de la fecha de vencimiento, el sistema aplica automáticamente el porcentaje de mora configurado. Podés modificarlo manualmente si acordaste algo diferente con el inquilino.</p>
 
       <h3>Totales del mes</h3>
-      <p>En la parte superior de Administración hay una barra con el total de alquileres cobrados y el total de honorarios del mes. Esta información es visible solo para usuarios con rol <strong>Admin</strong>.</p>
+      <p>En la parte superior de Administración hay una barra con los siguientes indicadores:</p>
+      <table>
+        <tr><th>Indicador</th><th>Qué muestra</th><th>Visible para</th></tr>
+        <tr><td>Total alquileres</td><td>Suma de todos los alquileres del mes</td><td>Solo Admin</td></tr>
+        <tr><td>Total inmobiliaria</td><td>Suma de honorarios del mes</td><td>Solo Admin</td></tr>
+        <tr><td>Sin pago</td><td>Contratos sin pago registrado después del día 10</td><td>Todos</td></tr>
+        <tr><td>Retirados</td><td>Contratos marcados como RETIRADO</td><td>Todos</td></tr>
+        <tr><td>Hon. pendientes</td><td>Cantidad de contratos con honorarios sin confirmar</td><td>Todos</td></tr>
+      </table>
 
       <h3>Imprimir recibo</h3>
-      <p>El botón <strong>"Recibo"</strong> abre una nueva pestaña con el recibo listo para imprimir. Una vez que imprimís (o cancelás), la pestaña se cierra automáticamente.</p>
+      <p>El botón <strong>"Recibo"</strong> (ícono de impresora) abre una nueva pestaña con ambos recibos listos para imprimir — uno para el inquilino y uno para el propietario en la misma hoja. La pestaña se cierra automáticamente al terminar de imprimir.</p>
+
+      <h3>Descargar recibo en PDF</h3>
+      <p>Además de imprimir, podés descargar cada recibo por separado como archivo PDF:</p>
+      <ul style="margin:.5rem 0 .5rem 1.2rem;line-height:1.8">
+        <li><strong>INQ PDF</strong> (azul) — descarga el recibo del inquilino con el desglose de lo que paga.</li>
+        <li><strong>DUE PDF</strong> (violeta) — descarga el recibo del propietario con la liquidación y honorarios descontados.</li>
+      </ul>
+      <p>El archivo se llama automáticamente <em>Dirección - Nombre (Inquilino/Propietario) - Mes Año.pdf</em> y se guarda en la carpeta de descargas del navegador.</p>
+      <div class="tip">En mobile los botones aparecen como <strong>"PDF Inquilino"</strong> y <strong>"PDF Dueño"</strong> en la card de cada contrato.</div>
 
       <h3>Mensajes de WhatsApp</h3>
       <p>Desde la vista de administración podés generar mensajes de WhatsApp pre-armados para enviarle al inquilino (con el monto a pagar) o al propietario (con la liquidación del mes). Ver sección <strong>📱 Mensajes WhatsApp</strong> para más detalle.</p>

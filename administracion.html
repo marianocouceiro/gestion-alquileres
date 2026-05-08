@@ -1140,22 +1140,19 @@
         async function generar(destino) {
             const esInq = destino === 'INQUILINO';
             const wrapper = document.createElement('div');
-            wrapper.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;background:#fff;padding:12px;box-sizing:border-box';
+            wrapper.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;background:#fff;padding:12px;box-sizing:border-box;font-family:Arial,sans-serif;color:#111';
             wrapper.innerHTML = buildReciboHtml(c, rec, destino);
             document.body.appendChild(wrapper);
+            // Pisa inline las reglas globales del tema oscuro antes de capturar:
+            // table{min-width:860px} rompe el layout y td{background:#0d0d0d} pone fondo negro.
+            // Los inline styles siempre ganan en el cascade sin depender de onclone.
+            wrapper.querySelectorAll('table').forEach(t => {
+                t.style.minWidth = '0'; t.style.width = '100%'; t.style.borderCollapse = 'collapse';
+            });
+            wrapper.querySelectorAll('td,th').forEach(el => { el.style.backgroundColor = 'transparent'; });
             try {
                 const canvas = await html2canvas(wrapper, {
-                    scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false,
-                    onclone: (clonedDoc) => {
-                        // Cancela reglas globales del tema oscuro que rompen el recibo:
-                        // td{background:#0d0d0d} y table{min-width:860px}.
-                        const s = clonedDoc.createElement('style');
-                        s.textContent = [
-                            'td,th,tr,thead,tbody,table{background-color:transparent!important}',
-                            'table{min-width:0!important;width:100%!important;font-size:inherit!important}',
-                        ].join('');
-                        clonedDoc.head.appendChild(s);
-                    }
+                    scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false
                 });
                 const { jsPDF } = window.jspdf;
                 const pdfW = 210;

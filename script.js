@@ -1187,7 +1187,7 @@ function printContract(c) {
     const w = window.open('', '_blank', 'width=900,height=700');
     w.document.write(html);
     w.document.close();
-    w.onload = () => { w.focus(); w.print(); };
+    w.onload = () => { w.focus(); w.print(); w.onafterprint = () => w.close(); };
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -1452,6 +1452,7 @@ async function createRow(c) {
             <button class="btn-icon" title="Detalle" data-action="detail">👁️</button>
             <button class="btn-icon" title="Prórroga" data-action="prorroga" style="color:#7c3aed;border-color:rgba(124,58,237,.35);font-size:0.82rem">🔄</button>
             <button class="btn-icon" title="Renovar contrato" data-action="renovar" style="color:#10b981;border-color:rgba(16,185,129,.35);font-size:0.82rem">♻️</button>
+            <button class="btn-icon" title="Finalizar contrato" data-action="finalizar" style="color:#ef4444;border-color:rgba(239,68,68,.35);font-size:0.82rem">🏁</button>
             <button class="btn-icon" title="Editar" data-action="edit">✏️</button>
             <button class="btn-icon danger" title="Eliminar" data-action="delete">🗑️</button>
         </div></td>`;
@@ -1460,6 +1461,7 @@ async function createRow(c) {
     tr.querySelector('[data-action="detail"]').onclick   = () => openDetail(c.id);
     tr.querySelector('[data-action="prorroga"]').onclick = () => openProrrogaModal(c.id);
     tr.querySelector('[data-action="renovar"]').onclick  = () => openRenovarModal(c.id);
+    tr.querySelector('[data-action="finalizar"]').onclick = () => openFinalizarModal(c.id);
     tr.querySelector('[data-action="edit"]').onclick     = () => openModal(c.id);
     tr.querySelector('[data-action="delete"]').onclick = async () => {
         if (!confirm(`¿Eliminar contrato de "${c.address}"?`)) return;
@@ -1594,7 +1596,7 @@ async function createCard(c) {
       ⚠️ Formulario y estructura HTML: SIN CAMBIOS
 ══════════════════════════════════════════════════════════════ */
 
-function openModal(editId = null) {
+function openModal(editId = null, prefillFrom = null) {
     $('#contractForm').reset();
     $('#contractId').value = '';
     $('#fixedPercentGroup').style.display = 'none';
@@ -1681,10 +1683,39 @@ function openModal(editId = null) {
         }
     } else {
         $('#modalTitle').textContent = 'Nuevo Contrato';
+        if (prefillFrom) {
+            const p = prefillFrom;
+            $('#modalTitle').textContent = 'Nuevo Contrato (desde ' + (p.address || '') + ')';
+            $('#address').value        = p.address      || '';
+            $('#owner').value          = p.owner        || '';
+            $('#ownerPhone').value     = p.ownerPhone   || '';
+            $('#ownerEmail').value     = p.ownerEmail   || '';
+            $('#adminFee').value       = p.adminFee     || '';
+            $('#moraRate').value       = p.moraRate != null ? p.moraRate : '2';
+            $('#aliasOwner1').value    = p.aliasOwner1  || '';
+            $('#aliasOwner2').value    = p.aliasOwner2  || '';
+            $('#aliasOwner3').value    = p.aliasOwner3  || '';
+            $('#aliasOwner4').value    = p.aliasOwner4  || '';
+            $('#nroAbl').value         = p.nroAbl       || '';
+            $('#nroAysa').value        = p.nroAysa      || '';
+            $('#nroLuz').value         = p.nroLuz       || '';
+            $('#nroGas').value         = p.nroGas       || '';
+            $('#pagaAbl').checked      = !!p.pagaAbl;
+            $('#pagaAysa').checked     = !!p.pagaAysa;
+            $('#pagaLuz').checked      = !!p.pagaLuz;
+            $('#pagaGas').checked      = !!p.pagaGas;
+            $('#pagaExpensas').checked = !!p.pagaExpensas;
+            if (p.honorariosPorDueno) {
+                $('#honorariosPorDueno').checked = true;
+                $('#honorariosToggle').classList.add('on');
+                $('#honorariosLabel').textContent = 'Dueño';
+                $('#honorariosLabel').style.color = '#f57c00';
+            }
+        }
     }
 
     $('#contractModal').classList.add('active');
-    setTimeout(() => $('#address').focus(), 100);
+    setTimeout(() => (prefillFrom ? $('#tenant') : $('#address')).focus(), 100);
 
     // Mobile: fix inline styles que rompen el ancho
     if (window.innerWidth <= 768) {
@@ -1904,11 +1935,17 @@ async function openDetail(id) {
             <div class="whatsapp-text">${escapeHTML(msg)}</div>
         </div>
     </div>
-    ${uds.length ? `<div class="update-timeline"><h3>📅 Cronograma de Actualizaciones</h3>${tlHTML}</div>` : ''}`;
+    ${uds.length ? `<div class="update-timeline"><h3>📅 Cronograma de Actualizaciones</h3>${tlHTML}</div>` : ''}
+    <div style="padding:1rem 0 0.5rem;display:flex;gap:0.75rem;flex-wrap:wrap;border-top:1px solid var(--border,#2a2a2a);margin-top:1rem">
+        <button id="btnRenovarDetail" class="btn btn-sm btn-ghost" style="color:#10b981;border-color:rgba(16,185,129,.35)">♻️ Renovar contrato</button>
+        <button id="btnFinalizarDetail" class="btn btn-sm btn-ghost" style="color:#ef4444;border-color:rgba(239,68,68,.35)">🏁 Finalizar contrato</button>
+    </div>`;
 
     $('#cpMsg').onclick = async () => { showToast(await copyText(msg) ? 'Copiado' : 'Error', await copyText(msg) ? 'success' : 'error'); };
     $('#waMsg').onclick = () => openWA(msg);
     $('#btnPrintContract').onclick = () => printContract(c);
+    $('#btnRenovarDetail').onclick  = () => { $('#detailModal').classList.remove('active'); openRenovarModal(c.id); };
+    $('#btnFinalizarDetail').onclick = () => { $('#detailModal').classList.remove('active'); openFinalizarModal(c.id); };
 
     // Desmarcar
     db.querySelectorAll('[data-unmark]').forEach(btn => {
@@ -2515,7 +2552,98 @@ async function confirmarRenovar(contractId) {
 
 
 /* ══════════════════════════════════════════════════════════════
-   19. INICIALIZACIÓN — DOMContentLoaded
+   19. FINALIZAR CONTRATO
+══════════════════════════════════════════════════════════════ */
+
+function openFinalizarModal(contractId) {
+    const c = getContractById(contractId);
+    if (!c) return;
+    const existing = document.getElementById('finalizarModal');
+    if (existing) existing.remove();
+
+    const today = new Date().toISOString().slice(0, 10);
+    const m = document.createElement('div');
+    m.id = 'finalizarModal';
+    m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:3000;display:flex;align-items:center;justify-content:center;padding:1rem';
+    m.innerHTML = `
+        <div style="background:#1c1c1c;border:1px solid rgba(255,255,255,0.13);border-radius:18px;width:100%;max-width:440px;box-shadow:0 24px 70px rgba(0,0,0,0.65);font-family:'Inter',-apple-system,sans-serif">
+            <div style="padding:1rem 1.5rem;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:space-between">
+                <div style="display:flex;align-items:center;gap:0.6rem">
+                    <span style="font-size:1.15rem">🏁</span>
+                    <h4 style="margin:0;font-size:0.95rem;font-weight:700;color:#f5f5f5">Finalizar contrato</h4>
+                </div>
+                <button onclick="document.getElementById('finalizarModal').remove()" style="background:none;border:none;color:#717171;font-size:1.35rem;cursor:pointer;line-height:1">&times;</button>
+            </div>
+            <div style="padding:1.25rem 1.5rem;display:flex;flex-direction:column;gap:1rem">
+                <div style="font-size:0.88rem;font-weight:700;color:#f5f5f5">${esc(c.address)}</div>
+                <div style="font-size:0.78rem;color:#a0a0a0;line-height:1.5">
+                    El contrato quedará guardado como historial. Se abrirá un nuevo contrato pre-llenado con los datos del propietario, servicios y alias.
+                </div>
+                <div style="display:flex;flex-direction:column;gap:0.3rem">
+                    <label style="font-size:0.7rem;font-weight:700;color:#b0b0b0;text-transform:uppercase;letter-spacing:0.4px">Fecha de finalización</label>
+                    <input id="finalizarFecha" type="date" value="${today}"
+                        style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:.4rem .65rem;font-size:.88rem;color:#f5f5f5;font-family:inherit;outline:none;color-scheme:dark">
+                </div>
+                <div style="font-size:0.7rem;color:#717171;background:rgba(245,124,0,0.07);border:1px solid rgba(245,124,0,0.2);border-radius:8px;padding:0.6rem 0.8rem;line-height:1.5">
+                    Se pre-completarán: <strong style="color:#f59e0b">propietario · servicios (números y quién paga) · aliases · honorario · mora</strong>.<br>
+                    Deberás completar: inquilino, fecha inicio, monto y condiciones.
+                </div>
+            </div>
+            <div style="padding:1rem 1.5rem;border-top:1px solid rgba(255,255,255,.08);display:flex;justify-content:flex-end;gap:.75rem">
+                <button onclick="document.getElementById('finalizarModal').remove()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#b0b0b0;border-radius:8px;padding:.4rem 1rem;font-size:.8rem;font-weight:600;cursor:pointer;font-family:inherit">Cancelar</button>
+                <button onclick="confirmarFinalizar('${c.id}')" style="background:linear-gradient(135deg,#ef4444,#dc2626);border:none;color:#fff;border-radius:8px;padding:.4rem 1.2rem;font-size:.8rem;font-weight:700;cursor:pointer;font-family:inherit">🏁 Confirmar finalización</button>
+            </div>
+        </div>`;
+    document.body.appendChild(m);
+    m.onclick = e => { if (e.target === m) m.remove(); };
+}
+
+async function confirmarFinalizar(contractId) {
+    const c = getContractById(contractId);
+    if (!c) return;
+    const fechaEl = document.getElementById('finalizarFecha');
+    const fecha = fechaEl ? fechaEl.value : new Date().toISOString().slice(0, 10);
+    if (!fecha) { alert('Ingresá una fecha de finalización.'); return; }
+
+    if (!confirm(`¿Finalizar el contrato de "${c.address}"?\n\nEl contrato quedará guardado como historial y se abrirá el formulario para el nuevo contrato.`)) return;
+
+    document.getElementById('finalizarModal').remove();
+    const lb = $('#loadingBanner');
+    if (lb) { lb.style.display = 'block'; $('#loadingBannerText').textContent = '🔄 Guardando finalización…'; }
+
+    try {
+        // 1. Marcar contrato como finalizado en Supabase
+        const contractFinalizado = { ...c, finalizadoAt: fecha };
+        const saveResult = await SupabaseDB.upsertContrato(contractFinalizado);
+        if (!saveResult || !saveResult.success) {
+            if (lb) lb.style.display = 'none';
+            showToast('Error al guardar la finalización.', 'error');
+            return;
+        }
+
+        // 2. Quitar del cache local y re-renderizar
+        const idx = contractsCache.findIndex(x => x.id === c.id);
+        if (idx !== -1) contractsCache.splice(idx, 1);
+        await renderContracts();
+
+        // 3. Cerrar modal de detalle si está abierto
+        const detailModal = document.getElementById('detailModal');
+        if (detailModal) detailModal.classList.remove('active');
+
+        showToast('Contrato finalizado. Completá los datos del nuevo contrato.', 'success');
+
+        // 4. Abrir formulario de nuevo contrato pre-llenado
+        openModal(null, c);
+
+    } catch (e) {
+        console.error('[confirmarFinalizar]', e);
+        showToast('Error al finalizar contrato: ' + (e.message || e), 'error');
+    }
+    if (lb) lb.style.display = 'none';
+}
+
+/* ══════════════════════════════════════════════════════════════
+   20. INICIALIZACIÓN — DOMContentLoaded
 ══════════════════════════════════════════════════════════════ */
 
 document.addEventListener('DOMContentLoaded', async () => {

@@ -222,6 +222,7 @@ const SupabaseDB = (function () {
       acuerdoMonto: c.acuerdo_monto, acuerdoFecha: c.acuerdo_fecha,
       acuerdoIndice: c.acuerdo_indice, acuerdoNota: c.acuerdo_nota,
       createdAt: c.created_at, updatedAt: c.updated_at,
+      finalizadoAt: c.finalizado_at || null,
     };
   }
 
@@ -261,12 +262,16 @@ const SupabaseDB = (function () {
       acuerdo_fecha:  nullDate(c.acuerdoFecha),
       acuerdo_indice: c.acuerdoIndice || null,
       acuerdo_nota:   c.acuerdoNota   || null,
+      finalizado_at:  nullDate(c.finalizadoAt) || null,
       updated_at: new Date().toISOString(),
     };
   }
 
-  async function getContratos() {
-    const r = await query('contratos', { filters: 'order=address.asc' });
+  async function getContratos({ includeFinalizados = false } = {}) {
+    const filters = includeFinalizados
+      ? 'order=address.asc'
+      : 'finalizado_at=is.null&order=address.asc';
+    const r = await query('contratos', { filters });
     return r.success ? (r.data || []).map(toApp) : [];
   }
   async function upsertContrato(c) { return await upsert('contratos', fromApp(c)); }

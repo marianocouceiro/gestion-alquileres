@@ -1300,6 +1300,9 @@
                 if (!existing._manualDifDeposito) {
                     rec.difDeposito = calcDefaultDifDeposito(c) || '';
                 }
+                if (!rec.adminFee) {
+                    rec.adminFee = parseFloat(c.adminFee) || 0;
+                }
             }
             body.appendChild(buildRow(c, rec));
             if (mobCards) mobCards.appendChild(buildCard(c, rec));
@@ -1485,7 +1488,7 @@
         </td>
         <td class="amount amount-green f-paraDueno">${buildParaDuenoHtml(calcRow(rec))}</td>
         <td class="f-honorarios" style="white-space:nowrap">
-            <span style="font-weight:600;color:var(--txt)">${fmtCur(honorarios)}${rec.adminFee ? `<span style="font-size:.75rem;color:var(--text-muted);font-weight:400;margin-left:3px">(${rec.adminFee}%)</span>` : ''}</span>
+            <span class="f-hon-amount" style="font-weight:600;color:var(--txt)">${fmtCur(honorarios)}${rec.adminFee ? `<span style="font-size:.75rem;color:var(--text-muted);font-weight:400;margin-left:3px">(${rec.adminFee}%)</span>` : ''}</span>
             ${honorarios > 0 ? `<br><button class="hon-badge f-honRecibido ${rec.honRecibido ? 'hon-recibido' : 'hon-pendiente'}"
                 data-recibido="${rec.honRecibido ? '1' : '0'}"
                 title="${rec.honRecibido ? 'Honorarios recibidos — click para marcar pendiente' : 'Honorarios pendientes — click para marcar recibido'}"
@@ -1580,7 +1583,12 @@
             rec.chkOtros      = get('.f-chkOtros')?.checked      || false;
             const {honorarios, paraDueno} = calcRow(rec);
             get('.f-paraDueno').innerHTML = buildParaDuenoHtml(calcRow(rec));
-            get('.f-honorarios').textContent = fmtCur(honorarios);
+            const honAmountSpan = get('.f-hon-amount');
+            if (honAmountSpan && honAmountSpan.firstChild) {
+                honAmountSpan.firstChild.nodeValue = fmtCur(honorarios);
+            } else {
+                get('.f-honorarios').textContent = fmtCur(honorarios);
+            }
             const cls = rowClass(rec.estado);
             // Desktop rows
             if (tr.tagName === 'TR' || tr2) {
@@ -1774,6 +1782,7 @@
             const rec2 = rec ? { ...rec } : defaultRecord(c);
                 if (rec && !rec._manualAlquiler)    rec2.montoAlquiler = getMontoBase(c);
                 if (rec && !rec._manualDifDeposito) rec2.difDeposito   = calcDefaultDifDeposito(c) || '';
+                if (rec && !rec2.adminFee)          rec2.adminFee      = parseFloat(c.adminFee) || 0;
                 const {alq, honorarios} = calcRow(rec2);
             sumAlq   += alq;
             sumInmob += honorarios;

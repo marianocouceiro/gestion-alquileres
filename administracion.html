@@ -1143,13 +1143,31 @@
             wrapper.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;background:#fff;padding:12px;box-sizing:border-box;font-family:Arial,sans-serif;color:#111';
             wrapper.innerHTML = buildReciboHtml(c, rec, destino);
             document.body.appendChild(wrapper);
-            // Pisa inline las reglas globales del tema oscuro antes de capturar:
-            // table{min-width:860px} rompe el layout y td{background:#0d0d0d} pone fondo negro.
-            // Los inline styles siempre ganan en el cascade sin depender de onclone.
+
+            // html2canvas no renderiza display:grid. Convertimos el grid de 2 columnas
+            // en una <table> HTML que sí soporta bien.
+            const grid = wrapper.querySelector('div[style*="grid-template-columns"]');
+            if (grid) {
+                const cols = Array.from(grid.children);
+                const tbl = document.createElement('table');
+                tbl.style.cssText = 'width:100%;border-collapse:collapse;table-layout:fixed';
+                const tr = document.createElement('tr');
+                const tdL = document.createElement('td');
+                tdL.style.cssText = 'width:50%;padding:5px 10px;padding-right:8px;border-right:1px solid #ddd;vertical-align:top';
+                tdL.innerHTML = cols[0] ? cols[0].innerHTML : '';
+                const tdR = document.createElement('td');
+                tdR.style.cssText = 'width:50%;padding:5px 10px;padding-left:8px;vertical-align:middle';
+                tdR.innerHTML = cols[1] ? cols[1].innerHTML : '';
+                tr.appendChild(tdL); tr.appendChild(tdR);
+                tbl.appendChild(tr);
+                grid.parentNode.replaceChild(tbl, grid);
+            }
+            // Cancela reglas globales del tema oscuro: min-width:860px y background:#0d0d0d
             wrapper.querySelectorAll('table').forEach(t => {
                 t.style.minWidth = '0'; t.style.width = '100%'; t.style.borderCollapse = 'collapse';
             });
             wrapper.querySelectorAll('td,th').forEach(el => { el.style.backgroundColor = 'transparent'; });
+
             try {
                 const canvas = await html2canvas(wrapper, {
                     scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false

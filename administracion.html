@@ -1147,10 +1147,13 @@
                 const canvas = await html2canvas(wrapper, {
                     scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false,
                     onclone: (clonedDoc) => {
-                        // El CSS global pone td{background:var(--bg-primary)} (negro).
-                        // Este reset lo cancela solo en el clon de captura.
+                        // Cancela reglas globales del tema oscuro que rompen el recibo:
+                        // td{background:#0d0d0d} y table{min-width:860px}.
                         const s = clonedDoc.createElement('style');
-                        s.textContent = 'td,th,tr,thead,tbody,table{background-color:transparent!important}';
+                        s.textContent = [
+                            'td,th,tr,thead,tbody,table{background-color:transparent!important}',
+                            'table{min-width:0!important;width:100%!important;font-size:inherit!important}',
+                        ].join('');
                         clonedDoc.head.appendChild(s);
                     }
                 });

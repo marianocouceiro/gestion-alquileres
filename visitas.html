@@ -85,7 +85,7 @@
     .week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;margin-bottom:1rem}
     .week-label{grid-column:1 / -1;font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;padding:.35rem 0 .15rem 0;border-bottom:1px solid var(--border);margin-bottom:.1rem}
     .week-label-next{margin-top:.8rem;color:var(--acc);border-color:rgba(245,124,0,.25)}
-    .week-day{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:.6rem;min-height:100px}
+    .week-day{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:.6rem;min-height:100px;max-height:280px;overflow-y:auto}
     .week-day.today{border-color:rgba(245,124,0,.4);background:rgba(245,124,0,.04)}
     .week-day-hdr{font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:.3rem}
     .week-day-num{font-size:.95rem;font-weight:700;margin-bottom:.4rem}

@@ -505,7 +505,7 @@
     </div>
     <!-- Visible para todos -->
     <div class="summary-item">
-        <span class="summary-label">Sin pago (luego del día 10)</span>
+        <span class="summary-label">Con mora</span>
         <span class="summary-value warning" id="sumMora">—</span>
     </div>
     <div class="summary-item">
@@ -519,6 +519,10 @@
     <div class="summary-item">
         <span class="summary-label">Faltan pagar</span>
         <span class="summary-value" id="sumFaltanPagar" style="color:var(--text-muted)">—</span>
+    </div>
+    <div class="summary-item">
+        <span class="summary-label">Faltan retirar</span>
+        <span class="summary-value" id="sumFaltanRetirar" style="color:var(--text-muted)">—</span>
     </div>
 </div>
 
@@ -1958,7 +1962,7 @@
 
     /* ══ Summary ══ */
     function updateSummary() {
-        let sumAlq=0, sumInmob=0, retirados=0, sinPago=0, honPendientes=0, faltanPagar=0;
+        let sumAlq=0, sumInmob=0, retirados=0, sinPago=0, honPendientes=0, faltanPagar=0, faltanRetirar=0;
 
         const isCurrentMonth = (today.getFullYear()===curYear && today.getMonth()===curMonth);
         const pastDay10 = isCurrentMonth && today.getDate() > 10;
@@ -1978,6 +1982,8 @@
             if (honorarios > 0 && (!rec || !rec.honRecibido)) honPendientes++;
             // Faltan pagar: contratos sin estado asignado
             if (!rec || rec.estado === '') faltanPagar++;
+            // Faltan retirar: avisados pero aún no retirados
+            if (rec && rec.estado === 'AVISADO') faltanRetirar++;
         });
 
         $('#sumAlq').textContent       = fmtCur(sumAlq);
@@ -1994,6 +2000,11 @@
         if (faltanPill) {
             faltanPill.textContent = faltanPagar > 0 ? `${faltanPagar}` : '—';
             faltanPill.style.color = faltanPagar > 0 ? 'var(--warning)' : 'var(--text-muted)';
+        }
+        const retirarPill = $('#sumFaltanRetirar');
+        if (retirarPill) {
+            retirarPill.textContent = faltanRetirar > 0 ? `${faltanRetirar}` : '—';
+            retirarPill.style.color = faltanRetirar > 0 ? 'var(--warning)' : 'var(--text-muted)';
         }
     }
 

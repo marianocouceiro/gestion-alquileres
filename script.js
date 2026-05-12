@@ -1686,11 +1686,21 @@ function openModal(editId = null, prefillFrom = null) {
         if (prefillFrom) {
             const p = prefillFrom;
             $('#modalTitle').textContent = 'Nuevo Contrato (desde ' + (p.address || '') + ')';
-            $('#address').value        = p.address      || '';
-            $('#owner').value          = p.owner        || '';
-            $('#ownerPhone').value     = p.ownerPhone   || '';
-            $('#ownerEmail').value     = p.ownerEmail   || '';
-            $('#adminFee').value       = p.adminFee     || '';
+            $('#address').value        = p.address         || '';
+            $('#owner').value          = p.owner           || '';
+            $('#ownerPhone').value     = p.ownerPhone      || '';
+            $('#ownerEmail').value     = p.ownerEmail      || '';
+            $('#adminFee').value       = p.adminFee        || '';
+            if (p.initialAmount)  $('#initialAmount').value  = p.initialAmount;
+            if (p.duration)       $('#duration').value       = p.duration;
+            if (p.updateFrequency) $('#updateFrequency').value = p.updateFrequency;
+            if (p.indexType) {
+                $('#indexType').value = p.indexType;
+                if (p.indexType === 'FIJO') {
+                    $('#fixedPercentGroup').style.display = 'flex';
+                    $('#fixedPercent').required = true;
+                }
+            }
             $('#moraRate').value       = p.moraRate != null ? p.moraRate : '2';
             $('#aliasOwner1').value    = p.aliasOwner1  || '';
             $('#aliasOwner2').value    = p.aliasOwner2  || '';
@@ -2710,6 +2720,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ── Botones principales ──
     $('#btnNewContract').onclick = () => openModal();
     $('#btnEmptyNew').onclick    = () => openModal();
+
+    // ── Pre-llenar contrato desde propiedades (ventas.html) ──
+    const _prefillRaw = sessionStorage.getItem('gestalquiler_prefill');
+    if (_prefillRaw) {
+        sessionStorage.removeItem('gestalquiler_prefill');
+        try { openModal(null, JSON.parse(_prefillRaw)); } catch(e) { /* ignore */ }
+    }
     $('#btnCloseModal').onclick  = closeModal;
     $('#btnCancelModal').onclick = closeModal;
     $('#contractModal').onclick  = e => { if (e.target === $('#contractModal')) closeModal(); };

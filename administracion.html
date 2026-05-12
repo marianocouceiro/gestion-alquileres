@@ -516,6 +516,10 @@
         <span class="summary-label">Hon. pendientes</span>
         <span class="summary-value" id="sumHonPendientes" style="color:var(--text-muted)">—</span>
     </div>
+    <div class="summary-item">
+        <span class="summary-label">Faltan pagar</span>
+        <span class="summary-value" id="sumFaltanPagar" style="color:var(--text-muted)">—</span>
+    </div>
 </div>
 
 <!-- Month nav — sticky -->
@@ -879,6 +883,7 @@
             // Preservar flags manuales
             _manualAlquiler:    existing ? !!existing._manualAlquiler    : false,
             _manualDifDeposito: existing ? !!existing._manualDifDeposito : false,
+            _manualMora:        existing ? !!existing._manualMora        : false,
             // Estado de cobro de honorarios al dueño
             honRecibido: existing ? !!existing.honRecibido : false,
         };
@@ -1671,7 +1676,7 @@
             const moraInput = get('.f-mora');
             const moraAuto = calcMoraAutomatica(rec.montoAlquiler, c.moraRate != null ? c.moraRate : 2, rec.fechaPago);
             const _moraRate = c.moraRate != null ? c.moraRate : 2;
-            if (_moraRate && rec.fechaPago && !moraInput.dataset.manual) {
+            if (_moraRate && rec.fechaPago && !rec._manualMora && !moraInput.dataset.manual) {
                 moraInput.value = moraAuto;
             }
             rec.mora           = parseFloat(get('.f-mora').value)||0;
@@ -1729,6 +1734,7 @@
 
         [tr, tr2].filter(Boolean).forEach(row => {
             row.querySelectorAll('input, select, textarea').forEach(el => {
+                if (el.classList.contains('f-mora')) return; // manejado por listener específico abajo
                 el.oninput = el.onchange = collectAndSave;
             });
         });
@@ -1754,13 +1760,20 @@
         // Marcar campos editados manualmente para que el auto-refresh no los pise
         get('.f-mora').addEventListener('input', function() {
             this.dataset.manual = '1';
+            rec._manualMora = true;
+            collectAndSave();
+        });
+        get('.f-mora').addEventListener('change', function() {
+            this.dataset.manual = '1';
+            rec._manualMora = true;
+            collectAndSave();
         });
         get('.f-montoAlquiler').addEventListener('input', function() {
             this.dataset.manual = '1';
             // Si se edita el monto manualmente, limpiar mora para que se recalcule
             // con el nuevo monto al próxima cambio de fecha
             const moraInput = get('.f-mora');
-            if (!moraInput.dataset.manual) moraInput.value = '';
+            if (!rec._manualMora && !moraInput.dataset.manual) moraInput.value = '';
         });
         get('.f-difDeposito').addEventListener('input', function() {
             this.dataset.manual = '1';
@@ -1769,7 +1782,7 @@
         get('.f-fechaPago').addEventListener('change', function() {
             const moraInput = get('.f-mora');
             const _mr = c.moraRate != null ? c.moraRate : 2;
-            if (_mr && !moraInput.dataset.manual) {
+            if (_mr && !rec._manualMora && !moraInput.dataset.manual) {
                 const monto = parseFloat(get('.f-montoAlquiler').value)||0;
                 moraInput.value = calcMoraAutomatica(monto, _mr, this.value);
                 collectAndSave();
@@ -1826,7 +1839,7 @@
 
     /* ══ Summary ══ */
     function updateSummary() {
-        let sumAlq=0, sumInmob=0, retirados=0, sinPago=0, honPendientes=0;
+        let sumAlq=0, sumInmob=0, retirados=0, sinPago=0, honPendientes=0, faltanPagar=0;
 
         const isCurrentMonth = (today.getFullYear()===curYear && today.getMonth()===curMonth);
         const pastDay10 = isCurrentMonth && today.getDate() > 10;
@@ -1844,6 +1857,8 @@
             if (pastDay10 && (!rec || !rec.fechaPago)) sinPago++;
             // Honorarios pendientes: tiene honorarios y aún no confirmó (rec puede no existir aún)
             if (honorarios > 0 && (!rec || !rec.honRecibido)) honPendientes++;
+            // Faltan pagar: contratos en estado RETIRADO o AVISADO
+            if (rec && (rec.estado==='RETIRADO' || rec.estado==='AVISADO')) faltanPagar++;
         });
 
         $('#sumAlq').textContent       = fmtCur(sumAlq);
@@ -1855,6 +1870,11 @@
         if (honPill) {
             honPill.textContent = honPendientes > 0 ? `${honPendientes} pend.` : '—';
             honPill.style.color = honPendientes > 0 ? 'var(--accent)' : 'var(--text-muted)';
+        }
+        const faltanPill = $('#sumFaltanPagar');
+        if (faltanPill) {
+            faltanPill.textContent = faltanPagar > 0 ? `${faltanPagar}` : '—';
+            faltanPill.style.color = faltanPagar > 0 ? 'var(--warning)' : 'var(--text-muted)';
         }
     }
 

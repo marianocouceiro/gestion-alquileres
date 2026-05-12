@@ -1976,8 +1976,8 @@
             if (pastDay10 && (!rec || rec.estado === '')) sinPago++;
             // Honorarios pendientes: tiene honorarios y aún no confirmó (rec puede no existir aún)
             if (honorarios > 0 && (!rec || !rec.honRecibido)) honPendientes++;
-            // Faltan pagar: contratos en estado RETIRADO o AVISADO
-            if (rec && (rec.estado==='RETIRADO' || rec.estado==='AVISADO')) faltanPagar++;
+            // Faltan pagar: contratos sin estado asignado
+            if (!rec || rec.estado === '') faltanPagar++;
         });
 
         $('#sumAlq').textContent       = fmtCur(sumAlq);

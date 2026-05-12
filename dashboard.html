@@ -390,16 +390,26 @@ function getNextUpdate(c){const now=new Date();now.setHours(0,0,0,0);const histo
 function isExpired(c){const s=new Date(c.startDate+'T00:00:00'),e=new Date(s);e.setMonth(e.getMonth()+getTotalDuration(c));return new Date()>e;}
 
 /* ══ Match simple (igual que banco.html) ══ */
+function propEnProceso(p){
+    if(!p||p.tipo!=='venta')return true;
+    const est=String(p.estado||'').toLowerCase();
+    return !!(p.proceso||p.contratoCreado||p.reservadaPor||
+        est==='reservada'||est==='en proceso'||est==='en_proceso'||
+        est==='proceso_venta'||est==='vendida'||est==='vendido'||est==='cerrado');
+}
 function matchear(comp,propiedades){
-    const v=comp.vistasProps||[],n=comp.noInteresaProps||[];
+    const v=comp.vistasProps||[],n=comp.noInteresaProps||[],manual=comp.propiedadesInteres||[];
     return propiedades.filter(p=>{
-        if(p.venta||p.tipo==='alquiler'||p.proceso)return false;
+        if(propEnProceso(p))return false;
         if(v.includes(p.address)||n.includes(p.address))return false;
-        if(comp.credito&&p.cCredito===false)return false;
+        if(manual.includes(p.address))return false;
+        if(comp.credito===true&&p.cCredito===false)return false;
         if(comp.rubros&&comp.rubros.length&&(!p.rubro||!comp.rubros.includes(p.rubro)))return false;
         const precio=parseFloat(p.precioAut||p.precioPubl)||0,presup=parseFloat(comp.presupuesto)||0;
-        if(presup>0&&precio>0&&(precio<presup*0.85||precio>presup*1.15))return false;
-        if(comp.zonas&&comp.zonas.length&&(!p.zona||!comp.zonas.includes(p.zona)))return false;
+        if(presup>0&&precio>0&&(precio<presup*0.90||precio>presup*1.10))return false;
+        const ambP=p.ambientes!==''&&p.ambientes!=null?parseInt(p.ambientes):null;
+        const ambMin=comp.ambMin!==''&&comp.ambMin!=null?parseInt(comp.ambMin):null;
+        if(ambP!==null&&ambMin!==null&&ambP<ambMin)return false;
         return true;
     });
 }
@@ -576,7 +586,7 @@ async function loadAll() {
 
     /* ── Ventas / Propiedades ── */
     const props = (propsRaw || []).filter(p=>!p.contratoCreado);
-    const propVenta  = props.filter(p=>p.tipo!=='alquiler');
+    const propVenta  = props.filter(p=>p.tipo==='venta'&&!propEnProceso(p));
     const enProceso  = props.filter(p=>p.proceso&&!p.venta);
     setEl('stPropVenta', propVenta.length);
     setEl('stProcesos',  enProceso.length);
@@ -601,7 +611,7 @@ async function loadAll() {
     /* ── Compradores / Matches ── */
     let buyersActivos=[];
     try{
-        buyersActivos=(comprRaw||[]).filter(c=>c.estado==='activo');
+        buyersActivos=(comprRaw||[]).filter(c=>c.estado==='activo'||c.estado==='quiere_reservar');
     }catch{}
     setEl('stCompradores', buyersActivos.length);
     const hits=buyersActivos.map(c=>({comp:c,ms:matchear(c,propVenta)})).filter(x=>x.ms.length>0);

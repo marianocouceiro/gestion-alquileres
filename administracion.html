@@ -427,7 +427,7 @@
       border: none; background: transparent; width: 100%;
       font-size: .8rem; color: var(--txt); outline: none; font-family: inherit; }
     .adm-field-inp textarea { resize: none; height: 1.8em; }
-    .adm-svc-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 5px; }
+    .adm-svc-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 5px; }
     .adm-svc-item { background: var(--bg3); border: 1px solid var(--border);
       border-radius: 6px; padding: 5px 7px; }
     .adm-svc-lbl { display: flex; align-items: center; gap: 4px; margin-bottom: 3px; }
@@ -441,10 +441,11 @@
     .adm-total-row { display: flex; justify-content: space-between;
       font-size: .78rem; margin-bottom: 2px; }
     .adm-card-btns { border-top: 1px solid var(--border); padding: .6rem .9rem;
-      display: flex; justify-content: flex-end; gap: .4rem; }
+      display: flex; flex-wrap: wrap; gap: .4rem; }
     .adm-card-btns button { background: rgba(255,255,255,.06);
       border: 1px solid var(--border2); border-radius: 7px;
       padding: .35rem .7rem; font-size: .75rem; color: var(--txt);
+      flex: 1 1 calc(50% - .4rem);
       cursor: pointer; font-family: inherit; }
     /* Estado border color */
     .adm-card.estado-cobrado { border-left: 3px solid #10b981; }

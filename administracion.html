@@ -649,7 +649,10 @@
         }
     }
     async function loadContracts() {
-        contracts = await SupabaseDB.getContratos();
+        const today = new Date();
+        const isPast = curYear < today.getFullYear() ||
+            (curYear === today.getFullYear() && curMonth < today.getMonth());
+        contracts = await SupabaseDB.getContratos({ includeDeleted: isPast });
         contracts.sort((a,b) => a.address.localeCompare(b.address,'es'));
     }
     async function loadMonthRecords() {
@@ -1327,9 +1330,10 @@
             updateSummary(); return;
         }
         body.innerHTML = '';
-        const filtered = searchTerm
+        const filtered = (searchTerm
             ? contracts.filter(c => c.address.toLowerCase().includes(searchTerm))
-            : contracts;
+            : contracts
+        ).filter(c => !c.deletedAt || !!records[c.address]);
         if (!filtered.length) {
             body.innerHTML = `<tr><td colspan="11" class="empty">Sin resultados para "${searchTerm}"</td></tr>`;
             updateSummary();

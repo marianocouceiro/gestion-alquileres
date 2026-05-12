@@ -223,6 +223,7 @@ const SupabaseDB = (function () {
       acuerdoIndice: c.acuerdo_indice, acuerdoNota: c.acuerdo_nota,
       createdAt: c.created_at, updatedAt: c.updated_at,
       finalizadoAt: c.finalizado_at || null,
+      deletedAt: c.deleted_at || null,
     };
   }
 
@@ -267,15 +268,23 @@ const SupabaseDB = (function () {
     };
   }
 
-  async function getContratos({ includeFinalizados = false } = {}) {
-    const filters = includeFinalizados
-      ? 'order=address.asc'
-      : 'finalizado_at=is.null&order=address.asc';
+  async function getContratos({ includeFinalizados = false, includeDeleted = false } = {}) {
+    const parts = [];
+    if (!includeFinalizados) parts.push('finalizado_at=is.null');
+    if (!includeDeleted)     parts.push('deleted_at=is.null');
+    parts.push('order=address.asc');
+    const filters = parts.join('&');
     const r = await query('contratos', { filters });
     return r.success ? (r.data || []).map(toApp) : [];
   }
   async function upsertContrato(c) { return await upsert('contratos', fromApp(c)); }
-  async function deleteContrato(id) { return await del('contratos', id); }
+  async function deleteContrato(id) {
+    const r = await query(`contratos?id=eq.${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body: { deleted_at: new Date().toISOString() }
+    });
+    return { success: r.success };
+  }
 
   // ══════════════════════════════════════════════════════════════
   // PATRÓN JSONB — todas las demás tablas

@@ -516,6 +516,10 @@
         <span class="summary-label">Hon. pendientes</span>
         <span class="summary-value" id="sumHonPendientes" style="color:var(--text-muted)">—</span>
     </div>
+    <div class="summary-item">
+        <span class="summary-label">Faltan pagar</span>
+        <span class="summary-value" id="sumFaltanPagar" style="color:var(--text-muted)">—</span>
+    </div>
 </div>
 
 <!-- Month nav — sticky -->
@@ -645,7 +649,10 @@
         }
     }
     async function loadContracts() {
-        contracts = await SupabaseDB.getContratos();
+        const today = new Date();
+        const isPast = curYear < today.getFullYear() ||
+            (curYear === today.getFullYear() && curMonth < today.getMonth());
+        contracts = await SupabaseDB.getContratos({ includeDeleted: isPast });
         contracts.sort((a,b) => a.address.localeCompare(b.address,'es'));
     }
     async function loadMonthRecords() {
@@ -879,6 +886,7 @@
             // Preservar flags manuales
             _manualAlquiler:    existing ? !!existing._manualAlquiler    : false,
             _manualDifDeposito: existing ? !!existing._manualDifDeposito : false,
+            _manualMora:        existing ? !!existing._manualMora        : false,
             // Estado de cobro de honorarios al dueño
             honRecibido: existing ? !!existing.honRecibido : false,
         };
@@ -1438,9 +1446,10 @@
             updateSummary(); return;
         }
         body.innerHTML = '';
-        const filtered = searchTerm
+        const filtered = (searchTerm
             ? contracts.filter(c => c.address.toLowerCase().includes(searchTerm))
-            : contracts;
+            : contracts
+        ).filter(c => !c.deletedAt || !!records[c.address]);
         if (!filtered.length) {
             body.innerHTML = `<tr><td colspan="11" class="empty">Sin resultados para "${searchTerm}"</td></tr>`;
             updateSummary();
@@ -1661,7 +1670,17 @@
                 ${rec.honRecibido ? '✓ Recibido' : '⏳ Pendiente'}
             </button>` : ''}
         </td>
-        <td></td>`;
+        <td rowspan="2" style="text-align:center;vertical-align:middle;padding:.4rem">
+            <div style="display:flex;flex-direction:column;gap:4px;align-items:center">
+                <button class="btn-wa-row" title="Generar mensaje WhatsApp" data-act="wa">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.999 2C6.477 2 2 6.484 2 12.017c0 1.99.525 3.86 1.438 5.472L2 22l4.641-1.406A9.955 9.955 0 0 0 12 22c5.522 0 10-4.484 10-10.017S17.522 2 12 2z"/></svg>
+                </button>
+                <button class="btn-wa-row" title="Imprimir recibo" data-act="print" style="color:#7b8fa1">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                </button>
+                <button class="btn-wa-row" title="Descargar PDF" data-act="pdf" style="font-size:.68rem;font-weight:700">PDF</button>
+            </div>
+        </td>`;
         fragment.appendChild(tr1);
 
         // ── Renglón 2: ajustes y detalles ──
@@ -1702,18 +1721,7 @@
                 <div class="r2-cell"><div class="svc-lbl-wrap"><input type="checkbox" class="svc-chk f-chkOtros" title="Tildar si se cuenta en el monto final" ${rec.chkOtros?'checked':''}><span class="r2-lbl">Otros</span></div><div class="svc-monto ${rec.chkOtros?'':'svc-inact'}"><span class="svc-peso">$</span><input type="number" class="inp f-montoOtros" value="${rec.montoOtros||''}" min="0" step="1" placeholder="0" style="width:58px;-moz-appearance:textfield" onwheel="this.blur()"></div></div>
             </div>
         </td>
-        <td class="row2" style="text-align:center;vertical-align:top;padding-top:.4rem">
-            <span class="r2-lbl" style="display:block;margin-bottom:4px;text-align:center">WA / IMP</span>
-            <div style="display:flex;gap:4px;justify-content:center">
-                <button class="btn-wa-row" title="Generar mensaje WhatsApp" data-act="wa">
-                    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.999 2C6.477 2 2 6.484 2 12.017c0 1.99.525 3.86 1.438 5.472L2 22l4.641-1.406A9.955 9.955 0 0 0 12 22c5.522 0 10-4.484 10-10.017S17.522 2 12 2z"/></svg>
-                </button>
-                <button class="btn-wa-row" title="Imprimir recibo" data-act="print" style="color:#7b8fa1">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                </button>
-                <button class="btn-wa-row" title="Descargar PDF" data-act="pdf" style="font-size:.6rem;font-weight:700;padding:0 4px">PDF</button>
-            </div>
-        </td>`;
+        `;
         fragment.appendChild(tr2);
 
         // ── Separador visual ──
@@ -1787,7 +1795,7 @@
             const moraInput = get('.f-mora');
             const moraAuto = calcMoraAutomatica(rec.montoAlquiler, c.moraRate != null ? c.moraRate : 2, rec.fechaPago);
             const _moraRate = c.moraRate != null ? c.moraRate : 2;
-            if (_moraRate && rec.fechaPago && !moraInput.dataset.manual) {
+            if (_moraRate && rec.fechaPago && !rec._manualMora && !moraInput.dataset.manual) {
                 moraInput.value = moraAuto;
             }
             rec.mora           = parseFloat(get('.f-mora').value)||0;
@@ -1845,6 +1853,7 @@
 
         [tr, tr2].filter(Boolean).forEach(row => {
             row.querySelectorAll('input, select, textarea').forEach(el => {
+                if (el.classList.contains('f-mora')) return; // manejado por listener específico abajo
                 el.oninput = el.onchange = collectAndSave;
             });
         });
@@ -1870,13 +1879,20 @@
         // Marcar campos editados manualmente para que el auto-refresh no los pise
         get('.f-mora').addEventListener('input', function() {
             this.dataset.manual = '1';
+            rec._manualMora = true;
+            collectAndSave();
+        });
+        get('.f-mora').addEventListener('change', function() {
+            this.dataset.manual = '1';
+            rec._manualMora = true;
+            collectAndSave();
         });
         get('.f-montoAlquiler').addEventListener('input', function() {
             this.dataset.manual = '1';
             // Si se edita el monto manualmente, limpiar mora para que se recalcule
             // con el nuevo monto al próxima cambio de fecha
             const moraInput = get('.f-mora');
-            if (!moraInput.dataset.manual) moraInput.value = '';
+            if (!rec._manualMora && !moraInput.dataset.manual) moraInput.value = '';
         });
         get('.f-difDeposito').addEventListener('input', function() {
             this.dataset.manual = '1';
@@ -1885,7 +1901,7 @@
         get('.f-fechaPago').addEventListener('change', function() {
             const moraInput = get('.f-mora');
             const _mr = c.moraRate != null ? c.moraRate : 2;
-            if (_mr && !moraInput.dataset.manual) {
+            if (_mr && !rec._manualMora && !moraInput.dataset.manual) {
                 const monto = parseFloat(get('.f-montoAlquiler').value)||0;
                 moraInput.value = calcMoraAutomatica(monto, _mr, this.value);
                 collectAndSave();
@@ -1942,7 +1958,7 @@
 
     /* ══ Summary ══ */
     function updateSummary() {
-        let sumAlq=0, sumInmob=0, retirados=0, sinPago=0, honPendientes=0;
+        let sumAlq=0, sumInmob=0, retirados=0, sinPago=0, honPendientes=0, faltanPagar=0;
 
         const isCurrentMonth = (today.getFullYear()===curYear && today.getMonth()===curMonth);
         const pastDay10 = isCurrentMonth && today.getDate() > 10;
@@ -1960,6 +1976,8 @@
             if (pastDay10 && (!rec || !rec.fechaPago)) sinPago++;
             // Honorarios pendientes: tiene honorarios y aún no confirmó (rec puede no existir aún)
             if (honorarios > 0 && (!rec || !rec.honRecibido)) honPendientes++;
+            // Faltan pagar: contratos en estado RETIRADO o AVISADO
+            if (rec && (rec.estado==='RETIRADO' || rec.estado==='AVISADO')) faltanPagar++;
         });
 
         $('#sumAlq').textContent       = fmtCur(sumAlq);
@@ -1971,6 +1989,11 @@
         if (honPill) {
             honPill.textContent = honPendientes > 0 ? `${honPendientes} pend.` : '—';
             honPill.style.color = honPendientes > 0 ? 'var(--accent)' : 'var(--text-muted)';
+        }
+        const faltanPill = $('#sumFaltanPagar');
+        if (faltanPill) {
+            faltanPill.textContent = faltanPagar > 0 ? `${faltanPagar}` : '—';
+            faltanPill.style.color = faltanPagar > 0 ? 'var(--warning)' : 'var(--text-muted)';
         }
     }
 

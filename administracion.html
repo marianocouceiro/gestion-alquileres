@@ -1973,7 +1973,7 @@
             sumAlq   += alq;
             sumInmob += honorarios;
             if (rec && rec.estado==='RETIRADO') retirados++;
-            if (pastDay10 && (!rec || !rec.fechaPago)) sinPago++;
+            if (pastDay10 && (!rec || rec.estado === '')) sinPago++;
             // Honorarios pendientes: tiene honorarios y aún no confirmó (rec puede no existir aún)
             if (honorarios > 0 && (!rec || !rec.honRecibido)) honPendientes++;
             // Faltan pagar: contratos en estado RETIRADO o AVISADO

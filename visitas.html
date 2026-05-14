@@ -1222,6 +1222,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         try { await loadVisitas(); renderDay(); renderWeek(); updateSummary(); } catch(e){ console.error("[Visitas]",e); }
     }, 60000);
 
+    // Helper: asigna onclick solo si el elemento existe (evita TypeError en mobile)
+    const setClick = (sel, fn) => { const el = $(sel); if (el) el.onclick = fn; };
+
     // Tabs
     document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
         switchTab(t.dataset.tab);
@@ -1230,20 +1233,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // Day nav
-    $('#btnDayPrev').onclick = ()=>{ currentDay.setDate(currentDay.getDate()-1); renderDay(); };
-    $('#btnDayNext').onclick = ()=>{ currentDay.setDate(currentDay.getDate()+1); renderDay(); };
-    $('#btnHoy').onclick     = ()=>{ currentDay=new Date(); currentDay.setHours(0,0,0,0); renderDay(); };
+    setClick('#btnDayPrev', ()=>{ currentDay.setDate(currentDay.getDate()-1); renderDay(); });
+    setClick('#btnDayNext', ()=>{ currentDay.setDate(currentDay.getDate()+1); renderDay(); });
+    setClick('#btnHoy',     ()=>{ currentDay=new Date(); currentDay.setHours(0,0,0,0); renderDay(); });
 
     // Week nav
-    $('#btnWeekPrev').onclick = ()=>{ currentWeekStart.setDate(currentWeekStart.getDate()-7); renderWeek(); };
-    $('#btnWeekNext').onclick = ()=>{ currentWeekStart.setDate(currentWeekStart.getDate()+7); renderWeek(); };
+    setClick('#btnWeekPrev', ()=>{ currentWeekStart.setDate(currentWeekStart.getDate()-7); renderWeek(); });
+    setClick('#btnWeekNext', ()=>{ currentWeekStart.setDate(currentWeekStart.getDate()+7); renderWeek(); });
 
     // Modal visita
-    $('#btnNueva').onclick       = ()=>openModalVisita();
-    $('#btnCloseVisita').onclick = ()=>$('#modalVisita').classList.remove('open');
-    $('#btnCancelVisita').onclick= ()=>$('#modalVisita').classList.remove('open');
-    $('#btnSaveVisita').onclick  = saveVisitaModal;
-    $('#modalVisita').onclick    = e=>{ if(e.target===$('#modalVisita')) $('#modalVisita').classList.remove('open'); };
+    setClick('#btnNueva',        ()=>openModalVisita());
+    setClick('#btnCloseVisita',  ()=>$('#modalVisita').classList.remove('open'));
+    setClick('#btnCancelVisita', ()=>$('#modalVisita').classList.remove('open'));
+    setClick('#btnSaveVisita',   saveVisitaModal);
+    setClick('#modalVisita',     e=>{ if(e.target===$('#modalVisita')) $('#modalVisita').classList.remove('open'); });
 
     // Propiedad change → toggle bloque de colega
     $('#vTipo').onchange = () => {

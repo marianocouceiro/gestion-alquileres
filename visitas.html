@@ -85,7 +85,10 @@
     .week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;margin-bottom:1rem}
     .week-label{grid-column:1 / -1;font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;padding:.35rem 0 .15rem 0;border-bottom:1px solid var(--border);margin-bottom:.1rem}
     .week-label-next{margin-top:.8rem;color:var(--acc);border-color:rgba(245,124,0,.25)}
-    .week-day{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:.6rem;min-height:100px;max-height:280px;overflow-y:auto}
+    .week-day{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:.6rem;min-height:100px;max-height:260px;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent}
+    .week-day::-webkit-scrollbar{width:3px}
+    .week-day::-webkit-scrollbar-track{background:transparent}
+    .week-day::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:3px}
     .week-day.today{border-color:rgba(245,124,0,.4);background:rgba(245,124,0,.04)}
     .week-day-hdr{font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:.3rem}
     .week-day-num{font-size:.95rem;font-weight:700;margin-bottom:.4rem}
@@ -902,7 +905,7 @@ function renderWeek() {
         const dayV = visitas.filter(v=>v.fecha===ds).sort((a,b)=>a.hora.localeCompare(b.hora));
         const div = document.createElement('div');
         div.className = 'week-day'+(ds===today?' today':'');
-        const eventsHtml = dayV.slice(0,4).map(v => {
+        const eventsHtml = dayV.map(v => {
             const estado  = v.estado || 'por_visitar';
             const cliente = v.cliente ? v.cliente.trim() : 'Sin cliente';
             const propTxt = v.propiedad ? v.propiedad.trim() : 'Sin dirección';
@@ -915,8 +918,7 @@ function renderWeek() {
         }).join('');
         div.innerHTML = `<div class="week-day-hdr">${DIAS[d.getDay()].slice(0,3).toUpperCase()}</div>
             <div class="week-day-num">${d.getDate()}</div>
-            ${eventsHtml}
-            ${dayV.length>4?`<div style="font-size:.58rem;color:var(--muted);margin-top:2px">+${dayV.length-4} más</div>`:''}`;
+            ${eventsHtml}`;
         div.onclick = () => { currentDay=new Date(d); switchTab('dia'); renderDay(); };
         return div;
     };

@@ -614,7 +614,7 @@ const IPC_HARDCODED = {
     "2025-04":  3.2, "2025-05":  3.3, "2025-06":  2.7,
     "2025-07":  3.0, "2025-08":  3.5, "2025-09":  2.9,
     "2025-10":  2.4, "2025-11":  2.4, "2025-12":  2.7,
-    "2026-01":  2.9, "2026-02":  2.9, "2026-03":  3.4,
+    "2026-01":  2.9, "2026-02":  2.9, "2026-03":  3.4, "2026-04":  2.6,
 };
 
 // ── Toast ─────────────────────────────────────────────────────
@@ -887,6 +887,7 @@ async function actualizarIndicesSmart() {
   const IPC_URLS = [
     INDEC_BASE,
     'https://corsproxy.io/?url='         + encodeURIComponent(INDEC_BASE),
+    'https://proxy.cors.sh/'             + INDEC_BASE,
     'https://api.allorigins.win/raw?url=' + encodeURIComponent(INDEC_BASE),
   ];
   for (const url of IPC_URLS) {

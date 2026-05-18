@@ -2631,12 +2631,21 @@ async function confirmarFinalizar(contractId) {
             return;
         }
 
-        // 2. Quitar del cache local y re-renderizar
+        // 2. Liberar la propiedad (limpiar contratoCreado) para que vuelva al listado de ventas
+        try {
+            const allProps = await SupabaseDB.getPropiedades();
+            const prop = allProps.find(p => p.address === c.address);
+            if (prop && prop.contratoCreado) {
+                await SupabaseDB.upsertPropiedad({ ...prop, contratoCreado: false });
+            }
+        } catch(eProp) { console.warn('[finalizar] no se pudo liberar propiedad:', eProp); }
+
+        // 3. Quitar del cache local y re-renderizar
         const idx = contractsCache.findIndex(x => x.id === c.id);
         if (idx !== -1) contractsCache.splice(idx, 1);
         await renderContracts();
 
-        // 3. Cerrar modal de detalle si está abierto
+        // 4. Cerrar modal de detalle si está abierto
         const detailModal = document.getElementById('detailModal');
         if (detailModal) detailModal.classList.remove('active');
 

@@ -383,7 +383,7 @@
       ℹ️ <strong>Actualizar desde BCRA/INDEC</strong>: descarga los últimos datos (requiere internet, intenta con proxy CORS si falla desde archivo local).
       <strong>Cargar datos base</strong>: escribe los valores INDEC oficial incluidos en esta versión directamente a Supabase, <u>pisando cualquier dato incorrecto</u>. Sin internet, siempre funciona.
     </div>
-    <div style="padding:.85rem 1rem;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid var(--border)">
+    <div style="padding:.85rem 1rem;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid var(--border);margin-bottom:.6rem">
       <div style="font-size:.76rem;font-weight:600;color:var(--txt2);margin-bottom:.6rem;text-transform:uppercase;letter-spacing:.4px">✏️ Carga manual de IPC</div>
       <div style="font-size:.72rem;color:var(--muted);margin-bottom:.7rem">Cuando la API aún no publicó el dato del mes. Ingresá el valor del informe oficial del INDEC.</div>
       <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
@@ -394,6 +394,18 @@
         </div>
         <button class="btn-prim" id="btnIpcManual" style="background:linear-gradient(135deg,#10b981,#059669)">💾 Guardar IPC</button>
         <span id="ipcManualMsg" style="font-size:.78rem;color:var(--muted)"></span>
+      </div>
+    </div>
+    <div style="padding:.85rem 1rem;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid var(--border)">
+      <div style="font-size:.76rem;font-weight:600;color:var(--txt2);margin-bottom:.6rem;text-transform:uppercase;letter-spacing:.4px">✏️ Carga manual de ICL</div>
+      <div style="font-size:.72rem;color:var(--muted);margin-bottom:.7rem">Cuando la API del BCRA falla. Ingresá el valor del índice publicado en <strong>estadisticasbcra.com</strong> (es un número absoluto, no un %, ej: 31.81).</div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
+        <input class="inp" type="month" id="iclManualMes" style="width:auto;min-width:140px">
+        <div style="display:flex;align-items:center;gap:.3rem">
+          <input class="inp" type="number" id="iclManualValor" step="0.01" min="0.01" placeholder="ej: 31.81" style="width:100px">
+        </div>
+        <button class="btn-prim" id="btnIclManual" style="background:linear-gradient(135deg,#378ADD,#1e60b0)">💾 Guardar ICL</button>
+        <span id="iclManualMsg" style="font-size:.78rem;color:var(--muted)"></span>
       </div>
     </div>
   </div>
@@ -1185,6 +1197,55 @@ document.addEventListener('DOMContentLoaded', async () => {
       msg.style.color = '#ef4444'; msg.textContent = 'Error: ' + e.message;
     }
     btn.disabled = false; btn.textContent = '💾 Guardar IPC';
+  };
+
+  // ── Carga manual ICL ──
+  // Pre-setear al mes actual (ICL se publica mensualmente pero con lag)
+  (() => {
+    const inp = $('iclManualMes');
+    if (!inp) return;
+    const d = new Date();
+    d.setDate(1);
+    d.setMonth(d.getMonth() - 1);
+    inp.value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  })();
+
+  $('btnIclManual').onclick = async () => {
+    const btn = $('btnIclManual');
+    const msg = $('iclManualMsg');
+    const mes = ($('iclManualMes').value || '').trim();   // "YYYY-MM"
+    const val = parseFloat($('iclManualValor').value);
+
+    if (!mes) { msg.style.color='#f59e0b'; msg.textContent='Seleccioná un mes'; return; }
+    if (isNaN(val) || val <= 0) { msg.style.color='#f59e0b'; msg.textContent='Ingresá un valor válido (ej: 31.81)'; return; }
+
+    // ICL se guarda como "YYYY-MM-01"
+    const key = `${mes}-01`;
+
+    btn.disabled = true; btn.textContent = '⏳ Guardando…'; msg.textContent = '';
+    try {
+      const cfg = await SupabaseDB.getConfig();
+      const iclData = (cfg.icl_data && typeof cfg.icl_data === 'object') ? { ...cfg.icl_data } : { ...ICL_HARDCODED };
+      iclData[key] = val;
+      await SupabaseDB.saveConfig({
+        icl_data: iclData,
+        icl_ultimo_mes: Object.keys(iclData).sort().pop(),
+        indices_updated_at: new Date().toISOString(),
+      });
+      msg.style.color = '#10b981';
+      msg.textContent = `✓ ICL ${mes} = ${val} guardado en Supabase`;
+      $('iclManualValor').value = '';
+      // Avanzar el selector al mes siguiente
+      const [y, m] = mes.split('-').map(Number);
+      const next = new Date(y, m, 1);
+      $('iclManualMes').value = `${next.getFullYear()}-${String(next.getMonth()+1).padStart(2,'0')}`;
+      renderIndicesTable(iclData, cfg.ipc_data || {});
+      loadIndicesStatus();
+      toast(`✓ ICL ${mes}: ${val}`);
+    } catch(e) {
+      msg.style.color = '#ef4444'; msg.textContent = 'Error: ' + e.message;
+    }
+    btn.disabled = false; btn.textContent = '💾 Guardar ICL';
   };
 
   // ── Backup ──

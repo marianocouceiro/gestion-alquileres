@@ -233,6 +233,8 @@
         tbody tr.estado-AVISADO  td.row2 { background: var(--avisado-bg); color: var(--avisado-text); }
         tbody tr.estado-ESPERAR  td { background: var(--esperar-bg);  color: var(--esperar-text); }
         tbody tr.estado-ESPERAR  td.row2 { background: var(--esperar-bg); color: var(--esperar-text); }
+        tbody tr.row-expired td  { background: rgba(239,68,68,.06); color: var(--text-primary); }
+        tbody tr.row-expired td.row2 { background: rgba(239,68,68,.06); }
         tbody tr:last-child td.row2 { border-bottom: none; }
         tbody tr:hover td, tbody tr:hover td.row2 { filter: brightness(1.08); }
         /* Separador visual entre contratos */
@@ -713,6 +715,17 @@
     function _normalizeStart(c) {
         const d = new Date(c.startDate+'T00:00:00');
         return new Date(d.getFullYear(), d.getMonth(), 1);
+    }
+    function _getTotalDuration(c) {
+        const extra = (c.prorrogas || []).reduce((sum, p) => sum + parseInt(p.months || 0), 0);
+        return parseInt(c.duration || 0) + extra;
+    }
+    // Retorna año*12+mes del ÚLTIMO mes de vigencia del contrato (incluye prórrogas)
+    function _contractEndYM(c) {
+        const start = _normalizeStart(c);
+        const end   = new Date(start);
+        end.setMonth(end.getMonth() + _getTotalDuration(c) - 1);
+        return end.getFullYear() * 12 + end.getMonth();
     }
     function _getUpdateDates(c) {
         const start = _normalizeStart(c);
@@ -1464,7 +1477,15 @@
         const mobCards = document.getElementById('mob-admin-cards');
         if (mobCards) mobCards.innerHTML = '';
 
+        const curYM = curYear * 12 + curMonth;
         filtered.forEach(c => {
+            // No mostrar el contrato en meses anteriores a su inicio
+            const startYM = _normalizeStart(c).getFullYear() * 12 + _normalizeStart(c).getMonth();
+            if (curYM < startYM) return;
+
+            // Detectar si el contrato ya venció (sin prórroga ni renovación)
+            const isExpired = curYM > _contractEndYM(c);
+
             const existing = records[c.address];
             let rec;
             if (!existing) {
@@ -1481,8 +1502,8 @@
                     rec.adminFee = parseFloat(c.adminFee) || 0;
                 }
             }
-            body.appendChild(buildRow(c, rec));
-            if (mobCards) mobCards.appendChild(buildCard(c, rec));
+            body.appendChild(buildRow(c, rec, isExpired));
+            if (mobCards) mobCards.appendChild(buildCard(c, rec, isExpired));
         });
         updateSummary();
         restoreFocusAdm(focusState);  // restaurar foco después de reconstruir DOM
@@ -1494,7 +1515,7 @@
     }
 
     // ── MOBILE CARD ─────────────────────────────────────────────
-    function buildCard(c, rec) {
+    function buildCard(c, rec, isExpired = false) {
         const {honorarios, paraDueno} = calcRow(rec);
         const depStyle = c.depositUpdate ? 'border-color:rgba(123,31,162,.4);background:rgba(123,31,162,.06)' : '';
         const svc = (key, lbl) => `
@@ -1519,13 +1540,14 @@
         };
         const eStyle = ESTADO_COLORS[rec.estado] || { border:'rgba(255,255,255,.08)', bg:'transparent', opacity:'1' };
         card.className = 'adm-card estado-' + (rec.estado || 'neutral');
-        card.style.borderLeft  = '3px solid ' + eStyle.border;
-        card.style.background  = eStyle.bg;
+        card.style.borderLeft  = isExpired ? '3px solid #f87171' : ('3px solid ' + eStyle.border);
+        card.style.background  = isExpired ? 'rgba(239,68,68,.05)' : eStyle.bg;
         card.style.opacity     = eStyle.opacity;
 
         card.innerHTML = `
           <div class="adm-card-hdr">
             <div class="adm-card-addr">${esc(c.address)}</div>
+            ${isExpired ? `<div style="margin:2px 0 4px;display:inline-block;font-size:.6rem;font-weight:700;letter-spacing:.5px;padding:2px 7px;border-radius:6px;background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.25)">⚠ CONTRATO VENCIDO — pendiente renovación</div>` : ''}
             <div class="adm-card-sub">
               Inq: ${esc(c.tenant||'—')}${c.tenantPhone?' · '+c.tenantPhone:''}<br>
               Dueño: ${esc(c.owner||'—')}
@@ -1632,9 +1654,9 @@
         return card;
     }
 
-    function buildRow(c, rec) {
+    function buildRow(c, rec, isExpired = false) {
         const {honorarios, paraDueno} = calcRow(rec);
-        const estadoClass = rowClass(rec.estado);
+        const estadoClass = isExpired ? 'row-expired' : rowClass(rec.estado);
         const fragment = document.createDocumentFragment();
 
         // ── Renglón 1: datos principales ──
@@ -1644,6 +1666,7 @@
         tr1.innerHTML = `
         <td>
             <div class="addr" title="${esc(c.address)}">${esc(c.address)}</div>
+            ${isExpired ? `<div style="margin-top:3px;display:inline-block;font-size:.6rem;font-weight:700;letter-spacing:.5px;padding:2px 7px;border-radius:6px;background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.25)">⚠ CONTRATO VENCIDO — pendiente renovación</div>` : ''}
             <div class="addr-sub" style="color:var(--text-muted)">
                 <span style="font-size:.65rem;text-transform:uppercase;letter-spacing:.4px;color:var(--txt);font-weight:600">Inq.</span>
                 ${esc(c.tenant||'')}

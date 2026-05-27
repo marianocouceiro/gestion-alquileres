@@ -510,10 +510,17 @@ function matchear(comp){
             if(precio<presup*0.90||precio>presup*1.10) return false;
         }
 
-        // PASO 4 — AMBIENTES MÍNIMOS (excluyente)
+        // PASO 4 — AMBIENTES (excluyente)
         const ambP=p.ambientes!==''&&p.ambientes!=null?parseInt(p.ambientes):null;
         const ambMin=comp.ambMin!==''&&comp.ambMin!=null?parseInt(comp.ambMin):null;
+        const ambMax=comp.ambMax!==''&&comp.ambMax!=null?parseInt(comp.ambMax):null;
         if(ambP!==null&&ambMin!==null&&ambP<ambMin) return false;
+        if(ambP!==null&&ambMax!==null&&ambP>ambMax) return false;
+
+        // PASO 5 — ZONA (excluyente si el comprador tiene zonas definidas)
+        if(comp.zonas&&comp.zonas.length>0){
+            if(!p.zona||!comp.zonas.includes(p.zona)) return false;
+        }
 
         return true;
     });

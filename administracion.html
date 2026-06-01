@@ -1133,6 +1133,7 @@
         const reciboInquilino = buildReciboHtml(c, rec, 'INQUILINO');
         const reciboDueno     = buildReciboHtml(c, rec, 'DUENO');
         const win = window.open('', '_blank');
+        if (!win) { showToast('El navegador bloqueó el popup. Permitir popups para este sitio e intentar nuevamente.', 'error'); return; }
         win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="apple-touch-icon" href="favicon-192.png">

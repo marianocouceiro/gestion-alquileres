@@ -1185,6 +1185,10 @@ function printContract(c) {
     </body></html>`;
 
     const w = window.open('', '_blank', 'width=900,height=700');
+    if (!w) {
+        showToast('El navegador bloqueó el popup. Permitir popups para este sitio e intentar nuevamente.', 'error');
+        return;
+    }
     w.document.write(html);
     w.document.close();
     w.onload = () => { w.focus(); w.print(); w.onafterprint = () => w.close(); };

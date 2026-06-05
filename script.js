@@ -86,14 +86,41 @@ let IPC_MONTHLY  = { ...IPC_BASE };
  * Devuelve objeto { "YYYY-MM-DD": valor } o null si falla.
  */
 async function fetchICLFromBCRA() {
-    // Intentar con proxy CORS (para file:// que tiene null origin)
+    // 1. Edge Function (server-side, sin CORS) — fuente primaria
+    const EDGE_URL = 'https://ratkgsxlqjjhjcclpcee.supabase.co/functions/v1/fetch-indices?type=icl';
+    try {
+        const r = await fetch(EDGE_URL, {
+            headers: { 'apikey': 'sb_publishable_frPLdQ7kBnOOP5JsULLU-g_XEPjc1Bv' },
+            signal: AbortSignal.timeout(20000)
+        });
+        if (r.ok) {
+            const json = await r.json();
+            const data = json.icl;
+            if (Array.isArray(data) && data.length > 10) {
+                const result = {};
+                for (const item of data) {
+                    if (item.d && item.v != null) {
+                        const parts = item.d.split('-');
+                        const key = `${parts[0]}-${parts[1]}-01`;
+                        result[key] = parseFloat(item.v);
+                    }
+                }
+                if (Object.keys(result).length > 10) {
+                    console.log('[Índices] ICL obtenido via Edge Function:', Object.keys(result).length, 'meses');
+                    return result;
+                }
+            }
+        }
+    } catch(e) { console.warn('[Índices] Edge Function ICL falló:', e.message); }
+
+    // 2. Fallbacks directos (pueden fallar por CORS en producción)
     const endpoints = [
         'https://api.estadisticasbcra.com/icl',
         'https://corsproxy.io/?url=' + encodeURIComponent('https://api.estadisticasbcra.com/icl'),
         'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://api.estadisticasbcra.com/icl'),
     ];
     for (const url of endpoints) {
-        try {
+        try{
             const r = await fetch(url);
             if (!r.ok) continue;
             const data = await r.json();
@@ -210,7 +237,18 @@ async function loadIndicesFromSupabase() {
         if (daysSinceUpdate > 5) {
             console.log('[Índices] Datos tienen', Math.round(daysSinceUpdate), 'días — actualizando en background…');
             // No await — que corra sin bloquear la UI
-            refreshIndicesFromAPI().catch(e => console.warn('[Índices] refresh background falló:', e));
+            refreshIndicesFromAPI()
+            .then(result => {
+                if (result && result.ok) {
+                    // scheduleCache.clear() ya fue llamado dentro de refreshIndicesFromAPI
+                    // Re-renderizar la tabla con los datos actualizados (ICL/IPC frescos)
+                    if (typeof renderContracts === 'function') {
+                        console.log('[Índices] Datos actualizados — re-renderizando tabla…');
+                        renderContracts();
+                    }
+                }
+            })
+            .catch(e => console.warn('[Índices] refresh background falló:', e));
         }
     } catch(e) {
         console.warn('[Índices] loadIndicesFromSupabase falló:', e.message);

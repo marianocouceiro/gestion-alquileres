@@ -489,6 +489,15 @@ function matchear(comp){
         return interesManual.includes(p.address);
     });
 
+    // Si el comprador no tiene ningún criterio definido (viene de sync automático sin datos),
+    // no hacer auto-match — solo mostrar propiedades manuales para evitar falsos positivos.
+    const tieneCriterios=(comp.rubros&&comp.rubros.length>0)||
+        (comp.zonas&&comp.zonas.length>0)||
+        (parseFloat(comp.presupuesto)||0)>0||
+        (comp.ambMin!==''&&comp.ambMin!=null)||
+        (comp.ambMax!==''&&comp.ambMax!=null);
+    if(!tieneCriterios) return manual;
+
     // 2. Propiedades que matchean por criterios automáticos
     const auto=propiedades.filter(p=>{
         // Solo propiedades tipo venta, activas (no en proceso, no reservadas, no vendidas)

@@ -143,13 +143,15 @@ async function fetchICLFromBCRA() {
 /**
  * Obtiene IPC Nacional mensual directamente desde la API oficial del INDEC
  * (via datos.gob.ar — sin intermediarios).
- * Serie: 148.3_INIVELNAL_DICI_M_26 — Variación % mensual respecto al mes anterior.
+ * Serie: 148.3_INIVELNAL_DICI_M_26 — La API de datos.gob.ar devuelve el ÍNDICE DE NIVEL
+ * (acumulado, base Dic 2016=100). Calculamos variación mensual % a partir de los niveles.
  * Devuelve objeto { "YYYY-MM": tasa% } o null si falla.
  */
 async function fetchIPCFromArgly() {
-    // Serie oficial INDEC: IPC Nacional — variación mensual
+    // Serie oficial INDEC: IPC Nacional — nivel acumulado
     const SERIE_ID = '148.3_INIVELNAL_DICI_M_26';
-    const BASE_URL = `https://apis.datos.gob.ar/series/api/series/?ids=${SERIE_ID}&limit=60&sort=desc&format=json`;
+    // Pedimos más datos para poder calcular variaciones (limit+1 meses)
+    const BASE_URL = `https://apis.datos.gob.ar/series/api/series/?ids=${SERIE_ID}&limit=72&sort=asc&format=json`;
     const endpoints = [
         BASE_URL,
         'https://corsproxy.io/?url='    + encodeURIComponent(BASE_URL),
@@ -162,15 +164,37 @@ async function fetchIPCFromArgly() {
             const json = await r.json();
             // La API devuelve { data: [["YYYY-MM-DD", valor], ...], meta: [...] }
             if (!json.data || !Array.isArray(json.data) || json.data.length < 5) continue;
-            const result = {};
+
+            // Recolectar niveles ordenados cronológicamente (sort=asc ya lo garantiza)
+            const niveles = [];
             for (const [fecha, valor] of json.data) {
                 if (!fecha || valor == null) continue;
-                // Clave "YYYY-MM" — la API devuelve "YYYY-MM-DD"
-                const key = String(fecha).substring(0, 7);
-                result[key] = parseFloat(valor);
+                niveles.push({ key: String(fecha).substring(0, 7), val: parseFloat(valor) });
             }
+
+            // Detectar si son niveles (>100) o variaciones directas (<50)
+            const maxVal = Math.max(...niveles.map(e => e.val));
+            const result = {};
+
+            if (maxVal > 100) {
+                // ── Son niveles acumulados → calcular variación mensual ──
+                for (let i = 1; i < niveles.length; i++) {
+                    const prev = niveles[i - 1].val;
+                    const curr = niveles[i].val;
+                    if (prev > 0 && curr > 0) {
+                        result[niveles[i].key] = parseFloat(((curr / prev - 1) * 100).toFixed(2));
+                    }
+                }
+            } else {
+                // ── Ya son variaciones porcentuales directas ──
+                for (const { key, val } of niveles) {
+                    // Guardia de seguridad: descartar valores absurdos (>100% mensual)
+                    if (val > 0 && val < 100) result[key] = val;
+                }
+            }
+
             if (Object.keys(result).length > 10) {
-                console.log('[Índices] IPC INDEC oficial OK:', Object.keys(result).length, 'entradas');
+                console.log('[Índices] IPC INDEC OK:', Object.keys(result).length, 'entradas (variación mensual calculada)');
                 return result;
             }
         } catch(e) { /* probar siguiente endpoint */ }
@@ -226,8 +250,22 @@ async function loadIndicesFromSupabase() {
 
         // Cargar IPC
         if (cfg.ipc_data && typeof cfg.ipc_data === 'object' && Object.keys(cfg.ipc_data).length > 10) {
-            IPC_MONTHLY = { ...IPC_BASE, ...cfg.ipc_data };
-            console.log('[Índices] IPC cargado desde Supabase:', Object.keys(IPC_MONTHLY).length, 'entradas');
+            // Guardia de seguridad: verificar que los valores son variaciones (< 100%)
+            // y no niveles acumulados del índice (> 100). Si son niveles, descartar.
+            const ipcValues = Object.values(cfg.ipc_data);
+            const maxIPC = Math.max(...ipcValues);
+            if (maxIPC < 100) {
+                IPC_MONTHLY = { ...IPC_BASE, ...cfg.ipc_data };
+                console.log('[Índices] IPC cargado desde Supabase:', Object.keys(IPC_MONTHLY).length, 'entradas');
+            } else {
+                // Los valores son niveles acumulados (bug previo) — usar solo IPC_BASE
+                console.warn('[Índices] ipc_data en Supabase contiene niveles acumulados (max=' + maxIPC.toFixed(0) + ') — usando IPC_BASE. Se corregirá en próximo refresh.');
+                IPC_MONTHLY = { ...IPC_BASE };
+                // Auto-limpiar Supabase para que no vuelva a contaminar
+                SupabaseDB.saveConfig({ ipc_data: {}, indices_updated_at: null })
+                    .then(() => console.log('[Índices] ipc_data corrupto limpiado de Supabase.'))
+                    .catch(() => {});
+            }
         }
 
         // Verificar antigüedad — si los datos tienen más de 5 días, refrescar en background

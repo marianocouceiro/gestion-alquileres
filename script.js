@@ -69,7 +69,8 @@ const IPC_BASE = {
     "2025-04":  3.2, "2025-05":  3.3, "2025-06":  2.7,
     "2025-07":  3.0, "2025-08":  3.5, "2025-09":  2.9,
     "2025-10":  2.4, "2025-11":  2.4, "2025-12":  2.7,
-    "2026-01":  2.9, "2026-02":  2.9, "2026-03":  3.4, "2026-04":  2.6,
+    "2026-01":  2.9, "2026-02":  2.9, "2026-03":  3.4,
+    "2026-04":  2.6, "2026-05":  2.1,
 };
 
 // Tablas activas — se reemplazan con datos de Supabase al iniciar
@@ -86,41 +87,14 @@ let IPC_MONTHLY  = { ...IPC_BASE };
  * Devuelve objeto { "YYYY-MM-DD": valor } o null si falla.
  */
 async function fetchICLFromBCRA() {
-    // 1. Edge Function (server-side, sin CORS) — fuente primaria
-    const EDGE_URL = 'https://ratkgsxlqjjhjcclpcee.supabase.co/functions/v1/fetch-indices?type=icl';
-    try {
-        const r = await fetch(EDGE_URL, {
-            headers: { 'apikey': 'sb_publishable_frPLdQ7kBnOOP5JsULLU-g_XEPjc1Bv' },
-            signal: AbortSignal.timeout(20000)
-        });
-        if (r.ok) {
-            const json = await r.json();
-            const data = json.icl;
-            if (Array.isArray(data) && data.length > 10) {
-                const result = {};
-                for (const item of data) {
-                    if (item.d && item.v != null) {
-                        const parts = item.d.split('-');
-                        const key = `${parts[0]}-${parts[1]}-01`;
-                        result[key] = parseFloat(item.v);
-                    }
-                }
-                if (Object.keys(result).length > 10) {
-                    console.log('[Índices] ICL obtenido via Edge Function:', Object.keys(result).length, 'meses');
-                    return result;
-                }
-            }
-        }
-    } catch(e) { console.warn('[Índices] Edge Function ICL falló:', e.message); }
-
-    // 2. Fallbacks directos (pueden fallar por CORS en producción)
+    // Intentar con proxy CORS (para file:// que tiene null origin)
     const endpoints = [
         'https://api.estadisticasbcra.com/icl',
         'https://corsproxy.io/?url=' + encodeURIComponent('https://api.estadisticasbcra.com/icl'),
         'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://api.estadisticasbcra.com/icl'),
     ];
     for (const url of endpoints) {
-        try{
+        try {
             const r = await fetch(url);
             if (!r.ok) continue;
             const data = await r.json();
@@ -143,15 +117,13 @@ async function fetchICLFromBCRA() {
 /**
  * Obtiene IPC Nacional mensual directamente desde la API oficial del INDEC
  * (via datos.gob.ar — sin intermediarios).
- * Serie: 148.3_INIVELNAL_DICI_M_26 — La API de datos.gob.ar devuelve el ÍNDICE DE NIVEL
- * (acumulado, base Dic 2016=100). Calculamos variación mensual % a partir de los niveles.
+ * Serie: 148.3_INIVELNAL_DICI_M_26 — Variación % mensual respecto al mes anterior.
  * Devuelve objeto { "YYYY-MM": tasa% } o null si falla.
  */
 async function fetchIPCFromArgly() {
-    // Serie oficial INDEC: IPC Nacional — nivel acumulado
+    // Serie oficial INDEC: IPC Nacional — variación mensual
     const SERIE_ID = '148.3_INIVELNAL_DICI_M_26';
-    // Pedimos más datos para poder calcular variaciones (limit+1 meses)
-    const BASE_URL = `https://apis.datos.gob.ar/series/api/series/?ids=${SERIE_ID}&limit=72&sort=asc&format=json`;
+    const BASE_URL = `https://apis.datos.gob.ar/series/api/series/?ids=${SERIE_ID}&limit=60&sort=desc&format=json`;
     const endpoints = [
         BASE_URL,
         'https://corsproxy.io/?url='    + encodeURIComponent(BASE_URL),
@@ -164,37 +136,15 @@ async function fetchIPCFromArgly() {
             const json = await r.json();
             // La API devuelve { data: [["YYYY-MM-DD", valor], ...], meta: [...] }
             if (!json.data || !Array.isArray(json.data) || json.data.length < 5) continue;
-
-            // Recolectar niveles ordenados cronológicamente (sort=asc ya lo garantiza)
-            const niveles = [];
+            const result = {};
             for (const [fecha, valor] of json.data) {
                 if (!fecha || valor == null) continue;
-                niveles.push({ key: String(fecha).substring(0, 7), val: parseFloat(valor) });
+                // Clave "YYYY-MM" — la API devuelve "YYYY-MM-DD"
+                const key = String(fecha).substring(0, 7);
+                result[key] = parseFloat(valor);
             }
-
-            // Detectar si son niveles (>100) o variaciones directas (<50)
-            const maxVal = Math.max(...niveles.map(e => e.val));
-            const result = {};
-
-            if (maxVal > 100) {
-                // ── Son niveles acumulados → calcular variación mensual ──
-                for (let i = 1; i < niveles.length; i++) {
-                    const prev = niveles[i - 1].val;
-                    const curr = niveles[i].val;
-                    if (prev > 0 && curr > 0) {
-                        result[niveles[i].key] = parseFloat(((curr / prev - 1) * 100).toFixed(2));
-                    }
-                }
-            } else {
-                // ── Ya son variaciones porcentuales directas ──
-                for (const { key, val } of niveles) {
-                    // Guardia de seguridad: descartar valores absurdos (>100% mensual)
-                    if (val > 0 && val < 100) result[key] = val;
-                }
-            }
-
             if (Object.keys(result).length > 10) {
-                console.log('[Índices] IPC INDEC OK:', Object.keys(result).length, 'entradas (variación mensual calculada)');
+                console.log('[Índices] IPC INDEC oficial OK:', Object.keys(result).length, 'entradas');
                 return result;
             }
         } catch(e) { /* probar siguiente endpoint */ }
@@ -250,22 +200,8 @@ async function loadIndicesFromSupabase() {
 
         // Cargar IPC
         if (cfg.ipc_data && typeof cfg.ipc_data === 'object' && Object.keys(cfg.ipc_data).length > 10) {
-            // Guardia de seguridad: verificar que los valores son variaciones (< 100%)
-            // y no niveles acumulados del índice (> 100). Si son niveles, descartar.
-            const ipcValues = Object.values(cfg.ipc_data);
-            const maxIPC = Math.max(...ipcValues);
-            if (maxIPC < 100) {
-                IPC_MONTHLY = { ...IPC_BASE, ...cfg.ipc_data };
-                console.log('[Índices] IPC cargado desde Supabase:', Object.keys(IPC_MONTHLY).length, 'entradas');
-            } else {
-                // Los valores son niveles acumulados (bug previo) — usar solo IPC_BASE
-                console.warn('[Índices] ipc_data en Supabase contiene niveles acumulados (max=' + maxIPC.toFixed(0) + ') — usando IPC_BASE. Se corregirá en próximo refresh.');
-                IPC_MONTHLY = { ...IPC_BASE };
-                // Auto-limpiar Supabase para que no vuelva a contaminar
-                SupabaseDB.saveConfig({ ipc_data: {}, indices_updated_at: null })
-                    .then(() => console.log('[Índices] ipc_data corrupto limpiado de Supabase.'))
-                    .catch(() => {});
-            }
+            IPC_MONTHLY = { ...IPC_BASE, ...cfg.ipc_data };
+            console.log('[Índices] IPC cargado desde Supabase:', Object.keys(IPC_MONTHLY).length, 'entradas');
         }
 
         // Verificar antigüedad — si los datos tienen más de 5 días, refrescar en background
@@ -275,18 +211,7 @@ async function loadIndicesFromSupabase() {
         if (daysSinceUpdate > 5) {
             console.log('[Índices] Datos tienen', Math.round(daysSinceUpdate), 'días — actualizando en background…');
             // No await — que corra sin bloquear la UI
-            refreshIndicesFromAPI()
-            .then(result => {
-                if (result && result.ok) {
-                    // scheduleCache.clear() ya fue llamado dentro de refreshIndicesFromAPI
-                    // Re-renderizar la tabla con los datos actualizados (ICL/IPC frescos)
-                    if (typeof renderContracts === 'function') {
-                        console.log('[Índices] Datos actualizados — re-renderizando tabla…');
-                        renderContracts();
-                    }
-                }
-            })
-            .catch(e => console.warn('[Índices] refresh background falló:', e));
+            refreshIndicesFromAPI().catch(e => console.warn('[Índices] refresh background falló:', e));
         }
     } catch(e) {
         console.warn('[Índices] loadIndicesFromSupabase falló:', e.message);
@@ -1261,10 +1186,6 @@ function printContract(c) {
     </body></html>`;
 
     const w = window.open('', '_blank', 'width=900,height=700');
-    if (!w) {
-        showToast('El navegador bloqueó el popup. Permitir popups para este sitio e intentar nuevamente.', 'error');
-        return;
-    }
     w.document.write(html);
     w.document.close();
     w.onload = () => { w.focus(); w.print(); w.onafterprint = () => w.close(); };
@@ -2711,21 +2632,12 @@ async function confirmarFinalizar(contractId) {
             return;
         }
 
-        // 2. Liberar la propiedad (limpiar contratoCreado) para que vuelva al listado de ventas
-        try {
-            const allProps = await SupabaseDB.getPropiedades();
-            const prop = allProps.find(p => p.address === c.address);
-            if (prop && prop.contratoCreado) {
-                await SupabaseDB.upsertPropiedad({ ...prop, contratoCreado: false });
-            }
-        } catch(eProp) { console.warn('[finalizar] no se pudo liberar propiedad:', eProp); }
-
-        // 3. Quitar del cache local y re-renderizar
+        // 2. Quitar del cache local y re-renderizar
         const idx = contractsCache.findIndex(x => x.id === c.id);
         if (idx !== -1) contractsCache.splice(idx, 1);
         await renderContracts();
 
-        // 4. Cerrar modal de detalle si está abierto
+        // 3. Cerrar modal de detalle si está abierto
         const detailModal = document.getElementById('detailModal');
         if (detailModal) detailModal.classList.remove('active');
 

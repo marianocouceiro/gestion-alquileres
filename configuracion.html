@@ -379,34 +379,9 @@
       <button class="btn-prim" id="btnCargarBase" style="background:linear-gradient(135deg,#378ADD,#1e60b0)" title="Escribe los valores INDEC oficial incluidos en el programa a Supabase, pisando datos incorrectos. Sin internet.">📋 Cargar datos base</button>
       <span id="indicesMsg" style="font-size:.78rem;color:var(--muted)"></span>
     </div>
-    <div class="hint" style="margin-bottom:.8rem">
-      ℹ️ <strong>Actualizar desde BCRA/INDEC</strong>: descarga los últimos datos (requiere internet, intenta con proxy CORS si falla desde archivo local).
+    <div class="hint" style="margin-bottom:1rem">
+      ℹ️ <strong>Actualizar desde BCRA/INDEC</strong>: descarga los últimos datos (requiere internet, intenta con proxy CORS si falla desde archivo local). 
       <strong>Cargar datos base</strong>: escribe los valores INDEC oficial incluidos en esta versión directamente a Supabase, <u>pisando cualquier dato incorrecto</u>. Sin internet, siempre funciona.
-    </div>
-    <div style="padding:.85rem 1rem;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid var(--border);margin-bottom:.6rem">
-      <div style="font-size:.76rem;font-weight:600;color:var(--txt2);margin-bottom:.6rem;text-transform:uppercase;letter-spacing:.4px">✏️ Carga manual de IPC</div>
-      <div style="font-size:.72rem;color:var(--muted);margin-bottom:.7rem">Cuando la API aún no publicó el dato del mes. Ingresá el valor del informe oficial del INDEC.</div>
-      <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
-        <input class="inp" type="month" id="ipcManualMes" style="width:auto;min-width:140px">
-        <div style="display:flex;align-items:center;gap:.3rem">
-          <input class="inp" type="number" id="ipcManualValor" step="0.01" min="0.01" max="100" placeholder="ej: 2.6" style="width:90px">
-          <span style="font-size:.82rem;color:var(--muted)">%</span>
-        </div>
-        <button class="btn-prim" id="btnIpcManual" style="background:linear-gradient(135deg,#10b981,#059669)">💾 Guardar IPC</button>
-        <span id="ipcManualMsg" style="font-size:.78rem;color:var(--muted)"></span>
-      </div>
-    </div>
-    <div style="padding:.85rem 1rem;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid var(--border)">
-      <div style="font-size:.76rem;font-weight:600;color:var(--txt2);margin-bottom:.6rem;text-transform:uppercase;letter-spacing:.4px">✏️ Carga manual de ICL</div>
-      <div style="font-size:.72rem;color:var(--muted);margin-bottom:.7rem">Cuando la API del BCRA falla. Ingresá el valor del índice publicado en <strong>estadisticasbcra.com</strong> (es un número absoluto, no un %, ej: 31.81).</div>
-      <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
-        <input class="inp" type="month" id="iclManualMes" style="width:auto;min-width:140px">
-        <div style="display:flex;align-items:center;gap:.3rem">
-          <input class="inp" type="number" id="iclManualValor" step="0.01" min="0.01" placeholder="ej: 31.81" style="width:100px">
-        </div>
-        <button class="btn-prim" id="btnIclManual" style="background:linear-gradient(135deg,#378ADD,#1e60b0)">💾 Guardar ICL</button>
-        <span id="iclManualMsg" style="font-size:.78rem;color:var(--muted)"></span>
-      </div>
     </div>
   </div>
 
@@ -639,7 +614,8 @@ const IPC_HARDCODED = {
     "2025-04":  3.2, "2025-05":  3.3, "2025-06":  2.7,
     "2025-07":  3.0, "2025-08":  3.5, "2025-09":  2.9,
     "2025-10":  2.4, "2025-11":  2.4, "2025-12":  2.7,
-    "2026-01":  2.9, "2026-02":  2.9, "2026-03":  3.4, "2026-04":  2.6,
+    "2026-01":  2.9, "2026-02":  2.9, "2026-03":  3.4,
+    "2026-04":  2.6, "2026-05":  2.1,
 };
 
 // ── Toast ─────────────────────────────────────────────────────
@@ -862,6 +838,22 @@ async function loadIndicesStatus() {
     const icl = (cfg.icl_data && Object.keys(cfg.icl_data).length > 10) ? cfg.icl_data : ICL_HARDCODED;
     const ipc = (cfg.ipc_data && Object.keys(cfg.ipc_data).length > 10) ? cfg.ipc_data : IPC_HARDCODED;
     renderIndicesTable(icl, ipc);
+
+    // Auto-refresh si el IPC tiene más de 35 días de atraso (sin acción del usuario)
+    const lastIpcMonth = ipcUltimo ? ipcUltimo.substring(0, 7) : null;
+    const ipcAtrasado = !lastIpcMonth || (() => {
+      const [y, m] = lastIpcMonth.split('-').map(Number);
+      const lastDate = new Date(y, m, 1); // primer día del mes siguiente al último IPC
+      return (Date.now() - lastDate.getTime()) > 35 * 86400000;
+    })();
+    if (ipcAtrasado) {
+      const msgEl = $('indicesMsg');
+      if (msgEl) msgEl.textContent = '⏳ Actualizando índices…';
+      actualizarIndicesSmart().then(res => {
+        if (res.ok && (res.ipc_new > 0 || res.icl_new > 0)) loadIndicesStatus();
+        if (msgEl) msgEl.textContent = '';
+      }).catch(() => { if (msgEl) msgEl.textContent = ''; });
+    }
   } catch(e) {
     if (el) { el.innerHTML = `⚠️ Error conectando: ${e.message}`; }
     renderIndicesTable(ICL_HARDCODED, IPC_HARDCODED);
@@ -912,7 +904,6 @@ async function actualizarIndicesSmart() {
   const IPC_URLS = [
     INDEC_BASE,
     'https://corsproxy.io/?url='         + encodeURIComponent(INDEC_BASE),
-    'https://proxy.cors.sh/'             + INDEC_BASE,
     'https://api.allorigins.win/raw?url=' + encodeURIComponent(INDEC_BASE),
   ];
   for (const url of IPC_URLS) {
@@ -1151,101 +1142,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       msg.style.color = '#ef4444'; msg.textContent = 'Error: ' + e.message;
     }
     $('btnCargarBase').disabled = false; $('btnCargarBase').textContent = '📋 Cargar datos base';
-  };
-
-  // ── Carga manual IPC ──
-  // Pre-setear al mes anterior (el más probable a cargar manualmente)
-  (() => {
-    const inp = $('ipcManualMes');
-    if (!inp) return;
-    const d = new Date();
-    d.setDate(1);
-    d.setMonth(d.getMonth() - 1);
-    inp.value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-  })();
-
-  $('btnIpcManual').onclick = async () => {
-    const btn = $('btnIpcManual');
-    const msg = $('ipcManualMsg');
-    const mes = ($('ipcManualMes').value || '').trim();        // "YYYY-MM"
-    const val = parseFloat($('ipcManualValor').value);
-
-    if (!mes) { msg.style.color='#f59e0b'; msg.textContent='Seleccioná un mes'; return; }
-    if (isNaN(val) || val <= 0 || val > 100) { msg.style.color='#f59e0b'; msg.textContent='Ingresá un valor entre 0.01 y 100'; return; }
-
-    btn.disabled = true; btn.textContent = '⏳ Guardando…'; msg.textContent = '';
-    try {
-      const cfg = await SupabaseDB.getConfig();
-      const ipcData = (cfg.ipc_data && typeof cfg.ipc_data === 'object') ? { ...cfg.ipc_data } : { ...IPC_HARDCODED };
-      ipcData[mes] = val;
-      await SupabaseDB.saveConfig({
-        ipc_data: ipcData,
-        ipc_ultimo_mes: Object.keys(ipcData).sort().pop(),
-        indices_updated_at: new Date().toISOString(),
-      });
-      msg.style.color = '#10b981';
-      msg.textContent = `✓ IPC ${mes} = ${val}% guardado en Supabase`;
-      $('ipcManualValor').value = '';
-      // Avanzar el selector al mes siguiente (próxima carga probable)
-      const [y, m] = mes.split('-').map(Number);
-      const next = new Date(y, m, 1);
-      $('ipcManualMes').value = `${next.getFullYear()}-${String(next.getMonth()+1).padStart(2,'0')}`;
-      renderIndicesTable(cfg.icl_data || {}, ipcData);
-      loadIndicesStatus();
-      toast(`✓ IPC ${mes}: ${val}%`);
-    } catch(e) {
-      msg.style.color = '#ef4444'; msg.textContent = 'Error: ' + e.message;
-    }
-    btn.disabled = false; btn.textContent = '💾 Guardar IPC';
-  };
-
-  // ── Carga manual ICL ──
-  // Pre-setear al mes actual (ICL se publica mensualmente pero con lag)
-  (() => {
-    const inp = $('iclManualMes');
-    if (!inp) return;
-    const d = new Date();
-    d.setDate(1);
-    d.setMonth(d.getMonth() - 1);
-    inp.value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-  })();
-
-  $('btnIclManual').onclick = async () => {
-    const btn = $('btnIclManual');
-    const msg = $('iclManualMsg');
-    const mes = ($('iclManualMes').value || '').trim();   // "YYYY-MM"
-    const val = parseFloat($('iclManualValor').value);
-
-    if (!mes) { msg.style.color='#f59e0b'; msg.textContent='Seleccioná un mes'; return; }
-    if (isNaN(val) || val <= 0) { msg.style.color='#f59e0b'; msg.textContent='Ingresá un valor válido (ej: 31.81)'; return; }
-
-    // ICL se guarda como "YYYY-MM-01"
-    const key = `${mes}-01`;
-
-    btn.disabled = true; btn.textContent = '⏳ Guardando…'; msg.textContent = '';
-    try {
-      const cfg = await SupabaseDB.getConfig();
-      const iclData = (cfg.icl_data && typeof cfg.icl_data === 'object') ? { ...cfg.icl_data } : { ...ICL_HARDCODED };
-      iclData[key] = val;
-      await SupabaseDB.saveConfig({
-        icl_data: iclData,
-        icl_ultimo_mes: Object.keys(iclData).sort().pop(),
-        indices_updated_at: new Date().toISOString(),
-      });
-      msg.style.color = '#10b981';
-      msg.textContent = `✓ ICL ${mes} = ${val} guardado en Supabase`;
-      $('iclManualValor').value = '';
-      // Avanzar el selector al mes siguiente
-      const [y, m] = mes.split('-').map(Number);
-      const next = new Date(y, m, 1);
-      $('iclManualMes').value = `${next.getFullYear()}-${String(next.getMonth()+1).padStart(2,'0')}`;
-      renderIndicesTable(iclData, cfg.ipc_data || {});
-      loadIndicesStatus();
-      toast(`✓ ICL ${mes}: ${val}`);
-    } catch(e) {
-      msg.style.color = '#ef4444'; msg.textContent = 'Error: ' + e.message;
-    }
-    btn.disabled = false; btn.textContent = '💾 Guardar ICL';
   };
 
   // ── Backup ──

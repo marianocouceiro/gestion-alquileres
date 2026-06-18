@@ -418,7 +418,6 @@ tbody tr.alerta-naranja td{background:rgba(245,124,0,.08);border-left:3px solid 
                 </div>
                 <div class="fl"><label>Valor tasado</label><input class="inp" type="number" id="tValTas" min="0"></div>
                 <div class="fl"><label>Val. pretendido dueño</label><input class="inp" type="number" id="tValPret" min="0"></div>
-                <div class="fl full"><label>URL publicación</label><input class="inp" type="url" id="tUrl" placeholder="https://…"></div>
                 <div class="fl full"><label>Observaciones</label><textarea class="ta" id="tObs"></textarea></div>
             </div>
         </div>
@@ -768,7 +767,6 @@ const TAS = (function() {
         ge('tMoneda').value   = t.moneda     || 'USD';
         ge('tValTas').value   = t.valorTasado      || '';
         ge('tValPret').value  = t.valorPretendido  || '';
-        ge('tUrl').value      = t.urlPublicacion   || '';
         ge('tObs').value      = t.obs        || '';
         ge('modalTas').classList.add('open');
     }
@@ -803,7 +801,6 @@ const TAS = (function() {
             moneda:           ge('tMoneda').value,
             valorTasado:      parseFloat(ge('tValTas').value)  || 0,
             valorPretendido:  parseFloat(ge('tValPret').value) || 0,
-            urlPublicacion:   ge('tUrl').value.trim(),
             obs:              ge('tObs').value.trim(),
             estado:           existing ? existing.estado : 'en_seguimiento',
             contactos:        existing ? existing.contactos : [],
@@ -947,7 +944,7 @@ const TAS = (function() {
             <div style="flex:1;min-width:130px"><span style="font-size:.68rem;color:var(--muted);display:block;text-transform:uppercase;letter-spacing:.3px">Valor tasado</span><span style="font-size:.9rem;font-weight:700;color:var(--ok)">${fmtMoney(t.valorTasado,t.moneda)}</span></div>
             <div style="flex:1;min-width:130px"><span style="font-size:.68rem;color:var(--muted);display:block;text-transform:uppercase;letter-spacing:.3px">Val. pretendido</span><span style="font-size:.9rem;font-weight:700;color:var(--warn)">${fmtMoney(t.valorPretendido,t.moneda)}</span></div>
             <div style="flex:1;min-width:100px"><span style="font-size:.68rem;color:var(--muted);display:block;text-transform:uppercase;letter-spacing:.3px">Días desde tasación</span><span style="font-size:.9rem;font-weight:700">${diasDesde(t.fecha)}d</span></div>
-            ${t.urlPublicacion ? `<div style="flex:2;min-width:180px"><span style="font-size:.68rem;color:var(--muted);display:block;text-transform:uppercase;letter-spacing:.3px">URL publicación</span><a href="${t.urlPublicacion}" target="_blank" style="font-size:.78rem;color:var(--info);text-decoration:none;word-break:break-all">${t.urlPublicacion.replace(/^https?:\/\//,'')}</a></div>` : ''}`;
+            `;
 
         const precios = (t.historialPrecios||[]);
         ge('segPrecios').innerHTML = precios.length
@@ -981,6 +978,37 @@ const TAS = (function() {
 
         if(estado === 'tomada' && estadoAnterior !== 'tomada') {
             try {
+                // Chequeo fuzzy: ¿ya existe una propiedad con dirección similar?
+                function _normAddr(s) {
+                    return String(s||'').toLowerCase()
+                        .replace(/\bav(da)?\.?\s*/g,'').replace(/\bcalle\s*/g,'').replace(/\bbvd\.?\s*/g,'')
+                        .replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
+                }
+                function _tokSim(a, b) {
+                    const ta = new Set(_normAddr(a).split(' ').filter(Boolean));
+                    const tb = new Set(_normAddr(b).split(' ').filter(Boolean));
+                    if (!ta.size || !tb.size) return 0;
+                    const inter = [...ta].filter(x => tb.has(x)).length;
+                    return inter / Math.min(ta.size, tb.size);
+                }
+
+                const todasProps = await SupabaseDB.getPropiedades();
+                const similar = todasProps.find(p => p.tipo === 'venta' && _tokSim(t.direccion, p.address) >= 0.7);
+
+                if (similar) {
+                    const usar = confirm(
+                        `Ya existe en Propiedades una entrada similar:\n"${similar.address}"\n\n` +
+                        `¿Querés vincular esta tasación a esa propiedad en lugar de crear una nueva?\n\n` +
+                        `OK = vincular a la existente\nCancelar = crear nueva igualmente`
+                    );
+                    if (usar) {
+                        await SupabaseDB.upsertPropiedad({ ...similar, origenTasacion: t.id });
+                        toast('✓ Tasación tomada — vinculada a propiedad existente','ok');
+                        cargando(false);
+                        return;
+                    }
+                }
+
                 const propVenta = {
                     id:        'tas_' + t.id,
                     address:   t.direccion,
@@ -1140,12 +1168,12 @@ const TAS = (function() {
     function exportarCSV() {
         if (!lista.length) { toast('Sin datos','err'); return; }
         const csvEsc = v => { const s=String(v==null?'':v); return s.includes(',')||s.includes('"')||s.includes('\n')?'"'+s.replace(/"/g,'""')+'"':s; };
-        const headers = ['Fecha','Dirección','Propietario','Celular','Vendedor','Destino','Tipo','Zona','Sup.','Moneda','Valor Tasado','Valor Pretendido','Estado','URL','Observaciones'];
+        const headers = ['Fecha','Dirección','Propietario','Celular','Vendedor','Destino','Tipo','Zona','Sup.','Moneda','Valor Tasado','Valor Pretendido','Estado','Observaciones'];
         const rows = lista.map(t => [
             t.fecha||'', t.direccion||'', t.propietario||'', t.celular||'',
             t.vendedor||'', t.destino||'', t.tipo||'', t.zona||'',
             t.superficie||'', t.moneda||'', t.valorTasado||'', t.valorPretendido||'',
-            t.estado||'', t.urlPublicacion||'', t.obs||''
+            t.estado||'', t.obs||''
         ].map(csvEsc).join(','));
         const csv = '\uFEFF' + headers.join(',') + '\n' + rows.join('\n');
         const url = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}));

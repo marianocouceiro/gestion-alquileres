@@ -621,6 +621,7 @@
                     <label class="chk"><input type="checkbox" id="cLuz"><span>Luz</span></label>
                     <label class="chk"><input type="checkbox" id="cGas"><span>Gas</span></label>
                     <label class="chk"><input type="checkbox" id="cPlancheta"><span>Plancheta Catastral</span></label>
+                    <label class="chk"><input type="checkbox" id="cAptoProfesional"><span>Apto profesional</span></label>
                 </div>
                 </div>
 
@@ -775,6 +776,7 @@
         if (p.cEscritura)   checks.push('<span style="font-size:.67rem">✓ Escritura</span>');
         if (p.cPlanos)      checks.push('<span style="font-size:.67rem">✓ Planos</span>');
         if (p.cPoder)       checks.push('<span style="font-size:.67rem">✓ Poder</span>');
+        if (p.cAptoProfesional) checks.push('<span style="font-size:.67rem">✓ Apto prof.</span>');
 
         const owners = (p.owners||[]).map(o=>`<div style="font-size:.74rem">${o.name||''}${o.phone?' '+GestShared.waSpan(o.phone):''}</div>`).join('');
 
@@ -919,7 +921,7 @@
         $('#ownersWrap').appendChild(row);
     }
 
-    const CHK_IDS = ['cCartel','cVentaCompra','cTracto','cCredito','cPoder','cVacia','cPlanos','cEscritura','cDeclaratoria','cAbl','cAgua','cLuz','cGas','cPlancheta'];
+    const CHK_IDS = ['cCartel','cVentaCompra','cTracto','cCredito','cPoder','cVacia','cPlanos','cEscritura','cDeclaratoria','cAbl','cAgua','cLuz','cGas','cPlancheta','cAptoProfesional'];
 
     function toggleTipoFields() {
         const isAlq = $('#fTipo').value === 'alquiler';
@@ -945,7 +947,7 @@
     function openModal(editId=null) {
         $('#fId').value=''; $('#fAddr').value=''; $('#fTipo').value='venta';
         $('#fPrecioPubl').value=''; $('#fPrecioAut').value='';
-        $('#fHonVend').value=''; $('#fHonComp').value='4'; $('#fDiasAut').value=''; $('#fFechaInicioAut').value='';
+        $('#fHonVend').value=''; $('#fHonComp').value='4'; $('#fDiasAut').value='180'; $('#fFechaInicioAut').value='';
         $('#fPrecioAlq').value=''; $('#fExpensas').value='';
         $('#fDurAlq').value='24'; $('#fIndexAlq').value='IPC'; $('#fFreqAlq').value='3';
         $('#fHonAlq').value='100'; $('#fDiasAutAlq').value=''; $('#fFechaInicioAutAlq').value='';

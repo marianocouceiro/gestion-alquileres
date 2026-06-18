@@ -78,211 +78,29 @@ let ICL_FALLBACK = { ...ICL_BASE };
 let IPC_MONTHLY  = { ...IPC_BASE };
 
 /* ══════════════════════════════════════════════════════════════
-   1b. CARGA DE ÍNDICES DESDE SUPABASE / BCRA
+   1b. CARGA DE ÍNDICES DESDE SUPABASE
+   Los índices se actualizan automáticamente vía Edge Function diaria.
+   El browser solo lee — nunca fetchea APIs externas.
 ══════════════════════════════════════════════════════════════ */
 
-/**
- * Intenta obtener ICL actualizado desde la API oficial del BCRA.
- * Endpoint: https://api.estadisticasbcra.com/icl
- * Devuelve objeto { "YYYY-MM-DD": valor } o null si falla.
- */
-async function fetchICLFromBCRA() {
-    // Intentar con proxy CORS (para file:// que tiene null origin)
-    const endpoints = [
-        'https://api.estadisticasbcra.com/icl',
-        'https://corsproxy.io/?url=' + encodeURIComponent('https://api.estadisticasbcra.com/icl'),
-        'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://api.estadisticasbcra.com/icl'),
-    ];
-    for (const url of endpoints) {
-        try {
-            const r = await fetch(url);
-            if (!r.ok) continue;
-            const data = await r.json();
-            if (!Array.isArray(data) || !data.length) continue;
-            const result = {};
-            for (const item of data) {
-                if (item.d && item.v != null) {
-                    const parts = item.d.split('-');
-                    const key = `${parts[0]}-${parts[1]}-01`;
-                    result[key] = parseFloat(item.v);
-                }
-            }
-            if (Object.keys(result).length > 10) return result;
-        } catch(e) { /* probar siguiente */ }
-    }
-    console.warn('[Índices] fetchICLFromBCRA: todos los endpoints fallaron');
-    return null;
-}
-
-/**
- * Obtiene IPC Nacional mensual directamente desde la API oficial del INDEC
- * (via datos.gob.ar — sin intermediarios).
- * Serie: 148.3_INIVELNAL_DICI_M_26 — Variación % mensual respecto al mes anterior.
- * Devuelve objeto { "YYYY-MM": tasa% } o null si falla.
- */
-async function fetchIPCFromArgly() {
-    // Serie oficial INDEC: IPC Nacional — variación mensual
-    const SERIE_ID = '148.3_INIVELNAL_DICI_M_26';
-    const BASE_URL = `https://apis.datos.gob.ar/series/api/series/?ids=${SERIE_ID}&limit=60&sort=desc&format=json`;
-    const endpoints = [
-        BASE_URL,
-        'https://corsproxy.io/?url='    + encodeURIComponent(BASE_URL),
-        'https://api.allorigins.win/raw?url=' + encodeURIComponent(BASE_URL),
-    ];
-    for (const url of endpoints) {
-        try {
-            const r = await fetch(url);
-            if (!r.ok) continue;
-            const json = await r.json();
-            // La API devuelve { data: [["YYYY-MM-DD", valor], ...], meta: [...] }
-            if (!json.data || !Array.isArray(json.data) || json.data.length < 5) continue;
-            const result = {};
-            for (const [fecha, valor] of json.data) {
-                if (!fecha || valor == null) continue;
-                // Clave "YYYY-MM" — la API devuelve "YYYY-MM-DD"
-                const key = String(fecha).substring(0, 7);
-                result[key] = parseFloat(valor);
-            }
-            if (Object.keys(result).length > 10) {
-                console.log('[Índices] IPC INDEC oficial OK:', Object.keys(result).length, 'entradas');
-                return result;
-            }
-        } catch(e) { /* probar siguiente endpoint */ }
-    }
-    console.warn('[Índices] fetchIPCFromArgly (INDEC): todos los endpoints fallaron');
-    return null;
-}
-
-/**
- * Intenta obtener IPC mensual desde la API del BCRA (series de tiempo).
- * Variable 27 = IPC Nacional mensual (datos desde el BCRA vía datos.gob.ar).
- * Fallback si Argly no responde.
- */
-async function fetchIPCFromBCRA() {
-    try {
-        // IPC Nacional — API pública de estadísticasbcra.com (sin token)
-        const r = await fetch('https://api.estadisticasbcra.com/ipc');
-        if (!r.ok) return null;
-        const data = await r.json(); // [{d: "YYYY-MM-DD", v: number (acumulado)}, ...]
-        if (!Array.isArray(data) || data.length < 2) return null;
-        // El IPC de esta API viene como índice acumulado, necesitamos calcular variación mensual
-        const result = {};
-        for (let i = 1; i < data.length; i++) {
-            const prev = data[i - 1];
-            const curr = data[i];
-            if (!prev.v || !curr.v) continue;
-            const variacion = ((curr.v / prev.v) - 1) * 100;
-            const parts = curr.d.split('-');
-            const key = `${parts[0]}-${parts[1]}`;
-            result[key] = parseFloat(variacion.toFixed(2));
-        }
-        return Object.keys(result).length ? result : null;
-    } catch(e) {
-        console.warn('[Índices] fetchIPCFromBCRA falló:', e.message);
-        return null;
-    }
-}
-
-/**
- * Carga los índices desde Supabase (config keys: 'icl_data', 'ipc_data').
- * Si no hay datos en Supabase o son viejos (>5 días), intenta bajar de BCRA/Argly.
- * Siempre actualiza ICL_FALLBACK e IPC_MONTHLY en memoria.
- */
 async function loadIndicesFromSupabase() {
     try {
         const cfg = await SupabaseDB.getConfig();
 
-        // Cargar ICL
         if (cfg.icl_data && typeof cfg.icl_data === 'object' && Object.keys(cfg.icl_data).length > 10) {
             ICL_FALLBACK = { ...ICL_BASE, ...cfg.icl_data };
-            console.log('[Índices] ICL cargado desde Supabase:', Object.keys(ICL_FALLBACK).length, 'entradas');
         }
 
-        // Cargar IPC
         if (cfg.ipc_data && typeof cfg.ipc_data === 'object' && Object.keys(cfg.ipc_data).length > 10) {
-            IPC_MONTHLY = { ...IPC_BASE, ...cfg.ipc_data };
-            console.log('[Índices] IPC cargado desde Supabase:', Object.keys(IPC_MONTHLY).length, 'entradas');
-        }
-
-        // Verificar antigüedad — si los datos tienen más de 5 días, refrescar en background
-        const lastUpdate = cfg.indices_updated_at ? new Date(cfg.indices_updated_at) : null;
-        const daysSinceUpdate = lastUpdate ? (Date.now() - lastUpdate.getTime()) / 86400000 : 999;
-
-        if (daysSinceUpdate > 5) {
-            console.log('[Índices] Datos tienen', Math.round(daysSinceUpdate), 'días — actualizando en background…');
-            // No await — que corra sin bloquear la UI
-            refreshIndicesFromAPI().catch(e => console.warn('[Índices] refresh background falló:', e));
+            // Sanity check: descartar si parecen niveles acumulados en lugar de variaciones
+            const maxVal = Math.max(...Object.values(cfg.ipc_data));
+            if (maxVal < 100) {
+                IPC_MONTHLY = { ...IPC_BASE, ...cfg.ipc_data };
+            }
         }
     } catch(e) {
         console.warn('[Índices] loadIndicesFromSupabase falló:', e.message);
     }
-}
-
-/**
- * Descarga índices desde BCRA/Argly, guarda en Supabase y actualiza memoria.
- * Llamada explícita desde configuración o automática en background.
- * Devuelve { ok, icl_entries, ipc_entries, message }
- */
-async function refreshIndicesFromAPI() {
-    const result = { ok: false, icl_entries: 0, ipc_entries: 0, message: '' };
-    const updates = {};
-
-    // ── ICL desde estadisticasbcra.com ──────────────────────
-    console.log('[Índices] Descargando ICL desde BCRA…');
-    const iclData = await fetchICLFromBCRA();
-    if (iclData && Object.keys(iclData).length > 10) {
-        ICL_FALLBACK = { ...ICL_BASE, ...iclData };
-        updates.icl_data = iclData;
-        result.icl_entries = Object.keys(iclData).length;
-        console.log('[Índices] ICL OK:', result.icl_entries, 'entradas');
-    } else {
-        result.message += 'ICL: no se pudo obtener del BCRA. ';
-        console.warn('[Índices] ICL falló o datos insuficientes');
-    }
-
-    // ── IPC: primero Argly, fallback BCRA ───────────────────
-    console.log('[Índices] Descargando IPC desde Argly…');
-    let ipcData = await fetchIPCFromArgly();
-    if (!ipcData || Object.keys(ipcData).length < 10) {
-        console.warn('[Índices] Argly falló, intentando BCRA para IPC…');
-        ipcData = await fetchIPCFromBCRA();
-    }
-    if (ipcData && Object.keys(ipcData).length > 10) {
-        IPC_MONTHLY = { ...IPC_BASE, ...ipcData };
-        updates.ipc_data = ipcData;
-        result.ipc_entries = Object.keys(ipcData).length;
-        console.log('[Índices] IPC OK:', result.ipc_entries, 'entradas');
-    } else {
-        result.message += 'IPC: no se pudo obtener. ';
-        console.warn('[Índices] IPC falló o datos insuficientes');
-    }
-
-    // ── Guardar en Supabase si hay algo nuevo ───────────────
-    if (Object.keys(updates).length) {
-        updates.indices_updated_at = new Date().toISOString();
-        // Calcular último mes real de ICL e IPC para mostrarlo en la UI
-        if (updates.icl_data) {
-            const lastICL = Object.keys(updates.icl_data).sort().pop();
-            updates.icl_ultimo_mes = lastICL || '';
-        }
-        if (updates.ipc_data) {
-            const lastIPC = Object.keys(updates.ipc_data).sort().pop();
-            updates.ipc_ultimo_mes = lastIPC || '';
-        }
-        try {
-            await SupabaseDB.saveConfig(updates);
-            console.log('[Índices] Guardado en Supabase OK');
-            result.ok = true;
-            // Invalidar cache de cronogramas para que recalculen con datos nuevos
-            scheduleCache.clear();
-        } catch(e) {
-            console.warn('[Índices] Error guardando en Supabase:', e.message);
-            result.message += 'Error al guardar en Supabase. ';
-        }
-    }
-
-    if (!result.message) result.message = `ICL: ${result.icl_entries} entradas. IPC: ${result.ipc_entries} entradas.`;
-    return result;
 }
 
 /* ══════════════════════════════════════════════════════════════

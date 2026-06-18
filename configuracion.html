@@ -374,14 +374,8 @@
     <div id="indicesStatus" style="margin:.6rem 0 1rem;padding:.7rem 1rem;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid var(--border);font-size:.82rem;color:var(--txt2);line-height:1.6">
       Cargando estado…
     </div>
-    <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-bottom:.6rem">
-      <button class="btn-prim" id="btnActualizarIndices">🔄 Actualizar desde BCRA/INDEC</button>
-      <button class="btn-prim" id="btnCargarBase" style="background:linear-gradient(135deg,#378ADD,#1e60b0)" title="Escribe los valores INDEC oficial incluidos en el programa a Supabase, pisando datos incorrectos. Sin internet.">📋 Cargar datos base</button>
-      <span id="indicesMsg" style="font-size:.78rem;color:var(--muted)"></span>
-    </div>
     <div class="hint" style="margin-bottom:1rem">
-      ℹ️ <strong>Actualizar desde BCRA/INDEC</strong>: descarga los últimos datos (requiere internet, intenta con proxy CORS si falla desde archivo local). 
-      <strong>Cargar datos base</strong>: escribe los valores INDEC oficial incluidos en esta versión directamente a Supabase, <u>pisando cualquier dato incorrecto</u>. Sin internet, siempre funciona.
+      ℹ️ Los índices se actualizan automáticamente todos los días desde fuentes oficiales (Arquiler/INDEC). No requieren acción del usuario.
     </div>
   </div>
 
@@ -819,135 +813,29 @@ async function loadIndicesStatus() {
       return (meses[parseInt(p[1])]||p[1])+' '+p[0];
     };
     if (!updatedAt && !iclEntries) {
-      el.innerHTML = '⚠️ <strong>Sin datos en Supabase.</strong> Hacé clic en "Cargar datos base" o "Actualizar desde BCRA/INDEC".';
+      el.innerHTML = '⚠️ <strong>Sin datos aún.</strong> El sistema los cargará automáticamente esta noche.';
       el.style.borderColor = 'rgba(245,158,11,.4)'; el.style.background = 'rgba(245,158,11,.06)';
+      renderIndicesTable(ICL_HARDCODED, IPC_HARDCODED);
       return;
     }
     const fechaUpd = updatedAt ? new Date(updatedAt) : null;
     const diasAtras = fechaUpd ? Math.round((Date.now()-fechaUpd.getTime())/86400000) : null;
-    const frescos = diasAtras !== null && diasAtras <= 5;
+    const frescos = diasAtras !== null && diasAtras <= 2;
     const fmtFecha = fechaUpd ? fechaUpd.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : 'desconocida';
     el.style.borderColor = frescos ? 'rgba(16,185,129,.4)' : 'rgba(245,158,11,.4)';
     el.style.background  = frescos ? 'rgba(16,185,129,.05)' : 'rgba(245,158,11,.06)';
     el.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem .8rem">
       <span>📊 <strong>ICL</strong> — último: <strong>${fmtMes(iclUltimo)}</strong> (${iclEntries} entradas)</span>
       <span>📊 <strong>IPC</strong> — último: <strong>${fmtMes(ipcUltimo)}</strong> (${ipcEntries} entradas)</span>
-      <span style="color:${frescos?'#10b981':'#f59e0b'}">${frescos?'✅':'⚠️'} Actualizado: ${fmtFecha}${diasAtras!==null?' (hace '+diasAtras+' día'+(diasAtras===1?'':'s')+')'  :''}</span>
-      <span style="color:var(--muted);font-size:.76rem">Compartido entre todas las PCs vía Supabase</span></div>`;
-    // Render table with Supabase data
+      <span style="color:${frescos?'#10b981':'#f59e0b'}">${frescos?'✅ Al día':'⚠️ Pendiente actualización'}: ${fmtFecha}</span>
+      <span style="color:var(--muted);font-size:.76rem">🔄 Actualización automática diaria</span></div>`;
     const icl = (cfg.icl_data && Object.keys(cfg.icl_data).length > 10) ? cfg.icl_data : ICL_HARDCODED;
     const ipc = (cfg.ipc_data && Object.keys(cfg.ipc_data).length > 10) ? cfg.ipc_data : IPC_HARDCODED;
     renderIndicesTable(icl, ipc);
-
-    // Auto-refresh si el IPC tiene más de 35 días de atraso (sin acción del usuario)
-    const lastIpcMonth = ipcUltimo ? ipcUltimo.substring(0, 7) : null;
-    const ipcAtrasado = !lastIpcMonth || (() => {
-      const [y, m] = lastIpcMonth.split('-').map(Number);
-      const lastDate = new Date(y, m, 1); // primer día del mes siguiente al último IPC
-      return (Date.now() - lastDate.getTime()) > 35 * 86400000;
-    })();
-    if (ipcAtrasado) {
-      const msgEl = $('indicesMsg');
-      if (msgEl) msgEl.textContent = '⏳ Actualizando índices…';
-      actualizarIndicesSmart().then(res => {
-        if (res.ok && (res.ipc_new > 0 || res.icl_new > 0)) loadIndicesStatus();
-        if (msgEl) msgEl.textContent = '';
-      }).catch(() => { if (msgEl) msgEl.textContent = ''; });
-    }
   } catch(e) {
-    if (el) { el.innerHTML = `⚠️ Error conectando: ${e.message}`; }
+    if (el) { el.innerHTML = `⚠️ Error conectando a Supabase: ${e.message}`; }
     renderIndicesTable(ICL_HARDCODED, IPC_HARDCODED);
   }
-}
-
-// Descarga solo meses nuevos — no repide lo que ya está guardado
-async function actualizarIndicesSmart() {
-  const result = { ok: false, icl_new: 0, ipc_new: 0, message: '' };
-  let cfg;
-  try { cfg = await SupabaseDB.getConfig(); } catch(e) { result.message = 'Error conectando a Supabase'; return result; }
-
-  const iclExisting = (cfg.icl_data && typeof cfg.icl_data === 'object') ? cfg.icl_data : { ...ICL_HARDCODED };
-  const ipcExisting = (cfg.ipc_data && typeof cfg.ipc_data === 'object') ? cfg.ipc_data : { ...IPC_HARDCODED };
-
-  const lastIclKey = Object.keys(iclExisting).sort().pop() || '2020-01-01';
-  const lastIpcKey = Object.keys(ipcExisting).sort().pop() || '2020-01';
-
-  // Fetch ICL — try direct then CORS proxies
-  const ICL_URLS = [
-    'https://api.estadisticasbcra.com/icl',
-    'https://corsproxy.io/?url=' + encodeURIComponent('https://api.estadisticasbcra.com/icl'),
-    'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://api.estadisticasbcra.com/icl'),
-  ];
-  for (const url of ICL_URLS) {
-    try {
-      const r = await fetch(url);
-      if (!r.ok) continue;
-      const data = await r.json();
-      if (!Array.isArray(data) || data.length < 5) continue;
-      let newCount = 0;
-      for (const item of data) {
-        if (!item.d || item.v == null) continue;
-        const p = item.d.split('-');
-        const key = `${p[0]}-${p[1]}-01`;
-        if (key > lastIclKey) { iclExisting[key] = parseFloat(item.v); newCount++; }
-        else if (!iclExisting[key]) { iclExisting[key] = parseFloat(item.v); } // fill gaps
-      }
-      result.icl_new = newCount;
-      break;
-    } catch(e) { continue; }
-  }
-
-  // Fetch IPC — API oficial INDEC (datos.gob.ar), serie IPC Nacional mensual
-  // Serie: 148.3_INIVELNAL_DICI_M_26 — Variación % mensual
-  const INDEC_SERIE = '148.3_INIVELNAL_DICI_M_26';
-  const INDEC_BASE  = `https://apis.datos.gob.ar/series/api/series/?ids=${INDEC_SERIE}&limit=60&sort=desc&format=json`;
-  const IPC_URLS = [
-    INDEC_BASE,
-    'https://corsproxy.io/?url='         + encodeURIComponent(INDEC_BASE),
-    'https://api.allorigins.win/raw?url=' + encodeURIComponent(INDEC_BASE),
-  ];
-  for (const url of IPC_URLS) {
-    try {
-      const r = await fetch(url);
-      if (!r.ok) continue;
-      const json = await r.json();
-      // La API del INDEC devuelve { data: [["YYYY-MM-DD", nivelIndice], ...] }
-      // El nivel es acumulado desde base dic-2016 — convertir a variacion mensual
-      if (!json.data || !Array.isArray(json.data) || json.data.length < 5) continue;
-      const sorted = [...json.data].sort((a, b) => a[0] < b[0] ? -1 : 1);
-      let newCount = 0;
-      for (let i = 0; i < sorted.length; i++) {
-        const [fecha, nivel] = sorted[i];
-        if (!fecha || nivel == null) continue;
-        const key = String(fecha).substring(0, 7);
-        const prevNivel = i > 0 ? sorted[i-1][1] : null;
-        const variacion = prevNivel ? parseFloat(((nivel / prevNivel - 1) * 100).toFixed(2)) : null;
-        if (variacion === null) continue;
-        if (key > lastIpcKey) { ipcExisting[key] = variacion; newCount++; }
-        else if (!ipcExisting[key]) { ipcExisting[key] = variacion; }
-      }
-      result.ipc_new = newCount;
-      break;
-    } catch(e) { continue; }
-  }
-
-  // Save merged data to Supabase
-  const updates = {
-    icl_data: iclExisting,
-    ipc_data: ipcExisting,
-    icl_ultimo_mes: Object.keys(iclExisting).sort().pop() || '',
-    ipc_ultimo_mes: Object.keys(ipcExisting).sort().pop() || '',
-    indices_updated_at: new Date().toISOString(),
-  };
-  try {
-    await SupabaseDB.saveConfig(updates);
-    result.ok = true;
-    result.message = `ICL: +${result.icl_new} meses nuevos · IPC: +${result.ipc_new} meses nuevos`;
-    if (!result.icl_new && !result.ipc_new) result.message = 'Ya tenés los datos más recientes';
-  } catch(e) {
-    result.message = 'Error guardando: ' + e.message;
-  }
-  return result;
 }
 
 // ── Backup helpers ────────────────────────────────────────────
@@ -1093,55 +981,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     $('savingLbl').style.display = 'none';
     setSrv('ok', '✓ Guardado en Supabase');
     toast('✓ Configuración guardada. Todas las PCs se sincronizarán al abrir.');
-  };
-
-  // ── Actualizar índices ──
-  $('btnActualizarIndices').onclick = async () => {
-    const btn = $('btnActualizarIndices');
-    const msg = $('indicesMsg');
-    btn.disabled = true; btn.textContent = '⏳ Actualizando…'; msg.textContent = '';
-    try {
-      const result = await actualizarIndicesSmart();
-      msg.style.color = result.ok ? '#10b981' : '#f59e0b';
-      msg.textContent = result.message;
-      toast(result.ok ? '✓ ' + result.message : result.message, !result.ok);
-      loadIndicesStatus();
-    } catch(e) {
-      msg.style.color = '#ef4444'; msg.textContent = 'Error: ' + e.message;
-      toast('Error: ' + e.message, true);
-    } finally {
-      btn.disabled = false; btn.textContent = '🔄 Actualizar desde BCRA/INDEC';
-    }
-  };
-
-  // ── Cargar datos base ──
-  // Los valores hardcodeados (INDEC oficial) SIEMPRE pisan los datos de Supabase.
-  // Útil para corregir datos incorrectos sin depender de internet.
-  $('btnCargarBase').onclick = async () => {
-    $('btnCargarBase').disabled = true; $('btnCargarBase').textContent = '⏳ Guardando…';
-    const msg = $('indicesMsg');
-    try {
-      // Los hardcodeados prevalecen sobre Supabase (al revés del merge anterior)
-      // Esto garantiza que los valores INDEC correctos siempre queden escritos.
-      let cfg = {};
-      try { cfg = await SupabaseDB.getConfig(); } catch {}
-      const iclMerged = Object.assign({}, cfg.icl_data || {}, ICL_HARDCODED);
-      const ipcMerged = Object.assign({}, cfg.ipc_data || {}, IPC_HARDCODED);
-      await SupabaseDB.saveConfig({
-        icl_data: iclMerged, ipc_data: ipcMerged,
-        icl_ultimo_mes: Object.keys(iclMerged).sort().pop(),
-        ipc_ultimo_mes: Object.keys(ipcMerged).sort().pop(),
-        indices_updated_at: new Date().toISOString(),
-      });
-      msg.style.color = '#10b981';
-      msg.textContent = '✓ Datos base INDEC cargados y guardados en Supabase';
-      renderIndicesTable(iclMerged, ipcMerged);
-      loadIndicesStatus();
-      toast('✓ Índices INDEC base guardados en Supabase');
-    } catch(e) {
-      msg.style.color = '#ef4444'; msg.textContent = 'Error: ' + e.message;
-    }
-    $('btnCargarBase').disabled = false; $('btnCargarBase').textContent = '📋 Cargar datos base';
   };
 
   // ── Backup ──

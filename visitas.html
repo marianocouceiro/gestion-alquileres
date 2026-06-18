@@ -748,53 +748,93 @@ function updateSummary() {
 }
 
 /* ═══ Sync visitante → Banco de Compradores ═══ */
+
+// Normaliza un número de teléfono a sus últimos 8 dígitos (ignora formato, códigos de área, etc.)
+function normalizarTel(tel) {
+    if (!tel) return '';
+    return String(tel).replace(/\D/g, '').slice(-8);
+}
+
 async function syncVisitanteToBanco(v) {
-    // Solo sincronizar si hay nombre de cliente
+    // Necesitamos al menos el nombre del cliente
     if (!v.cliente || !v.cliente.trim()) return;
 
-    // Buscar datos de la propiedad visitada
-    const prop = propiedades.find(p => p.address === v.propiedad) || null;
-
-    // Determinar características de búsqueda basadas en la propiedad
-    const rubros = prop && prop.rubro ? [prop.rubro] : [];
-    const zonas  = prop && prop.zona  ? [prop.zona]  : [];
-    const amb    = prop && prop.ambientes != null && prop.ambientes !== ''
-                   ? String(prop.ambientes) : '';
-    // Presupuesto solo aplica a propiedades en venta (USD); alquileres quedan en 0
-    const presupuesto = (prop && prop.tipo !== 'alquiler')
-                        ? (parseFloat(prop.precioAut || prop.precioPubl) || 0)
-                        : 0;
-
-    // Nota con contexto de la visita
-    const tipoLabel = v.tipo ? ` (${v.tipo})` : '';
-    const fechaLabel = v.fecha ? ` el ${v.fecha}` : '';
-    const obs = [`Visitó ${v.propiedad || '—'}${tipoLabel}${fechaLabel}.`, v.obs].filter(Boolean).join(' ');
-
-    const obj = {
-        // ID estable: "vis_" + visitaId → si se edita la visita, actualiza el mismo registro
-        id:         'vis_' + v.id,
-        nombre:     v.cliente.trim(),
-        tel:        v.celular || '',
-        rubros,
-        zonas,
-        ambMin:     amb,
-        ambMax:     amb,
-        presupuesto,
-        credito:    false,
-        estado:     'activo',
-        obs,
-        fechaAlta:  new Date().toISOString().slice(0, 10),
-        origenVisita: v.propiedad || '',
-        // Solo asignar la propiedad visitada como interés — evita matchear con todas las propiedades
-        // cuando rubro/zona/precio están vacíos
-        propiedadesInteres: v.propiedad ? [v.propiedad] : []
-    };
-
     try {
-        await SupabaseDB.upsertComprador(obj);
+        // ── 1. Buscar datos de la propiedad visitada ──────────────────────
+        const prop = propiedades.find(p => p.address === v.propiedad) || null;
+        const rubros = prop && prop.rubro ? [prop.rubro] : [];
+        const zonas  = prop && prop.zona  ? [prop.zona]  : [];
+        const amb    = prop && prop.ambientes != null && prop.ambientes !== ''
+                       ? String(prop.ambientes) : '';
+        const presupuesto = (prop && prop.tipo !== 'alquiler')
+                            ? (parseFloat(prop.precioAut || prop.precioPubl) || 0)
+                            : 0;
+
+        const tipoLabel  = v.tipo  ? ` (${v.tipo})`  : '';
+        const fechaLabel = v.fecha ? ` el ${v.fecha}` : '';
+        const nuevaObs   = [`Visitó ${v.propiedad || '—'}${tipoLabel}${fechaLabel}.`, v.obs]
+                            .filter(Boolean).join(' ');
+
+        // ── 2. Dedup por teléfono (últimos 8 dígitos) ────────────────────
+        const telNorm = normalizarTel(v.celular);
+        const todosCompradores = await SupabaseDB.getCompradores();
+
+        let existente = null;
+
+        // Primero: buscar por teléfono (más confiable que el nombre)
+        if (telNorm.length >= 7) {
+            existente = todosCompradores.find(c =>
+                normalizarTel(c.tel || '').length >= 7 &&
+                normalizarTel(c.tel) === telNorm
+            );
+        }
+
+        // Segundo: si no hay teléfono, buscar por el ID estable de visita anterior
+        if (!existente) {
+            existente = todosCompradores.find(c => c.id === 'vis_' + v.id);
+        }
+
+        // ── 3a. Ya existe → agregar propiedad a sus intereses si falta ───
+        if (existente) {
+            const propYaAsignada = (existente.propiedadesInteres || []).includes(v.propiedad);
+            if (v.propiedad && !propYaAsignada) {
+                const actualizado = {
+                    ...existente,
+                    propiedadesInteres: [...(existente.propiedadesInteres || []), v.propiedad],
+                    // Agregar la observación de esta nueva visita al historial
+                    obs: [existente.obs, nuevaObs].filter(Boolean).join(' | ')
+                };
+                await SupabaseDB.upsertComprador(actualizado);
+                // No toast — el comprador ya estaba, solo actualizamos silenciosamente
+            }
+            return;
+        }
+
+        // ── 3b. No existe → crear nuevo comprador ────────────────────────
+        const nuevoComprador = {
+            // ID estable: "vis_" + visitaId — permite upsert si se re-guarda la misma visita
+            id:          'vis_' + v.id,
+            nombre:      v.cliente.trim(),
+            tel:         v.celular || '',
+            rubros,
+            zonas,
+            ambMin:      amb,
+            ambMax:      amb,
+            presupuesto,
+            credito:     false,
+            estado:      'activo',
+            obs:         nuevaObs,
+            fechaAlta:   new Date().toISOString().slice(0, 10),
+            origenVisita: v.propiedad || '',
+            propiedadesInteres: v.propiedad ? [v.propiedad] : []
+        };
+
+        await SupabaseDB.upsertComprador(nuevoComprador);
+        toast(`${v.cliente.trim()} agregado al Banco de Compradores 🏠`, 'ok');
+
     } catch(e) {
         // No interrumpir el flujo principal si falla la sincronización
-        console.warn('syncVisitanteToBanco: error al sincronizar', e);
+        console.warn('[Visitas] syncVisitanteToBanco error:', e);
     }
 }
 
@@ -1103,7 +1143,17 @@ async function saveVisitaModal() {
     $('#modalVisita').classList.remove('open');
     renderDay(); renderWeek(); updateSummary();
     toast('Visita guardada','ok');
-    // Sync a banco de compradores desactivado — se carga manualmente
+
+    // ── Sync automático → Banco de Compradores ──────────────────────────
+    // Solo para visitas donde hay un cliente visitando una propiedad.
+    // Se excluyen: Entrega de llaves (inquilino ya existente), Reunión,
+    // Fotos, Tasación (es el dueño, no comprador) y visitas de colegas.
+    const TIPOS_NO_SINCRONIZAR = new Set([
+        'Entrega de llaves', 'Reunión', 'Fotos', 'Tasación', 'Firma alquiler'
+    ]);
+    if (v.cliente && !TIPOS_NO_SINCRONIZAR.has(v.tipo) && !v.esColega) {
+        syncVisitanteToBanco(v).catch(e => console.warn('[Visitas] sync banco:', e));
+    }
 }
 
 /* ═══ WA Recordatorio ═══ */

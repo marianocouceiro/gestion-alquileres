@@ -638,6 +638,15 @@ const SupabaseDB = (function () {
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') _bgRefreshIfNeeded();
     });
+    // Sincronizar logout entre tabs: si otra pestaña borra la sesión, redirigir
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'ga_session' && !e.newValue) {
+        const page = location.pathname.split('/').pop().toLowerCase();
+        if (page !== 'login.html' && page !== 'superadmin_login.html') {
+          window.location.replace('login.html');
+        }
+      }
+    });
   }
 
   return api;

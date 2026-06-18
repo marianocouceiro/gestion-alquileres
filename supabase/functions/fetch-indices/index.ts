@@ -5,8 +5,21 @@ const RAPIDAPI_KEY       = Deno.env.get("RAPIDAPI_KEY") ?? "";
 const SUPABASE_URL       = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
-serve(async (_req) => {
+const CRON_SECRET = Deno.env.get("CRON_SECRET") ?? "";
+
+serve(async (req) => {
   const result = { ok: false, icl_months: 0, ipc_months: 0, orgs_updated: 0, error: "" };
+
+  // Verificar header secreto (protege contra llamadas no autorizadas)
+  if (CRON_SECRET) {
+    const incoming = req.headers.get("x-cron-secret") ?? "";
+    if (incoming !== CRON_SECRET) {
+      return new Response(JSON.stringify({ ok: false, error: "Unauthorized" }), {
+        status: 401,
+        headers: cors(),
+      });
+    }
+  }
 
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);

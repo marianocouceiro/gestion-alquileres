@@ -1470,7 +1470,7 @@
             : contracts
         ).filter(c => !c.deletedAt || !!records[c.address]);
         if (!filtered.length) {
-            body.innerHTML = `<tr><td colspan="11" class="empty">Sin resultados para "${searchTerm}"</td></tr>`;
+            body.innerHTML = `<tr><td colspan="11" class="empty">Sin resultados para "${GestShared.esc(searchTerm)}"</td></tr>`;
             updateSummary();
             restoreFocusAdm(focusState);
             return;

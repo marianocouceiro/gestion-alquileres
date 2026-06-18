@@ -615,6 +615,7 @@ const IPC_HARDCODED = {
     "2025-07":  3.0, "2025-08":  3.5, "2025-09":  2.9,
     "2025-10":  2.4, "2025-11":  2.4, "2025-12":  2.7,
     "2026-01":  2.9, "2026-02":  2.9, "2026-03":  3.4,
+    "2026-04":  2.6, "2026-05":  2.1,
 };
 
 // ── Toast ─────────────────────────────────────────────────────
@@ -837,6 +838,22 @@ async function loadIndicesStatus() {
     const icl = (cfg.icl_data && Object.keys(cfg.icl_data).length > 10) ? cfg.icl_data : ICL_HARDCODED;
     const ipc = (cfg.ipc_data && Object.keys(cfg.ipc_data).length > 10) ? cfg.ipc_data : IPC_HARDCODED;
     renderIndicesTable(icl, ipc);
+
+    // Auto-refresh si el IPC tiene más de 35 días de atraso (sin acción del usuario)
+    const lastIpcMonth = ipcUltimo ? ipcUltimo.substring(0, 7) : null;
+    const ipcAtrasado = !lastIpcMonth || (() => {
+      const [y, m] = lastIpcMonth.split('-').map(Number);
+      const lastDate = new Date(y, m, 1); // primer día del mes siguiente al último IPC
+      return (Date.now() - lastDate.getTime()) > 35 * 86400000;
+    })();
+    if (ipcAtrasado) {
+      const msgEl = $('indicesMsg');
+      if (msgEl) msgEl.textContent = '⏳ Actualizando índices…';
+      actualizarIndicesSmart().then(res => {
+        if (res.ok && (res.ipc_new > 0 || res.icl_new > 0)) loadIndicesStatus();
+        if (msgEl) msgEl.textContent = '';
+      }).catch(() => { if (msgEl) msgEl.textContent = ''; });
+    }
   } catch(e) {
     if (el) { el.innerHTML = `⚠️ Error conectando: ${e.message}`; }
     renderIndicesTable(ICL_HARDCODED, IPC_HARDCODED);

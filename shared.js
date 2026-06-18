@@ -185,7 +185,137 @@ const GestShared = (function () {
   function _injectCSS() {
     if (document.getElementById('gs-css')) return;
     const s = document.createElement('style'); s.id = 'gs-css';
-    s.textContent = `.gs-hdr{position:sticky;top:0;z-index:300;display:flex;align-items:center;justify-content:space-between;padding:.55rem 1.4rem;background:linear-gradient(135deg,#0d0d0d 0%,#1a1206 50%,#0d0d0d 100%);border-bottom:1px solid rgba(255,255,255,.08);backdrop-filter:blur(20px);gap:.8rem;flex-wrap:wrap}.gs-logo{display:flex;align-items:center;gap:.65rem;flex-shrink:0;text-decoration:none}.gs-logo-ico{width:34px;height:34px;flex-shrink:0;border-radius:9px;overflow:hidden;border:1px solid rgba(245,124,0,.35);padding:2px;background:rgba(245,124,0,.1)}.gs-logo-name{font-family:'Inter',-apple-system,sans-serif;font-size:.88rem;font-weight:700;color:#fff;line-height:1.2}.gs-logo-sub{font-family:'Inter',-apple-system,sans-serif;font-size:.64rem;color:#717171;line-height:1}.gs-nav{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}.gs-nav-btn{display:inline-flex;align-items:center;gap:.3rem;padding:.35rem .75rem;border-radius:8px;font-family:'Inter',-apple-system,sans-serif;font-size:.76rem;font-weight:600;color:rgba(245,124,0,.85);background:rgba(245,124,0,.1);border:1px solid rgba(245,124,0,.22);text-decoration:none;cursor:pointer;transition:background .15s,border-color .15s;white-space:nowrap}.gs-nav-btn:hover{background:rgba(245,124,0,.22);color:#f57c00;border-color:rgba(245,124,0,.45)}.gs-nav-active{background:rgba(245,124,0,.25)!important;color:#ff9800!important;border-color:rgba(245,124,0,.6)!important}.gs-font-ctrl{display:flex;align-items:center;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;overflow:hidden;flex-shrink:0}.gs-font-ctrl button{background:none;border:none;color:#b0b0b0;cursor:pointer;padding:.28rem .48rem;font-family:'Inter',-apple-system,sans-serif;font-size:.8rem;font-weight:600;transition:color .15s}.gs-font-ctrl button:hover{color:#f57c00;background:rgba(245,124,0,.1)}.wa-phone-link{color:#378ADD;text-decoration:none;cursor:pointer}.wa-phone-link:hover{text-decoration:underline;color:#25d366}`;
+    s.textContent = `
+.gs-hdr{position:sticky;top:0;z-index:300;display:flex;align-items:center;justify-content:space-between;padding:0 1.4rem;height:56px;background:#090909;border-bottom:1px solid rgba(255,255,255,.07);backdrop-filter:blur(24px);gap:1rem;flex-shrink:0}
+.gs-logo{display:flex;align-items:center;gap:.6rem;flex-shrink:0;text-decoration:none}
+.gs-logo-ico{width:32px;height:32px;flex-shrink:0;border-radius:8px;overflow:hidden;border:1px solid rgba(245,124,0,.28);padding:2px;background:rgba(245,124,0,.08)}
+.gs-logo-name{font-family:'Inter',-apple-system,sans-serif;font-size:.92rem;font-weight:800;color:#fff;line-height:1.15;letter-spacing:-.015em}
+.gs-logo-sub{font-family:'Inter',-apple-system,sans-serif;font-size:.58rem;color:#444;line-height:1;text-transform:uppercase;letter-spacing:.06em}
+.gs-nav{display:flex;align-items:center;gap:.2rem;flex-wrap:wrap}
+.gs-nav-btn{display:inline-flex;align-items:center;gap:.25rem;padding:.3rem .65rem;border-radius:7px;font-family:'Inter',-apple-system,sans-serif;font-size:.75rem;font-weight:600;color:rgba(255,255,255,.45);background:transparent;border:none;text-decoration:none;cursor:pointer;transition:all .12s ease;white-space:nowrap;letter-spacing:.005em}
+.gs-nav-btn:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.88)}
+.gs-nav-active{background:rgba(245,124,0,.14)!important;color:#f57c00!important;border:1px solid rgba(245,124,0,.28)!important;border-radius:7px!important}
+.gs-font-ctrl{display:flex;align-items:center;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:7px;overflow:hidden;flex-shrink:0;margin-left:.2rem}
+.gs-font-ctrl button{background:none;border:none;color:#444;cursor:pointer;padding:.27rem .42rem;font-family:'Inter',-apple-system,sans-serif;font-size:.74rem;font-weight:700;transition:color .12s}
+.gs-font-ctrl button:hover{color:#f57c00}
+.wa-phone-link{color:#378ADD;text-decoration:none;cursor:pointer}
+.wa-phone-link:hover{text-decoration:underline;color:#25d366}
+`;
+    document.head.appendChild(s);
+  }
+
+  function _injectDesignSystem() {
+    if (document.getElementById('ga-ds')) return;
+    const s = document.createElement('style'); s.id = 'ga-ds';
+    s.textContent = `
+/* ═══ GestAlquiler Design System v2 ═══ */
+
+/* ── Botones primarios ── */
+.btn-prim,button.btn-prim{
+  background:linear-gradient(135deg,#f57c00 0%,#ff9800 100%)!important;
+  color:#fff!important;border:none!important;border-radius:9px!important;
+  padding:.5rem 1.1rem!important;font-size:.84rem!important;font-weight:700!important;
+  font-family:'Inter',-apple-system,sans-serif!important;cursor:pointer!important;
+  display:inline-flex!important;align-items:center!important;gap:.38rem!important;
+  transition:all .14s ease!important;box-shadow:0 2px 10px rgba(245,124,0,.25)!important;
+  white-space:nowrap!important;letter-spacing:.005em!important;line-height:1.4!important;
+}
+.btn-prim:hover{opacity:.9!important;transform:translateY(-1px)!important;box-shadow:0 5px 18px rgba(245,124,0,.38)!important}
+.btn-prim:active{transform:none!important;opacity:1!important}
+
+/* ── Botones ghost ── */
+.btn-ghost,button.btn-ghost{
+  background:rgba(255,255,255,.05)!important;color:#aaa!important;
+  border:1px solid rgba(255,255,255,.11)!important;border-radius:9px!important;
+  padding:.48rem 1rem!important;font-size:.84rem!important;font-weight:600!important;
+  font-family:'Inter',-apple-system,sans-serif!important;cursor:pointer!important;
+  display:inline-flex!important;align-items:center!important;gap:.38rem!important;
+  transition:all .14s ease!important;white-space:nowrap!important;
+}
+.btn-ghost:hover{background:rgba(255,255,255,.09)!important;color:#f5f5f5!important;border-color:rgba(255,255,255,.2)!important}
+
+/* ── Botones small ── */
+.btn-sm,button.btn-sm{
+  padding:.3rem .7rem!important;font-size:.78rem!important;border-radius:7px!important;
+}
+
+/* ── Botones icono ── */
+.btn-ico,button.btn-ico{
+  background:rgba(255,255,255,.05)!important;border:1px solid rgba(255,255,255,.09)!important;
+  border-radius:8px!important;width:32px!important;height:32px!important;min-width:32px!important;
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  font-size:.82rem!important;color:#888!important;cursor:pointer!important;
+  transition:all .13s ease!important;padding:0!important;line-height:1!important;
+}
+.btn-ico:hover{background:rgba(245,124,0,.12)!important;border-color:rgba(245,124,0,.35)!important;color:#f57c00!important}
+.btn-ico.del:hover,.btn-ico.danger:hover{background:rgba(239,68,68,.12)!important;border-color:rgba(239,68,68,.35)!important;color:#ef4444!important}
+
+/* ── Inputs / Selects / Textareas ── */
+.inp,input.inp,.sel,select.sel,.ta,textarea.ta{
+  background:rgba(255,255,255,.05)!important;
+  border:1px solid rgba(255,255,255,.1)!important;
+  border-radius:8px!important;padding:.52rem .78rem!important;
+  font-size:.87rem!important;color:#f0f0f0!important;
+  font-family:'Inter',-apple-system,sans-serif!important;
+  transition:border-color .14s,box-shadow .14s!important;outline:none!important;
+  width:100%!important;
+}
+.inp:focus,.sel:focus,.ta:focus{
+  border-color:#f57c00!important;
+  box-shadow:0 0 0 2.5px rgba(245,124,0,.14)!important;
+  background:rgba(245,124,0,.03)!important;
+}
+.inp::placeholder,.ta::placeholder{color:#555!important}
+select.inp,select.sel{color-scheme:dark!important}
+
+/* ── Search inputs unificados ── */
+.search-input,input[type="search"].search-input{
+  background:rgba(255,255,255,.05)!important;
+  border:1px solid rgba(255,255,255,.1)!important;
+  border-radius:8px!important;padding:.42rem .75rem!important;
+  font-size:.82rem!important;color:#f0f0f0!important;
+  font-family:'Inter',-apple-system,sans-serif!important;
+  transition:border-color .14s,box-shadow .14s!important;outline:none!important;
+}
+.search-input:focus{border-color:#f57c00!important;box-shadow:0 0 0 2.5px rgba(245,124,0,.14)!important}
+.search-input::placeholder{color:#555!important}
+
+/* ── Tablas: tipografía más grande ── */
+table td{font-size:.88rem!important;padding:.72rem .88rem!important;vertical-align:middle!important}
+table th{font-size:.72rem!important;padding:.62rem .88rem!important;letter-spacing:.05em!important;text-transform:uppercase!important}
+
+/* ── Labels de formulario ── */
+.fl>label,div.fl>label,.fg .fl>label{
+  font-size:.76rem!important;font-weight:600!important;
+  color:#909090!important;letter-spacing:.01em!important;
+  display:block!important;margin-bottom:.2rem!important;
+}
+
+/* ── Tags / filtros ── */
+.tag-btn,.filter-btn{
+  border-radius:7px!important;font-size:.76rem!important;
+  transition:all .13s ease!important;
+}
+.tag-btn.selected{font-weight:700!important}
+
+/* ── Header legacy (páginas con .app-hdr propio) ── */
+header.app-hdr,.app-hdr{
+  background:#090909!important;
+  border-bottom:1px solid rgba(255,255,255,.07)!important;
+  height:56px!important;padding:0 1.4rem!important;
+}
+.nav-lnk{
+  font-size:.75rem!important;font-weight:600!important;
+  color:rgba(255,255,255,.45)!important;
+  background:transparent!important;border:none!important;
+  border-radius:7px!important;padding:.3rem .65rem!important;
+  transition:all .12s ease!important;
+}
+.nav-lnk:hover{background:rgba(255,255,255,.07)!important;color:rgba(255,255,255,.88)!important}
+.nav-lnk.active{background:rgba(245,124,0,.14)!important;color:#f57c00!important;border:1px solid rgba(245,124,0,.28)!important}
+.nav-font button{color:#444!important;font-size:.73rem!important}
+.nav-font button:hover{color:#f57c00!important}
+`;
     document.head.appendChild(s);
   }
 
@@ -358,6 +488,7 @@ window.changeFontSize = GestShared.changeFontSize.bind(GestShared);
 })();
 
 document.addEventListener('DOMContentLoaded', function() {
+  _injectDesignSystem();
   GestShared.applyBranding();
   if (window._gsReady && typeof window._gsReady.then === 'function') {
     window._gsReady.then(() => {

@@ -79,7 +79,6 @@
     .bk-detail{font-size:.74rem;color:#717171;flex:1}
 
   /* ══ Mobile overlay — siempre oculto por defecto ══ */
-  #gs-mob-menu { display: none; }
 
   /* ══ MOBILE RESPONSIVE (≤768px) — no toca desktop ══ */
   @media (max-width: 768px) {
@@ -87,38 +86,26 @@
     /* Header hamburguesa — aplica tanto a .app-hdr como a .gs-hdr (shared.js) */
     .app-hdr, .gs-hdr { padding: .5rem .9rem !important; }
     .nav-font, .gs-font-ctrl { display: none !important; }
-    .hbg-btn { margin-left: auto; display: flex; flex-direction: column; justify-content: center;
       gap: 5px; width: 36px; height: 36px; background: rgba(245,124,0,.1);
       border: 1px solid rgba(245,124,0,.3); border-radius: 8px;
       cursor: pointer; padding: 7px; flex-shrink: 0; }
-    .hbg-btn span { display: block; height: 2px; background: #f57c00;
       border-radius: 2px; transition: all .2s; }
-    .hbg-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-    .hbg-btn.open span:nth-child(2) { opacity: 0; }
-    .hbg-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
     /* Fullscreen menu overlay */
-    #gs-mob-menu { display: none; position: fixed;
       top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
       width: 100% !important; height: 100% !important; min-height: 100vh;
       z-index: 9999; background: rgba(13,13,13,.98);
       flex-direction: column; padding: 1.2rem;
       overflow-y: auto; overflow-x: hidden; box-sizing: border-box; }
-    #gs-mob-menu.open { display: flex !important; }
-    #gs-mob-menu-top { display: flex; align-items: center;
       justify-content: space-between; margin-bottom: 1.5rem; padding-bottom: 1rem;
       border-bottom: 1px solid rgba(255,255,255,.08); }
-    #gs-mob-menu-top .mob-brand { font-size: .9rem; font-weight: 700; color: #fff; }
-    #gs-mob-menu-top .mob-close { background: rgba(239,68,68,.1);
       border: 1px solid rgba(239,68,68,.3); color: #ef4444; border-radius: 8px;
       padding: .4rem .8rem; font-size: .9rem; font-weight: 700;
       cursor: pointer; font-family: inherit; }
-    #gs-mob-menu a { display: flex; align-items: center; gap: .75rem;
       padding: .85rem 1rem; border-radius: 10px; font-size: .95rem; font-weight: 600;
       color: rgba(245,124,0,.9); background: rgba(245,124,0,.08);
       border: 1px solid rgba(245,124,0,.15); text-decoration: none;
       margin-bottom: .4rem; }
-    #gs-mob-menu a.mob-active { background: rgba(245,124,0,.2);
       color: #ff9800; border-color: rgba(245,124,0,.5); }
 
     /* Página wrap */
@@ -156,7 +143,6 @@
     /* Buttons */
     .btn { padding: .45rem .85rem; font-size: .8rem; }
   }
-  @media (min-width: 769px) { .hbg-btn { display: none; } }
   </style>
 </head>
 <body>
@@ -882,15 +868,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Mobile hamburger — inject after header is rendered
   (function() {
     var hdr = document.querySelector('.gs-hdr, .app-hdr, header');
-    if (hdr && !document.getElementById('hbgBtn')) {
       var btn = document.createElement('button');
-      btn.className = 'hbg-btn'; btn.id = 'hbgBtn'; btn.setAttribute('aria-label','Menú');
       btn.innerHTML = '<span></span><span></span><span></span>';
       hdr.appendChild(btn);
     }
-    function openMobMenu() {
       document.getElementById('gs-mob-menu').classList.add('open');
-      var b = document.getElementById('hbgBtn');
       if (b) b.classList.add('open');
       document.body.style.overflow = 'hidden';
       // Mostrar email del usuario
@@ -902,18 +884,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch(e) {}
       }
     }
-    function closeMobMenu() {
       document.getElementById('gs-mob-menu').classList.remove('open');
-      var b = document.getElementById('hbgBtn');
       if (b) b.classList.remove('open');
       document.body.style.overflow = '';
     }
-    window.closeMobMenu = closeMobMenu;
     setTimeout(function() {
-      var hbg = document.getElementById('hbgBtn');
       if (hbg) hbg.onclick = function() {
         document.getElementById('gs-mob-menu').classList.contains('open')
-          ? closeMobMenu() : openMobMenu();
       };
     }, 100);
   })();
@@ -1181,57 +1158,27 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
-<div id="gs-mob-menu">
-  <div id="gs-mob-menu-top">
-    <span class="mob-brand" id="mob-brand-name">⚙️ GestAlquiler</span>
-    <button class="mob-close" onclick="closeMobMenu()">✕ Cerrar</button>
-  </div>
-  <a href="dashboard.html">🏠 Dashboard</a>
-  <a href="ventas.html">🏘️ Propiedades</a>
-  <a href="visitas.html">📅 Visitas</a>
-  <a href="tasaciones.html">📋 Tasaciones</a>
-  <a href="banco.html">👤 Banco</a>
-  <a href="index.html">📄 Contratos</a>
-  <a href="administracion.html">🧾 Administración</a>
-  <a href="tareas.html">✅ Tareas</a>
-  <a href="configuracion.html" class="mob-active">⚙️ Configuración</a>
-  <a href="ayuda.html">❓ Ayuda</a>
-  <div style="margin-top:1.5rem;padding-top:1.2rem;border-top:1px solid rgba(255,255,255,.08)">
-    <div id="mob-user-email" style="font-size:.75rem;color:#717171;margin-bottom:.75rem;padding:.5rem .75rem;background:rgba(255,255,255,.04);border-radius:8px;word-break:break-all"></div>
-    <button onclick="typeof SupabaseDB!=='undefined'&&SupabaseDB.logout()" style="width:100%;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#ef4444;border-radius:10px;padding:.75rem 1rem;font-size:.9rem;font-weight:600;cursor:pointer;font-family:inherit;text-align:left">
-      🚪 Cerrar sesión
-    </button>
-  </div>
-</div>
 <script>
   (function() {
     // Aplicar brandName dinámico al menú mobile
     function setMobBrand() {
       const cfg = (typeof GestShared !== 'undefined') ? GestShared.getConfig() : {};
       const name = cfg.brandName || 'GestAlquiler';
-      const el = document.getElementById('mob-brand-name');
       if (el) el.textContent = '⚙️ ' + name;
     }
     setMobBrand();
     window.addEventListener('gs:config-synced', setMobBrand);
 
-    function openMobMenu() {
       document.getElementById('gs-mob-menu').classList.add('open');
-      var b = document.getElementById('hbgBtn');
       if (b) b.classList.add('open');
       document.body.style.overflow = 'hidden';
     }
-    function closeMobMenu() {
       document.getElementById('gs-mob-menu').classList.remove('open');
-      var b = document.getElementById('hbgBtn');
       if (b) b.classList.remove('open');
       document.body.style.overflow = '';
     }
-    window.closeMobMenu = closeMobMenu;
-    var hbg = document.getElementById('hbgBtn');
     if (hbg) hbg.onclick = function() {
       document.getElementById('gs-mob-menu').classList.contains('open')
-        ? closeMobMenu() : openMobMenu();
     };
   })();
 
@@ -1329,3 +1276,5 @@ async function actualizarNombreVendedorEnBD(oldName, newName) {
 </script>
 </body>
 </html>
+
+

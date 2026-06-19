@@ -460,25 +460,29 @@ header.app-hdr,.app-hdr{
     const html = `
 <a href="index.html" class="gs-logo">${logoIcoHtml}<div><div class="gs-logo-name">${bName}</div><div class="gs-logo-sub">${bSub}</div></div></a>
 <div class="gs-nav">${navHtml}<div class="gs-font-ctrl"><button onclick="GestShared.changeFontSize(-1)" title="Reducir">A-</button><button onclick="GestShared.changeFontSize(0)" title="Defecto">↺</button><button onclick="GestShared.changeFontSize(1)" title="Agrandar">A+</button></div>${logoutBtn}</div>
-<button class="gs-hbg" id="gs-hbg-btn" aria-label="Menú"><span></span><span></span><span></span></button>
-<div class="gs-mob-overlay" id="gs-mob-overlay"></div>
-<div class="gs-mob-menu" id="gs-mob-menu">
-  <button class="gs-mob-close" id="gs-mob-close">✕</button>
-  ${mobNavHtml}
-  <button class="gs-mob-logout" onclick="typeof SupabaseDB!=='undefined'&&SupabaseDB.logout()">🚪 Cerrar sesión</button>
-</div>`;
+<button class="gs-hbg" id="gs-hbg-btn" aria-label="Menú"><span></span><span></span><span></span></button>`;
     let hdr = document.querySelector('header');
     if (!hdr) { hdr = document.createElement('header'); document.body.insertBefore(hdr, document.body.firstChild); }
     hdr.className = 'gs-hdr'; hdr.innerHTML = html;
 
+    // Overlay y menú mobile van en body (no en header) para que position:fixed funcione
+    // El backdrop-filter del header crea un nuevo containing block que rompe fixed
+    document.getElementById('gs-mob-overlay') && document.getElementById('gs-mob-overlay').remove();
+    document.getElementById('gs-mob-menu') && document.getElementById('gs-mob-menu').remove();
+    const overlay = document.createElement('div');
+    overlay.className = 'gs-mob-overlay'; overlay.id = 'gs-mob-overlay';
+    document.body.appendChild(overlay);
+    const menu = document.createElement('div');
+    menu.className = 'gs-mob-menu'; menu.id = 'gs-mob-menu';
+    menu.innerHTML = `<button class="gs-mob-close" id="gs-mob-close">✕</button>${mobNavHtml}<button class="gs-mob-logout" onclick="typeof SupabaseDB!=='undefined'&&SupabaseDB.logout()">Cerrar sesión</button>`;
+    document.body.appendChild(menu);
+
     // Hamburger logic
     const hbg = document.getElementById('gs-hbg-btn');
-    const overlay = document.getElementById('gs-mob-overlay');
-    const menu = document.getElementById('gs-mob-menu');
     function openMob(){ menu.classList.add('open'); overlay.classList.add('open'); }
     function closeMob(){ menu.classList.remove('open'); overlay.classList.remove('open'); }
     if(hbg) hbg.addEventListener('click', openMob);
-    if(overlay) overlay.addEventListener('click', closeMob);
+    overlay.addEventListener('click', closeMob);
     const closeBtn = document.getElementById('gs-mob-close');
     if(closeBtn) closeBtn.addEventListener('click', closeMob);
 

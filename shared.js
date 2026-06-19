@@ -210,17 +210,22 @@ const GestShared = (function () {
 /* ═══ GestAlquiler Design System v2 ═══ */
 
 /* ── Botones primarios ── */
-.btn-prim,button.btn-prim{
-  background:linear-gradient(135deg,#f57c00 0%,#ff9800 100%)!important;
+.btn-prim,button.btn-prim,a.btn-prim{
+  background:linear-gradient(135deg,#e65100 0%,#ff9800 100%)!important;
   color:#fff!important;border:none!important;border-radius:9px!important;
   padding:.5rem 1.1rem!important;font-size:.84rem!important;font-weight:700!important;
   font-family:'Inter',-apple-system,sans-serif!important;cursor:pointer!important;
   display:inline-flex!important;align-items:center!important;gap:.38rem!important;
-  transition:all .14s ease!important;box-shadow:0 2px 10px rgba(245,124,0,.25)!important;
+  transition:background .2s ease,color .2s ease,box-shadow .2s ease,transform .1s ease!important;
+  box-shadow:0 2px 10px rgba(230,81,0,.35)!important;
   white-space:nowrap!important;letter-spacing:.005em!important;line-height:1.4!important;
 }
-.btn-prim:hover{opacity:.9!important;transform:translateY(-1px)!important;box-shadow:0 5px 18px rgba(245,124,0,.38)!important}
-.btn-prim:active{transform:none!important;opacity:1!important}
+.btn-prim:hover,button.btn-prim:hover,a.btn-prim:hover{
+  background:linear-gradient(135deg,#ff6d00 0%,#ffb300 100%)!important;
+  color:#000!important;box-shadow:0 5px 18px rgba(230,81,0,.55)!important;
+  transform:translateY(-1px)!important;
+}
+.btn-prim:active,button.btn-prim:active{transform:scale(0.97)!important;}
 
 /* ── Botones ghost ── */
 .btn-ghost,button.btn-ghost{

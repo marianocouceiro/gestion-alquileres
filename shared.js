@@ -474,6 +474,7 @@ header.app-hdr,.app-hdr{
     getServerUrl:   () => '',
     syncFromServer: async () => false,
     apiCall:        async () => ({ success: false, error: 'GAS eliminado en v5' }),
+    injectDesignSystem: _injectDesignSystem,
   };
 })();
 
@@ -501,7 +502,7 @@ window.changeFontSize = GestShared.changeFontSize.bind(GestShared);
 })();
 
 document.addEventListener('DOMContentLoaded', function() {
-  _injectDesignSystem();
+  GestShared.injectDesignSystem();
   // Aplicar inline styles a .nav-lnk en páginas con header propio
   const _BNORM = 'linear-gradient(135deg,#e65100,#ff9800)';
   const _BHOV  = 'linear-gradient(135deg,#ff6d00,#ffb300)';

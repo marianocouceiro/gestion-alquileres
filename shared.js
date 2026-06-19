@@ -191,7 +191,7 @@ const GestShared = (function () {
 .gs-logo-ico{width:32px;height:32px;flex-shrink:0;border-radius:8px;overflow:hidden;border:1px solid rgba(245,124,0,.28);padding:2px;background:rgba(245,124,0,.08)}
 .gs-logo-name{font-family:'Inter',-apple-system,sans-serif;font-size:.92rem;font-weight:800;color:#fff;line-height:1.15;letter-spacing:-.015em}
 .gs-logo-sub{font-family:'Inter',-apple-system,sans-serif;font-size:.58rem;color:#444;line-height:1;text-transform:uppercase;letter-spacing:.06em}
-.gs-nav{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.gs-nav{display:flex;align-items:center;gap:5px;flex-wrap:nowrap}
 .gs-nav-btn{display:inline-block;outline:0;cursor:pointer;border:none;padding:0 13px;height:32px;line-height:32px;border-radius:7px;font-family:'Inter',-apple-system,sans-serif;font-size:.76rem;font-weight:500;color:#fff;background:linear-gradient(135deg,#e65100,#ff9800);box-shadow:0 2px 8px rgba(230,81,0,0.35);text-decoration:none;white-space:nowrap;transition:box-shadow .2s,transform .1s}
 .gs-nav-active{background:linear-gradient(135deg,#ff6d00,#ffb300)!important;color:#000!important;box-shadow:0 4px 14px rgba(230,81,0,0.65)!important;transform:translateY(-1px)!important}
 .gs-font-ctrl{display:flex;align-items:center;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:7px;overflow:hidden;flex-shrink:0;margin-left:.2rem}
@@ -199,6 +199,21 @@ const GestShared = (function () {
 .gs-font-ctrl button:hover{color:#f57c00}
 .wa-phone-link{color:#378ADD;text-decoration:none;cursor:pointer}
 .wa-phone-link:hover{text-decoration:underline;color:#25d366}
+/* ── Hamburger mobile ── */
+.gs-hbg{display:none;flex-direction:column;justify-content:center;gap:5px;background:none;border:none;cursor:pointer;padding:.4rem;flex-shrink:0}
+.gs-hbg span{display:block;width:22px;height:2px;background:#fff;border-radius:2px;transition:all .2s}
+.gs-mob-overlay{display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.6);backdrop-filter:blur(4px)}
+.gs-mob-overlay.open{display:block}
+.gs-mob-menu{position:fixed;top:0;right:0;bottom:0;z-index:401;width:260px;background:#111;border-left:1px solid rgba(255,255,255,.08);padding:1.2rem 1rem;display:flex;flex-direction:column;gap:.4rem;transform:translateX(100%);transition:transform .22s ease}
+.gs-mob-menu.open{transform:translateX(0)}
+.gs-mob-menu a{display:block;padding:.7rem 1rem;border-radius:8px;font-family:'Inter',-apple-system,sans-serif;font-size:.9rem;font-weight:600;color:#fff;text-decoration:none;background:linear-gradient(135deg,#e65100,#ff9800);box-shadow:0 2px 6px rgba(230,81,0,.3);margin-bottom:2px}
+.gs-mob-menu a.gs-nav-active{background:linear-gradient(135deg,#ff6d00,#ffb300);color:#000}
+.gs-mob-close{background:none;border:none;color:#666;cursor:pointer;font-size:1.4rem;align-self:flex-end;line-height:1;margin-bottom:.5rem;padding:.2rem}
+.gs-mob-logout{margin-top:auto;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#ef4444;border-radius:8px;padding:.65rem 1rem;font-size:.85rem;font-weight:600;cursor:pointer;font-family:inherit;text-align:left}
+@media(max-width:768px){
+  .gs-nav,.gs-font-ctrl,.gs-logout-area{display:none!important}
+  .gs-hbg{display:flex}
+}
 `;
     document.head.appendChild(s);
   }
@@ -438,10 +453,34 @@ header.app-hdr,.app-hdr{
     const logoIcoHtml = cfg.brandLogo
       ? `<div class="gs-logo-ico"><img src="${cfg.brandLogo}" alt="${bName}" style="width:100%;height:100%;object-fit:contain;border-radius:7px"></div>`
       : '';
-    const html = `<a href="index.html" class="gs-logo">${logoIcoHtml}<div><div class="gs-logo-name">${bName}</div><div class="gs-logo-sub">${bSub}</div></div></a><div class="gs-nav">${navHtml}<div class="gs-font-ctrl"><button onclick="GestShared.changeFontSize(-1)" title="Reducir">A-</button><button onclick="GestShared.changeFontSize(0)" title="Defecto">↺</button><button onclick="GestShared.changeFontSize(1)" title="Agrandar">A+</button></div>${logoutBtn}</div>`;
+    const mobNavHtml = NAV.map(n => {
+      const active = n.key === activePage ? ' gs-nav-active' : '';
+      return `<a href="${n.href}" class="${active.trim()}">${n.label}</a>`;
+    }).join('');
+    const html = `
+<a href="index.html" class="gs-logo">${logoIcoHtml}<div><div class="gs-logo-name">${bName}</div><div class="gs-logo-sub">${bSub}</div></div></a>
+<div class="gs-nav">${navHtml}<div class="gs-font-ctrl"><button onclick="GestShared.changeFontSize(-1)" title="Reducir">A-</button><button onclick="GestShared.changeFontSize(0)" title="Defecto">↺</button><button onclick="GestShared.changeFontSize(1)" title="Agrandar">A+</button></div>${logoutBtn}</div>
+<button class="gs-hbg" id="gs-hbg-btn" aria-label="Menú"><span></span><span></span><span></span></button>
+<div class="gs-mob-overlay" id="gs-mob-overlay"></div>
+<div class="gs-mob-menu" id="gs-mob-menu">
+  <button class="gs-mob-close" id="gs-mob-close">✕</button>
+  ${mobNavHtml}
+  <button class="gs-mob-logout" onclick="typeof SupabaseDB!=='undefined'&&SupabaseDB.logout()">🚪 Cerrar sesión</button>
+</div>`;
     let hdr = document.querySelector('header');
     if (!hdr) { hdr = document.createElement('header'); document.body.insertBefore(hdr, document.body.firstChild); }
     hdr.className = 'gs-hdr'; hdr.innerHTML = html;
+
+    // Hamburger logic
+    const hbg = document.getElementById('gs-hbg-btn');
+    const overlay = document.getElementById('gs-mob-overlay');
+    const menu = document.getElementById('gs-mob-menu');
+    function openMob(){ menu.classList.add('open'); overlay.classList.add('open'); }
+    function closeMob(){ menu.classList.remove('open'); overlay.classList.remove('open'); }
+    if(hbg) hbg.addEventListener('click', openMob);
+    if(overlay) overlay.addEventListener('click', closeMob);
+    const closeBtn = document.getElementById('gs-mob-close');
+    if(closeBtn) closeBtn.addEventListener('click', closeMob);
 
     // Aplicar inline styles a todos los botones nav (evita que CSS externo los pise)
     const BNORM = 'linear-gradient(135deg,#e65100,#ff9800)';

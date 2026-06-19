@@ -145,10 +145,6 @@
     .app-hdr-ico svg{width:100%;height:100%;display:block}
     .app-hdr-name{font-family:'Inter',-apple-system,sans-serif;font-size:.88rem;font-weight:700;color:#fff;line-height:1.2}
     .app-hdr-sub{font-family:'Inter',-apple-system,sans-serif;font-size:.64rem;color:#717171;line-height:1}
-    .app-hdr-nav{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
-    .nav-lnk{display:inline-flex;align-items:center;gap:.3rem;padding:.35rem .75rem;border-radius:8px;font-family:'Inter',-apple-system,sans-serif;font-size:.76rem;font-weight:600;color:rgba(245,124,0,.85);background:rgba(245,124,0,.1);border:1px solid rgba(245,124,0,.22);text-decoration:none;transition:background .15s;white-space:nowrap}
-    .nav-lnk:hover{background:rgba(245,124,0,.22);color:#f57c00;border-color:rgba(245,124,0,.45)}
-    .nav-lnk.active{background:rgba(245,124,0,.25);color:#ff9800;border-color:rgba(245,124,0,.6)}
     .nav-font{display:flex;align-items:center;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;overflow:hidden;flex-shrink:0}
     .nav-font button{background:none;border:none;color:#b0b0b0;cursor:pointer;padding:.28rem .48rem;font-family:'Inter',-apple-system,sans-serif;font-size:.8rem;font-weight:600}
     .nav-font button:hover{color:#f57c00;background:rgba(245,124,0,.1)}
@@ -182,7 +178,6 @@
 
     /* Header hamburguesa */
     .app-hdr { padding: .5rem .9rem; }
-    .app-hdr-nav { display: none; }
     .nav-font { display: none; }
     .hbg-btn { display: flex; flex-direction: column; justify-content: center;
       gap: 5px; width: 36px; height: 36px; background: rgba(245,124,0,.1);
@@ -334,23 +329,6 @@
     <div><div class="app-hdr-name">GestAlquiler</div>
     <div class="app-hdr-sub">Administración de Alquileres</div></div>
   </a>
-  <nav class="app-hdr-nav">
-    <a href="dashboard.html" class="nav-lnk">🏠 Dashboard</a>
-    <a href="ventas.html" class="nav-lnk">🏘️ Propiedades</a>
-    <a href="visitas.html" class="nav-lnk active">📅 Visitas</a>
-    <a href="tasaciones.html" class="nav-lnk">📋 Tasaciones</a>
-    <a href="banco.html" class="nav-lnk">👤 Banco</a>
-    <a href="index.html" class="nav-lnk">📄 Contratos</a>
-    <a href="administracion.html" class="nav-lnk">🧾 Administración</a>
-    <a href="tareas.html"         class="nav-lnk">✅ Tareas</a>
-    <a href="configuracion.html" class="nav-lnk">⚙️ Configuración</a>
-    <a href="ayuda.html" class="nav-lnk">❓ Ayuda</a>
-    <div class="nav-font">
-      <button onclick="(function(){var fs=parseInt(localStorage.getItem('app_fs'))||15;fs=Math.max(11,fs-1);localStorage.setItem('app_fs',fs);document.documentElement.style.fontSize=fs+'px';})()" title="Reducir">A-</button>
-      <button onclick="(function(){localStorage.setItem('app_fs',15);document.documentElement.style.fontSize='15px';})()" title="Defecto">↺</button>
-      <button onclick="(function(){var fs=parseInt(localStorage.getItem('app_fs'))||15;fs=Math.min(20,fs+1);localStorage.setItem('app_fs',fs);document.documentElement.style.fontSize=fs+'px';})()" title="Agrandar">A+</button>
-    </div>
-  </nav>
   <button class="hbg-btn" id="hbgBtn" aria-label="Menú">
     <span></span><span></span><span></span>
   </button>

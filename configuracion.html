@@ -437,31 +437,16 @@
     </div>
 
     <div class="cfg-card" style="margin-top:1rem">
-      <div><h2>Color principal</h2><p>El color que se usa en botones, íconos activos, bordes y acentos en toda la app.</p></div>
-      <div style="display:flex;align-items:center;gap:1.2rem;margin-top:1rem;flex-wrap:wrap">
-        <div>
-          <label class="lbl">Elegí un color</label>
-          <input type="color" id="brColorPicker" value="#f57c00"
-            style="width:60px;height:40px;border:none;border-radius:8px;cursor:pointer;background:none;padding:2px">
-        </div>
-        <div>
-          <label class="lbl">Código hex</label>
-          <input class="inp" id="brColorHex" type="text" value="#f57c00" maxlength="7"
-            style="width:110px;font-family:monospace;text-transform:lowercase">
-        </div>
-        <div style="display:flex;flex-direction:column;gap:.4rem">
-          <label class="lbl">Colores sugeridos</label>
-          <div style="display:flex;gap:.5rem;flex-wrap:wrap" id="brPresets">
-            <button onclick="setBrandColor('#f57c00')" title="Naranja" style="width:28px;height:28px;border-radius:6px;border:2px solid transparent;cursor:pointer;background:#f57c00"></button>
-            <button onclick="setBrandColor('#2563eb')" title="Azul"    style="width:28px;height:28px;border-radius:6px;border:2px solid transparent;cursor:pointer;background:#2563eb"></button>
-            <button onclick="setBrandColor('#16a34a')" title="Verde"   style="width:28px;height:28px;border-radius:6px;border:2px solid transparent;cursor:pointer;background:#16a34a"></button>
-            <button onclick="setBrandColor('#dc2626')" title="Rojo"    style="width:28px;height:28px;border-radius:6px;border:2px solid transparent;cursor:pointer;background:#dc2626"></button>
-            <button onclick="setBrandColor('#7c3aed')" title="Violeta" style="width:28px;height:28px;border-radius:6px;border:2px solid transparent;cursor:pointer;background:#7c3aed"></button>
-            <button onclick="setBrandColor('#0891b2')" title="Celeste" style="width:28px;height:28px;border-radius:6px;border:2px solid transparent;cursor:pointer;background:#0891b2"></button>
-            <button onclick="setBrandColor('#be185d')" title="Rosa"    style="width:28px;height:28px;border-radius:6px;border:2px solid transparent;cursor:pointer;background:#be185d"></button>
-            <button onclick="setBrandColor('#b45309')" title="Marrón"  style="width:28px;height:28px;border-radius:6px;border:2px solid transparent;cursor:pointer;background:#b45309"></button>
-          </div>
-        </div>
+      <div><h2>Modo de visualización</h2><p>Elegí entre tema oscuro o claro para toda la app.</p></div>
+      <div style="display:flex;gap:.75rem;margin-top:1rem;flex-wrap:wrap">
+        <button id="btnTemaOscuro" onclick="setTema('dark')"
+          style="display:flex;align-items:center;gap:.55rem;padding:.6rem 1.1rem;border-radius:10px;border:2px solid transparent;cursor:pointer;font-family:inherit;font-size:.84rem;font-weight:600;background:#1c1c1c;color:#f5f5f5;transition:border-color .15s,box-shadow .15s">
+          🌙 Oscuro
+        </button>
+        <button id="btnTemaClaro" onclick="setTema('light')"
+          style="display:flex;align-items:center;gap:.55rem;padding:.6rem 1.1rem;border-radius:10px;border:2px solid transparent;cursor:pointer;font-family:inherit;font-size:.84rem;font-weight:600;background:#f0f0f0;color:#111;transition:border-color .15s,box-shadow .15s">
+          ☀️ Claro
+        </button>
       </div>
     </div>
 
@@ -975,37 +960,17 @@ document.addEventListener('DOMContentLoaded', async () => {
    APARIENCIA — funciones globales (fuera del DOMContentLoaded)
 ══════════════════════════════════════════════════════════ */
 
-function setBrandColor(hex) {
-  const picker = document.getElementById('brColorPicker');
-  const hexInp = document.getElementById('brColorHex');
-  if (picker) picker.value = hex;
-  if (hexInp) hexInp.value = hex;
-  updateBrandPreview();
-  if (typeof GestShared !== 'undefined') GestShared.applyBranding.__preview = hex;
-  // Aplicar en tiempo real
-  applyColorPreview(hex);
-}
+// tema actual en memoria
+let _temaActual = 'dark';
 
-function applyColorPreview(hex) {
-  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return;
-  const r = parseInt(hex.slice(1,3),16);
-  const g = parseInt(hex.slice(3,5),16);
-  const b = parseInt(hex.slice(5,7),16);
-  const rgb = `${r}, ${g}, ${b}`;
-  const root = document.documentElement;
-  root.style.setProperty('--accent',          hex);
-  root.style.setProperty('--accent-glow',     `rgba(${rgb}, 0.28)`);
-  root.style.setProperty('--accent-soft',     `rgba(${rgb}, 0.12)`);
-  root.style.setProperty('--info',            hex);
-  root.style.setProperty('--info-soft',       `rgba(${rgb}, 0.10)`);
-  root.style.setProperty('--gradient-primary',`linear-gradient(135deg, ${hex} 0%, ${hex}cc 100%)`);
-  // Preview header buttons
-  const b1 = document.getElementById('prevBtn1');
-  const b2 = document.getElementById('prevBtn2');
-  if (b1) { b1.style.background = `rgba(${rgb},.1)`; b1.style.borderColor = `rgba(${rgb},.22)`; b1.style.color = `rgba(${rgb},.85)`; }
-  if (b2) { b2.style.background = `rgba(${rgb},.25)`; b2.style.borderColor = `rgba(${rgb},.6)`; b2.style.color = hex; }
-  const logoWrap = document.getElementById('prevLogoWrap');
-  if (logoWrap) { logoWrap.style.borderColor = `rgba(${rgb},.35)`; logoWrap.style.background = `rgba(${rgb},.1)`; }
+function setTema(tema) {
+  _temaActual = tema;
+  const btnO = document.getElementById('btnTemaOscuro');
+  const btnC = document.getElementById('btnTemaClaro');
+  const active = 'border-color:#f57c00;box-shadow:0 0 0 3px rgba(245,124,0,.18)';
+  const inactive = 'border-color:transparent;box-shadow:none';
+  if (btnO) btnO.style.cssText = btnO.style.cssText.replace(/border-color:[^;]+;box-shadow:[^;]+/, tema==='dark' ? active : inactive);
+  if (btnC) btnC.style.cssText = btnC.style.cssText.replace(/border-color:[^;]+;box-shadow:[^;]+/, tema==='light' ? active : inactive);
 }
 
 function updateBrandPreview() {
@@ -1033,18 +998,16 @@ async function saveApariencia() {
   const nombre    = (document.getElementById('brNombre')?.value    || '').trim();
   const subtitulo = (document.getElementById('brSubtitulo')?.value || '').trim();
   const logoUrl   = (document.getElementById('brLogo')?.value      || '').trim();
-  const hex       = (document.getElementById('brColorHex')?.value  || '#f57c00').trim();
 
   if (nombre && nombre.length < 2) { msg.style.color='var(--danger)'; msg.textContent='El nombre es muy corto.'; return; }
-  if (hex && !/^#[0-9a-fA-F]{6}$/.test(hex)) { msg.style.color='var(--danger)'; msg.textContent='Color inválido. Usá formato #rrggbb'; return; }
 
   btn.disabled = true; btn.textContent = '⏳ Guardando…'; msg.textContent = '';
   try {
     const cfg = GestShared.getConfig();
     if (nombre)    cfg.brandName     = nombre;
     if (subtitulo) cfg.brandSubtitle = subtitulo;
-    if (hex)       cfg.brandColor    = hex;
-    cfg.brandLogo = logoUrl; // puede ser vacío (para quitar el logo)
+    cfg.brandLogo = logoUrl;
+    cfg.theme     = _temaActual;
     GestShared.saveConfig(cfg);
     GestShared.applyBranding();
     msg.style.color = 'var(--ok)'; msg.textContent = '✓ Apariencia guardada. Se aplica en todas las páginas.';
@@ -1061,8 +1024,8 @@ function resetApariencia() {
   const cfg = GestShared.getConfig();
   cfg.brandName     = '';
   cfg.brandSubtitle = 'Administración de Alquileres';
-  cfg.brandColor    = '#f57c00';
   cfg.brandLogo     = '';
+  cfg.theme         = 'dark';
   GestShared.saveConfig(cfg);
   GestShared.applyBranding();
   loadAparienciaFields();
@@ -1074,14 +1037,10 @@ function loadAparienciaFields() {
   const n = document.getElementById('brNombre');
   const s = document.getElementById('brSubtitulo');
   const l = document.getElementById('brLogo');
-  const p = document.getElementById('brColorPicker');
-  const h = document.getElementById('brColorHex');
   if (n) n.value = cfg.brandName     || '';
   if (s) s.value = cfg.brandSubtitle || 'Administración de Alquileres';
   if (l) l.value = cfg.brandLogo     || '';
-  const color = cfg.brandColor || '#f57c00';
-  if (p) p.value = color;
-  if (h) h.value = color;
+  setTema(cfg.theme || 'dark');
   updateBrandPreview();
 }
 
@@ -1090,16 +1049,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Esperar a que la config esté sincronizada
   const initApariencia = () => {
     loadAparienciaFields();
-    const picker = document.getElementById('brColorPicker');
-    const hexInp = document.getElementById('brColorHex');
-    const nombre  = document.getElementById('brNombre');
-    const sub     = document.getElementById('brSubtitulo');
-    const logo    = document.getElementById('brLogo');
-    if (picker) picker.oninput = e => { hexInp.value = e.target.value; updateBrandPreview(); };
-    if (hexInp) hexInp.oninput = e => {
-      const v = e.target.value;
-      if (/^#[0-9a-fA-F]{6}$/.test(v)) { picker.value = v; updateBrandPreview(); }
-    };
+    const nombre = document.getElementById('brNombre');
+    const sub    = document.getElementById('brSubtitulo');
+    const logo   = document.getElementById('brLogo');
     if (nombre) nombre.oninput = updateBrandPreview;
     if (sub)    sub.oninput    = updateBrandPreview;
     if (logo)   logo.oninput   = updateBrandPreview;

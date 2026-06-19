@@ -723,20 +723,6 @@ function openModalWABanco(msg,tel,nombre){document.getElementById('waBancoTitle'
 </script>
 
 <script>
-  (function() {
-      document.getElementById('gs-mob-menu').classList.add('open');
-      if (b) b.classList.add('open');
-      document.body.style.overflow = 'hidden';
-    }
-      document.getElementById('gs-mob-menu').classList.remove('open');
-      if (b) b.classList.remove('open');
-      document.body.style.overflow = '';
-    }
-    if (hbg) hbg.onclick = function() {
-      document.getElementById('gs-mob-menu').classList.contains('open')
-    };
-  })();
-
   // Actualizar lista de vendedores si se editaron desde Configuración
   window.addEventListener('gs:vendedores-updated', () => {
     if (typeof renderVendedoresList === 'function') renderVendedoresList();

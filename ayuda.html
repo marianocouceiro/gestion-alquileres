@@ -801,5 +801,12 @@ if (hash && SECTIONS[hash]) {
   showSection(hash, btn);
 }
 </script>
+<script src="supabase-db.js"></script>
+<script src="shared.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof GestShared !== 'undefined') GestShared.initHeader('ayuda');
+});
+</script>
 </body>
 </html>

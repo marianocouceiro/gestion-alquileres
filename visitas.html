@@ -1203,20 +1203,6 @@ async function renderHistorial() {
   // Marcar inmediatamente si es mobile (antes de que renderDay corra)
   if (isMobile()) document.body.classList.add('is-mobile');
 
-  /* ── Hamburguesa ── */
-    var m = document.getElementById('gs-mob-menu');
-    if (m) m.classList.add('open');
-    if (b) b.classList.add('open');
-    document.body.style.overflow = 'hidden';
-  }
-    var m = document.getElementById('gs-mob-menu');
-    if (m) m.classList.remove('open');
-    if (b) b.classList.remove('open');
-    document.body.style.overflow = '';
-  }
-  if (hbg) hbg.onclick = function() {
-    var m = document.getElementById('gs-mob-menu');
-  };
 
   /* ── Dots de navegación ── */
   function buildDots() {

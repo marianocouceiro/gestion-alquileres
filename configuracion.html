@@ -865,35 +865,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const badgeTimer = setTimeout(() => setSrv('warn', '⚠ Respuesta lenta…'), 8000);
 
   try { GestShared.initHeader('configuracion'); } catch(e) {}
-  // Mobile hamburger — inject after header is rendered
-  (function() {
-    var hdr = document.querySelector('.gs-hdr, .app-hdr, header');
-      var btn = document.createElement('button');
-      btn.innerHTML = '<span></span><span></span><span></span>';
-      hdr.appendChild(btn);
-    }
-      document.getElementById('gs-mob-menu').classList.add('open');
-      if (b) b.classList.add('open');
-      document.body.style.overflow = 'hidden';
-      // Mostrar email del usuario
-      var emailEl = document.getElementById('mob-user-email');
-      if (emailEl) {
-        try {
-          var s = JSON.parse(localStorage.getItem('ga_session')||'{}');
-          emailEl.textContent = s.user_email || (typeof SupabaseDB!=='undefined' && SupabaseDB.getUserEmail()) || '';
-        } catch(e) {}
-      }
-    }
-      document.getElementById('gs-mob-menu').classList.remove('open');
-      if (b) b.classList.remove('open');
-      document.body.style.overflow = '';
-    }
-    setTimeout(function() {
-      if (hbg) hbg.onclick = function() {
-        document.getElementById('gs-mob-menu').classList.contains('open')
-      };
-    }, 100);
-  })();
   try { updFP(); } catch(e) {}
 
   // Render indices table immediately with hardcoded data
@@ -1169,17 +1140,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setMobBrand();
     window.addEventListener('gs:config-synced', setMobBrand);
 
-      document.getElementById('gs-mob-menu').classList.add('open');
-      if (b) b.classList.add('open');
-      document.body.style.overflow = 'hidden';
-    }
-      document.getElementById('gs-mob-menu').classList.remove('open');
-      if (b) b.classList.remove('open');
-      document.body.style.overflow = '';
-    }
-    if (hbg) hbg.onclick = function() {
-      document.getElementById('gs-mob-menu').classList.contains('open')
-    };
   })();
 
   // ── Upload logo a Supabase Storage ──────────────────────────

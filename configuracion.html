@@ -450,22 +450,6 @@
       </div>
     </div>
 
-    <div class="cfg-card" style="margin-top:1rem">
-      <div><h2>Vista previa del encabezado</h2><p>Así se va a ver el header en todas las páginas.</p></div>
-      <div id="brPreview" style="margin-top:.8rem;background:#0d0d0d;border-radius:10px;padding:.6rem 1.2rem;border:1px solid rgba(255,255,255,.08)">
-        <div style="display:flex;align-items:center;gap:.65rem">
-          <div id="prevLogoWrap" style="width:34px;height:34px;flex-shrink:0;border-radius:9px;overflow:hidden;border:1px solid rgba(245,124,0,.35);padding:2px;background:rgba(245,124,0,.1);display:flex;align-items:center;justify-content:center;font-size:18px">🏘️</div>
-          <div>
-            <div id="prevNombre" style="font-size:.88rem;font-weight:700;color:#fff">Mi Inmobiliaria</div>
-            <div id="prevSubtitulo" style="font-size:.64rem;color:#717171">Administración de Alquileres</div>
-          </div>
-          <div style="margin-left:auto;display:flex;gap:.4rem">
-            <div id="prevBtn1" style="padding:.3rem .7rem;border-radius:7px;font-size:.75rem;font-weight:600;background:rgba(245,124,0,.1);border:1px solid rgba(245,124,0,.22);color:rgba(245,124,0,.85)">Dashboard</div>
-            <div id="prevBtn2" style="padding:.3rem .7rem;border-radius:7px;font-size:.75rem;font-weight:600;background:rgba(245,124,0,.25);border:1px solid rgba(245,124,0,.6);color:#ff9800">Contratos</div>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <div style="margin-top:1.2rem;display:flex;gap:.7rem">
       <button class="btn-prim" id="btnSaveApariencia" onclick="saveApariencia()">💾 Guardar apariencia</button>
@@ -967,30 +951,11 @@ function setTema(tema) {
   _temaActual = tema;
   const btnO = document.getElementById('btnTemaOscuro');
   const btnC = document.getElementById('btnTemaClaro');
-  const active = 'border-color:#f57c00;box-shadow:0 0 0 3px rgba(245,124,0,.18)';
-  const inactive = 'border-color:transparent;box-shadow:none';
-  if (btnO) btnO.style.cssText = btnO.style.cssText.replace(/border-color:[^;]+;box-shadow:[^;]+/, tema==='dark' ? active : inactive);
-  if (btnC) btnC.style.cssText = btnC.style.cssText.replace(/border-color:[^;]+;box-shadow:[^;]+/, tema==='light' ? active : inactive);
+  if (btnO) { btnO.style.borderColor = tema === 'dark'  ? '#f57c00' : 'transparent'; btnO.style.boxShadow = tema === 'dark'  ? '0 0 0 3px rgba(245,124,0,.2)' : 'none'; }
+  if (btnC) { btnC.style.borderColor = tema === 'light' ? '#f57c00' : 'transparent'; btnC.style.boxShadow = tema === 'light' ? '0 0 0 3px rgba(245,124,0,.2)' : 'none'; }
 }
 
-function updateBrandPreview() {
-  const nombre    = (document.getElementById('brNombre')?.value    || '').trim() || 'Mi Inmobiliaria';
-  const subtitulo = (document.getElementById('brSubtitulo')?.value || '').trim() || 'Administración de Alquileres';
-  const logoUrl   = (document.getElementById('brLogo')?.value      || '').trim();
-  const hex       = (document.getElementById('brColorHex')?.value  || '#f57c00').trim();
-
-  const pNombre    = document.getElementById('prevNombre');
-  const pSub       = document.getElementById('prevSubtitulo');
-  const pLogoWrap  = document.getElementById('prevLogoWrap');
-  if (pNombre)   pNombre.textContent   = nombre;
-  if (pSub)      pSub.textContent      = subtitulo;
-  if (pLogoWrap) {
-    pLogoWrap.innerHTML = logoUrl
-      ? `<img src="${logoUrl}" style="width:100%;height:100%;object-fit:contain;border-radius:7px" onerror="this.parentNode.innerHTML='❌'">`
-      : '🏘️';
-  }
-  if (/^#[0-9a-fA-F]{6}$/.test(hex)) applyColorPreview(hex);
-}
+function updateBrandPreview() { /* preview eliminado */ }
 
 async function saveApariencia() {
   const btn = document.getElementById('btnSaveApariencia');

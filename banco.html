@@ -636,22 +636,14 @@ async function marcarVista(cid,addr){const c=compradores.find(x=>x.id===cid);if(
 async function marcarReservo(cid,addr,pid){
     const c=compradores.find(x=>x.id===cid);
     if(!c)return;
-    if(!confirm('¿Confirmar que '+c.nombre+' SE RESERVÓ "'+addr+'"?\n\nOtra persona reservó esta propiedad. Se cerrará al comprador y la propiedad dejará de aparecer en matches.'))return;
-    c.estado='cerrado';
-    c.vistasProps=c.vistasProps||[];
-    if(!c.vistasProps.includes(addr))c.vistasProps.push(addr);
+    if(!confirm('¿Confirmar que "'+addr+'" ya no está disponible para '+c.nombre+'?\n\nSe quitará de sus matches. La propiedad no cambia de estado en otras páginas.'))return;
+    c.noInteresaProps=c.noInteresaProps||[];
+    if(!c.noInteresaProps.includes(addr))c.noInteresaProps.push(addr);
     loading(true,'Guardando…');
     await SupabaseDB.upsertComprador(c);
-    const prop=propiedades.find(p=>p.address===addr);
-    if(prop){
-        const pData={...prop, estado:'Reservada', reservadaPor:'otro', reservadaFecha:new Date().toISOString().slice(0,10)};
-        await SupabaseDB.upsertPropiedad(pData);
-        // FIX: actualizar en memoria y sacar de propiedades disponibles
-        propiedades=propiedades.filter(p=>p.address!==addr);
-    }
     loading(false);
     renderMatchBanner();renderCompradores();
-    toast('✅ Propiedad "'+addr+'" marcada como reservada. Ya no aparecerá en matches.');
+    toast('"'+addr+'" quitada de matches de '+c.nombre);
 }
 
 async function marcarNoInteresa(cid,addr){const c=compradores.find(x=>x.id===cid);if(!c)return;c.noInteresaProps=c.noInteresaProps||[];if(c.noInteresaProps.includes(addr))return;c.noInteresaProps.push(addr);loading(true,'Guardando…');await SupabaseDB.upsertComprador(c);loading(false);renderMatchBanner();renderCompradores();toast('✓ No le interesa: "'+addr+'"');}

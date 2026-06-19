@@ -687,6 +687,9 @@ tr:last-child td{border-bottom:none}
 
 <script>
 'use strict';
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof GestShared !== 'undefined') GestShared.initHeader('ayuda');
+});
 
 const SECTIONS = {
   inicio:        { title:'Primeros pasos',        icon:'🏠' },

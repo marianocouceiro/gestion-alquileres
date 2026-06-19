@@ -2013,7 +2013,7 @@ Presioná Cancelar para mantener.`);
 
     /* ══ Init ══ */
     document.addEventListener('DOMContentLoaded', async () => {
-    // header hardcoded — no JS needed
+        if (typeof GestShared !== 'undefined') GestShared.initHeader('ventas');
         loading(true,'Cargando propiedades…');
         try { if (window._gsReady) await window._gsReady; } catch {}
         try { await loadProps(); } catch(e){ toast('Error al cargar','err'); }

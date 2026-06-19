@@ -2025,6 +2025,7 @@
 
     /* ══ Init ══ */
     document.addEventListener('DOMContentLoaded', async () => {
+        if (typeof GestShared !== 'undefined') GestShared.initHeader('administracion');
   // Mostrar summary bar solo a admins
   async function applyRoleVisibility() {
     try {

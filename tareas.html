@@ -668,6 +668,7 @@ document.addEventListener('keydown', e => {
 
 /* ── Init ── */
 document.addEventListener('DOMContentLoaded', async () => {
+  if (typeof GestShared !== 'undefined') GestShared.initHeader('tareas');
   (function(){var fs=parseInt(localStorage.getItem('app_fs'))||15;document.documentElement.style.fontSize=fs+'px';})();
   histTarAnio = new Date().getFullYear();
   document.getElementById('histTarYear').textContent = histTarAnio;

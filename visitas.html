@@ -1226,7 +1226,7 @@ async function cleanupVisitasAntiguas() {
 
 /* ═══ Init ═══ */
 document.addEventListener('DOMContentLoaded', async () => {
-    // header hardcoded — no JS needed
+    if (typeof GestShared !== 'undefined') GestShared.initHeader('visitas');
     loading(true,'Cargando visitas…');
     // Esperar a que se sincronice la configuración (vendedores) desde Supabase
     try { if (window._gsReady) await window._gsReady; } catch {}

@@ -1106,6 +1106,7 @@ const TAS = (function() {
 
     // ── Init ─────────────────────────────────────────────────
     window.addEventListener('DOMContentLoaded', async () => {
+        if (typeof GestShared !== 'undefined') GestShared.initHeader('tasaciones');
         cargando(true, 'Cargando tasaciones…');
         try { if (window._gsReady) await window._gsReady; } catch {}
         await cargar();

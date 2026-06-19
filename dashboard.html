@@ -723,6 +723,7 @@ function dismissOnboarding() {
 }
 
 document.addEventListener('DOMContentLoaded', async ()=>{
+    if (typeof GestShared !== 'undefined') GestShared.initHeader('dashboard');
     // Verificar rol y mostrar sección admin si corresponde
     // Intentar inmediatamente, y si no hay caché, reintentar tras 800ms
     async function applyRoleVisibility() {

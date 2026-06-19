@@ -447,14 +447,22 @@ header.app-hdr,.app-hdr{
     if (!hdr) { hdr = document.createElement('header'); document.body.insertBefore(hdr, document.body.firstChild); }
     hdr.className = 'gs-hdr'; hdr.innerHTML = html;
 
-    // Hover naranja brillante + texto negro via JS (CSS no puede sobreescribir inline gradient)
+    // Aplicar inline styles a todos los botones nav (evita que CSS externo los pise)
     const BNORM = 'linear-gradient(135deg,#e65100,#ff9800)';
     const BHOV  = 'linear-gradient(135deg,#ff6d00,#ffb300)';
-    hdr.querySelectorAll('.gs-nav-btn:not(.gs-nav-active)').forEach(el => {
-      el.addEventListener('mouseenter', () => { el.style.background = BHOV; el.style.color = '#000'; el.style.boxShadow = '0 4px 14px rgba(230,81,0,0.65)'; el.style.transform = 'translateY(-1px)'; });
-      el.addEventListener('mouseleave', () => { el.style.background = BNORM; el.style.color = '#fff'; el.style.boxShadow = '0 2px 8px rgba(230,81,0,0.35)'; el.style.transform = ''; });
-      el.addEventListener('mousedown',  () => { el.style.background = 'linear-gradient(135deg,#bf360c,#f57c00)'; el.style.transform = 'scale(0.97)'; });
-      el.addEventListener('mouseup',    () => { el.style.background = BHOV; el.style.transform = 'translateY(-1px)'; });
+    const BDOWN = 'linear-gradient(135deg,#bf360c,#f57c00)';
+    const BASE_STYLE = 'display:inline-block;outline:0;cursor:pointer;border:none;padding:0 13px;height:32px;line-height:32px;border-radius:7px;font-family:Inter,-apple-system,sans-serif;font-size:.76rem;font-weight:500;white-space:nowrap;text-decoration:none;transition:box-shadow .2s,transform .1s;';
+    hdr.querySelectorAll('.gs-nav-btn').forEach(el => {
+      const isActive = el.classList.contains('gs-nav-active');
+      el.setAttribute('style', BASE_STYLE + (isActive
+        ? `background:${BHOV};color:#000;box-shadow:0 4px 14px rgba(230,81,0,0.65);transform:translateY(-1px)`
+        : `background:${BNORM};color:#fff;box-shadow:0 2px 8px rgba(230,81,0,0.35)`));
+      if (!isActive) {
+        el.addEventListener('mouseenter', () => { el.style.background = BHOV; el.style.color = '#000'; el.style.boxShadow = '0 4px 14px rgba(230,81,0,0.65)'; el.style.transform = 'translateY(-1px)'; });
+        el.addEventListener('mouseleave', () => { el.style.background = BNORM; el.style.color = '#fff'; el.style.boxShadow = '0 2px 8px rgba(230,81,0,0.35)'; el.style.transform = ''; });
+        el.addEventListener('mousedown',  () => { el.style.background = BDOWN; el.style.transform = 'scale(0.97)'; });
+        el.addEventListener('mouseup',    () => { el.style.background = BHOV; el.style.transform = 'translateY(-1px)'; });
+      }
     });
   }
 
@@ -498,14 +506,22 @@ window.changeFontSize = GestShared.changeFontSize.bind(GestShared);
 
 document.addEventListener('DOMContentLoaded', function() {
   _injectDesignSystem();
-  // Hover naranja+negro para .nav-lnk en páginas con header propio
-  const BNORM = 'linear-gradient(135deg,#e65100,#ff9800)';
-  const BHOV  = 'linear-gradient(135deg,#ff6d00,#ffb300)';
-  document.querySelectorAll('.nav-lnk:not(.active)').forEach(el => {
-    el.addEventListener('mouseenter', () => { el.style.background = BHOV; el.style.color = '#000'; el.style.boxShadow = '0 4px 14px rgba(230,81,0,0.65)'; el.style.transform = 'translateY(-1px)'; });
-    el.addEventListener('mouseleave', () => { el.style.background = BNORM; el.style.color = '#fff'; el.style.boxShadow = '0 2px 8px rgba(230,81,0,0.35)'; el.style.transform = ''; });
-    el.addEventListener('mousedown',  () => { el.style.background = 'linear-gradient(135deg,#bf360c,#f57c00)'; el.style.transform = 'scale(0.97)'; });
-    el.addEventListener('mouseup',    () => { el.style.background = BHOV; el.style.transform = 'translateY(-1px)'; });
+  // Aplicar inline styles a .nav-lnk en páginas con header propio
+  const _BNORM = 'linear-gradient(135deg,#e65100,#ff9800)';
+  const _BHOV  = 'linear-gradient(135deg,#ff6d00,#ffb300)';
+  const _BDOWN = 'linear-gradient(135deg,#bf360c,#f57c00)';
+  const _BASE  = 'display:inline-block;outline:0;cursor:pointer;border:none;padding:0 13px;height:32px;line-height:32px;border-radius:7px;font-family:Inter,-apple-system,sans-serif;font-size:.76rem;font-weight:500;white-space:nowrap;text-decoration:none;transition:box-shadow .2s,transform .1s;';
+  document.querySelectorAll('.nav-lnk').forEach(el => {
+    const isActive = el.classList.contains('active');
+    el.setAttribute('style', _BASE + (isActive
+      ? `background:${_BHOV};color:#000;box-shadow:0 4px 14px rgba(230,81,0,0.65);transform:translateY(-1px)`
+      : `background:${_BNORM};color:#fff;box-shadow:0 2px 8px rgba(230,81,0,0.35)`));
+    if (!isActive) {
+      el.addEventListener('mouseenter', () => { el.style.background = _BHOV; el.style.color = '#000'; el.style.boxShadow = '0 4px 14px rgba(230,81,0,0.65)'; el.style.transform = 'translateY(-1px)'; });
+      el.addEventListener('mouseleave', () => { el.style.background = _BNORM; el.style.color = '#fff'; el.style.boxShadow = '0 2px 8px rgba(230,81,0,0.35)'; el.style.transform = ''; });
+      el.addEventListener('mousedown',  () => { el.style.background = _BDOWN; el.style.transform = 'scale(0.97)'; });
+      el.addEventListener('mouseup',    () => { el.style.background = _BHOV; el.style.transform = 'translateY(-1px)'; });
+    }
   });
   GestShared.applyBranding();
   if (window._gsReady && typeof window._gsReady.then === 'function') {

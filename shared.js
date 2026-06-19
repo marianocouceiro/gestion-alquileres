@@ -408,16 +408,7 @@ header.app-hdr,.app-hdr{
         el.style.display = 'none';
       }
     });
-    document.querySelectorAll('.gs-nav-btn, .nav-lnk').forEach(el => {
-      el.style.color      = `rgba(${rgb}, 0.85)`;
-      el.style.background = `rgba(${rgb}, 0.10)`;
-      el.style.borderColor = `rgba(${rgb}, 0.22)`;
-    });
-    document.querySelectorAll('.gs-nav-active, .nav-lnk.active').forEach(el => {
-      el.style.color       = color;
-      el.style.background  = `rgba(${rgb}, 0.25)`;
-      el.style.borderColor = `rgba(${rgb}, 0.6)`;
-    });
+    // Nav buttons tienen su propio estilo fijo (degradé naranja), no se tocan aquí
     document.querySelectorAll('.hbg-btn span').forEach(el => { el.style.background = color; });
     document.querySelectorAll('.hbg-btn').forEach(el => {
       el.style.background   = `rgba(${rgb}, 0.10)`;

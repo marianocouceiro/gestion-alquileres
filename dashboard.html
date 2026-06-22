@@ -642,7 +642,7 @@ function updateOnboarding(contracts, pagos, propiedades, visitas) {
   if (localStorage.getItem(OB_KEY) === '1') return;
 
   const cfg = (typeof GestShared !== 'undefined') ? GestShared.getConfig() : {};
-  const hasBrand   = !!(cfg.brandName && cfg.brandName.trim());
+  const hasBrand   = !!(cfg.brandName?.trim() || cfg.aliasInmo?.trim());
   const hasContrato = contracts && contracts.length > 0;
   const hasPago     = pagos && pagos.length > 0;
   const hasVisitaOrProp = (visitas && visitas.length > 0) || (propiedades && propiedades.length > 0);
@@ -650,8 +650,8 @@ function updateOnboarding(contracts, pagos, propiedades, visitas) {
   const steps = [hasBrand, hasContrato, hasPago, hasVisitaOrProp];
   const done  = steps.filter(Boolean).length;
 
-  // Si todo completado, ocultar definitivamente
-  if (done === steps.length) {
+  // Si todo completado, o si la cuenta ya tiene actividad real (≥2 contratos), ocultar definitivamente
+  if (done === steps.length || (contracts && contracts.length >= 2)) {
     localStorage.setItem(OB_KEY, '1');
     return;
   }
